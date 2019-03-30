@@ -13,3 +13,21 @@ pip-selfcheck.json
 __pycache__
 .history
 *.z64
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+# Windows Crap
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+
+# Mac Crap
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
