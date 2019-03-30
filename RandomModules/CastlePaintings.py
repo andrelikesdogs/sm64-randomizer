@@ -11,14 +11,13 @@ class CastlePaintingsRandomizer:
     warp_ids = []
     targets = []
     for (cmd, data, pos) in self.rom.read_cmds_from_level_block(LEVEL_POSITIONS["INSIDE_CASTLE"], filter=[0x27]):
-      print(cmd)
-      print([hex(byte) for byte in data])
       warp_ids.append((data[0], pos))
       targets.append(data[1:3])
     
     return (warp_ids, targets)
 
   def shuffle_paintings(self):
+    print("- Shuffling all Castle Paintings")
     # todo: list ids so we can shuffle only some of them
 
     (warp_ids, targets) = self.find_all_painting_warps()

@@ -45,7 +45,7 @@ class ROM:
       cmd_length = max(self.file.read(1)[0] - 2, 0)
 
       if cmd == 0x02:
-        print("Ending Level Sequence (0x02 END_LEVEL)")
+        #print("Ending Level Sequence (0x02 END_LEVEL)")
         break
 
       if not len(filter) or cmd in filter:
@@ -58,9 +58,9 @@ class ROM:
         self.file.seek(cmd_length, 1)
 
       if self.file.tell() > end_position:
-        print("Ending Level Sequence (end of bytes)")
+        #print("Ending Level Sequence (end of bytes)")
         break
-    print(f'{cmd_count} level commands found')
+    #print(f'{cmd_count} level commands found')
 
 
 '''
