@@ -7,11 +7,12 @@ from random import seed
 from __version__ import __version__
 
 from Rom import ROM
+from Debug import Debug
 
 from RandomModules.Music import MusicRandomizer
 from RandomModules.CastlePaintings import CastlePaintingsRandomizer
 
-from Constants import LEVEL_POSITIONS, PLAYABLE_LEVELS
+from Constants import ALL_LEVELS, MISSION_LEVELS
 
 print(f'  Super Mario 64 Randomizer  (Version: {__version__})')
 
@@ -40,10 +41,12 @@ with ROM(rom_path, out_path) as rom:
   if not rom.verify_header():
     raise Exception("invalid rom, does not match known headers. make sure you use the z64 format")
 
+  debugger = Debug(rom)
+  debugger.list_course_ids()
+
   music_random = MusicRandomizer(rom)
-  music_random.shuffle_music(LEVEL_POSITIONS.values())
+  music_random.shuffle_music(ALL_LEVELS)
 
   castle_warp_random = CastlePaintingsRandomizer(rom)
   castle_warp_random.shuffle_paintings()
-  #castle_warp_random.shuffle_paintings(LEVEL_POSITIONS.values())
   

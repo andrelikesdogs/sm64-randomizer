@@ -2,7 +2,7 @@ from random import shuffle
 from typing import List
 
 from Level import Level
-from Constants import LEVEL_POSITIONS, SONG_NAMES
+from Constants import SONG_NAMES
 from Rom import ROM
 
 class MusicRandomizer:

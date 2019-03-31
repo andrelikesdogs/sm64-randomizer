@@ -38,26 +38,31 @@ class ROM:
 
     cmd = None
     cmd_count = 0
+    cursor = start_position
     while True:
       cmd_count = cmd_count + 1
 
+      # if this function is used recursively, this would get lost
+      self.file.seek(cursor, 0)
       cmd = self.file.read(1)[0]
       cmd_length = max(self.file.read(1)[0] - 2, 0)
-
       if cmd == 0x02:
         #print("Ending Level Sequence (0x02 END_LEVEL)")
         break
 
+      cursor = cursor + cmd_length + 2
+      #print('position: ' + str(cursor))
+
       if not len(filter) or cmd in filter:
         # read data and output
-        data_pos = self.file.tell()
         cmd_data = self.file.read(cmd_length)
-        yield (cmd, cmd_data, data_pos)
+        #print([hex(b) for b in cmd_data])
+        yield (cmd, cmd_data, cursor + 2)
       else:
         # skip forward
         self.file.seek(cmd_length, 1)
 
-      if self.file.tell() > end_position:
+      if cursor > end_position:
         #print("Ending Level Sequence (end of bytes)")
         break
     #print(f'{cmd_count} level commands found')
