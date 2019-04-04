@@ -10,7 +10,7 @@ LVL_CASTLE_INSIDE=Level(0x3CF0D0, 0x3D0DC0, 0x06, "Castle Inside") # 0
 LVL_CASTLE_COURTYARD=Level(0x4AF670, 0x4AF930, 0x1A, "Castle Courtyard") # 0
 
 LVL_BOB=Level(0x405A60, 0x405FB0, 0x09, "Bob-omb Battlefield") # 1
-LVL_WF=Level(0x49DA50, 0x49E710, 0x0B, "Whomp's Fortress") # 2
+LVL_WF=Level(0x49DA50, 0x49E710, 0x18, "Whomp's Fortress") # 2
 LVL_JRB=Level(0x423B20, 0x4246D0, 0x0C, "Jolly Roger Bay") # 3
 LVL_CCM=Level(0x395C90, 0x396340, 0x05, "Cool, Cool Mountain") # 4
 LVL_BBH=Level(0x3828C0, 0x383950, 0x04, "Big Boo's Haunt") # 5

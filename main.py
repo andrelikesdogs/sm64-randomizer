@@ -50,10 +50,6 @@ with ROM(rom_path, out_path) as rom:
   print(f'using seed {used_seed}')
 
   debugger = Debug(rom)
-  #decompressed_mio0 = debugger.decompress_mio0(0x114750, 0x1279B0)
-  d = debugger.read_data(0x823B64, 0x858EDC)
-
-  print([hex(b) for b in d[0:40]])
 
   music_random = MusicRandomizer(rom)
   music_random.shuffle_music(ALL_LEVELS)
@@ -61,5 +57,5 @@ with ROM(rom_path, out_path) as rom:
   mario_random = MarioRandomizer(rom)
   mario_random.randomize_color()
 
-  #castle_warp_random = CastlePaintingsRandomizer(rom)
-  #castle_warp_random.shuffle_paintings()
+  castle_warp_random = CastlePaintingsRandomizer(rom)
+  castle_warp_random.shuffle_paintings()
