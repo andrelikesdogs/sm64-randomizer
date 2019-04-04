@@ -1,24 +1,24 @@
 from pathlib import Path
 import shutil
+import os
 
 from Level import Level
 from Constants import LEVEL_SCRIPT_FUNCS
-
-KNOWN_HEADERS = [
-  b'\x807\x12@\x00\x00\x00\x0f\x80$`\x00\x00\x00\x14DcZ+\xff\x8b\x02#&\x00\x00\x00\x00\x00\x00\x00\x00SUPER MARIO 64      \x00\x00\x00\x00\x00\x00\x00NSME\x00'
-]
-HEADER_SIZE=0x40
 
 class ROM:
   def __init__(self, path, out_path):
     self.path = path
     self.out_path = out_path
 
+    self.region = None
+    self.endianess = None
+    self.file_stats = None
+    self.rom_type = None
+
   def __enter__(self):
+    self.file_stats = os.stat(self.path)
     self.file = open(self.path, 'rb')
-    print(f'INPUT: {self.path}')
     shutil.copyfile(self.path, self.out_path)
-    print(f'OUTPUT: {self.out_path}')
     self.target = open(self.out_path, 'b+r')
     return self
 
@@ -28,9 +28,58 @@ class ROM:
 
   def verify_header(self):
     self.file.seek(0)
-    header = self.file.read(HEADER_SIZE)
+    header = self.file.read(0x40)
+    
+    # read endianess
+    endian_bytes = header[0:2]
+    if endian_bytes == bytes([0x80, 0x37]):
+      self.endianess = 'big'
+    elif endian_bytes == bytes([0x37, 0x80]):
+      self.endianess = 'mixed'
+    elif endian_bytes == bytes([0x40, 0x12]):
+      self.endianess = 'little'
+    else:
+      raise Exception('invalid endianess in ROM')
 
-    return header in KNOWN_HEADERS
+    # read region
+    region_byte = header[0x3E]
+    region_byte_alt = header[0x3F]
+
+    if region_byte == 0x45:
+      self.region = 'NORTH_AMERICA'
+    elif region_byte == 0x50:
+      self.region = 'EUROPE'
+    elif region_byte == 0x4A:
+      if region_byte_alt < 3:
+        self.region = 'JAPAN'
+      else:
+        self.region = 'JAPAN_SHINDOU'
+    elif region_byte == 0x00:
+      self.region = 'CHINESE'
+    else:
+      raise Exception('invalid region in ROM')
+
+    if self.file_stats.st_size == 25165824:
+      self.rom_type = 'EXTENDED'
+    elif self.file_stats.st_size == 8388608:
+      self.rom_type = 'VANILLA'
+    else:
+      print("Warning: Could not determine ROM-Type from size")
+
+    #return header in KNOWN_HEADERS
+
+  def print_info(self):
+    output_vars = [
+      ('Loaded ROM', self.file.name),
+      ('Output ROM', self.target.name),
+      ('ROM Endianness', self.endianess.upper()),
+      ('ROM Region', self.region),
+      ('ROM Type', self.rom_type)
+    ]
+
+    for (label, value) in output_vars:
+      print(f'{(label + ":").ljust(20)}{value}')
+    print()
 
   def read_cmds_from_level_block(self, level: Level, filter=[]):
     (start_position, end_position) = level.address
@@ -56,16 +105,11 @@ class ROM:
       if not len(filter) or cmd in filter:
         # read data and output
         cmd_data = self.file.read(cmd_length)
-        #print([hex(b) for b in cmd_data])
-        yield (cmd, cmd_data, cursor + 2)
-      else:
-        # skip forward
-        self.file.seek(cmd_length, 1)
+        yield (cmd, cmd_data, cursor - cmd_length)
 
       if cursor > end_position:
         #print("Ending Level Sequence (end of bytes)")
         break
-    #print(f'{cmd_count} level commands found')
 
 
 '''

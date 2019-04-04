@@ -11,10 +11,11 @@ from Debug import Debug
 
 from RandomModules.Music import MusicRandomizer
 from RandomModules.CastlePaintings import CastlePaintingsRandomizer
+from RandomModules.Mario import MarioRandomizer
 
 from Constants import ALL_LEVELS, MISSION_LEVELS
 
-print(f'  Super Mario 64 Randomizer  (Version: {__version__})')
+print(f'  Super Mario 64 Randomizer  (Version: {__version__})\n')
 
 parser = argparse.ArgumentParser()
 parser.add_argument("rom")
@@ -28,7 +29,7 @@ if args.seed:
   used_seed = args.seed
   seed(used_seed)
 else:
-  used_seed = time.time() * 256
+  used_seed = round(time.time() * 256 * 1000)
   seed(used_seed)
 
 rom_path = Path(args.rom)
@@ -38,15 +39,27 @@ if not rom_path.exists():
   raise Exception("invalid file, does not exist")
 
 with ROM(rom_path, out_path) as rom:
-  if not rom.verify_header():
-    raise Exception("invalid rom, does not match known headers. make sure you use the z64 format")
+  try:
+    rom.verify_header()
+    rom.print_info()
+  except Exception as err:
+    print(err)
+    print("invalid rom, does not match known headers. make sure you use the z64 format")
+    sys.exit(2)
+
+  print(f'using seed {used_seed}')
 
   debugger = Debug(rom)
-  debugger.list_course_ids()
+  #decompressed_mio0 = debugger.decompress_mio0(0x114750, 0x1279B0)
+  d = debugger.read_data(0x823B64, 0x858EDC)
+
+  print([hex(b) for b in d[0:40]])
 
   music_random = MusicRandomizer(rom)
   music_random.shuffle_music(ALL_LEVELS)
 
-  castle_warp_random = CastlePaintingsRandomizer(rom)
-  castle_warp_random.shuffle_paintings()
-  
+  mario_random = MarioRandomizer(rom)
+  mario_random.randomize_color()
+
+  #castle_warp_random = CastlePaintingsRandomizer(rom)
+  #castle_warp_random.shuffle_paintings()
