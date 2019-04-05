@@ -42,13 +42,14 @@ class MarioRandomizer:
     self.rom = rom
 
   def randomize_color(self):
+    print("Randomizing Mario\'s Colors")
     if self.rom.rom_type != 'EXTENDED':
       print('Can not modify Mario\'s color on a non-extended ROM. Please load an extended ROM')
       return
     
     for (part, mem_address) in MEM_COLOR_ADDRESSES.items():
       color = (randint(0, 255), randint(0, 255), randint(0, 255), 255)
-      print(f'{part} is now {color}')
+      #print(f'{part} is now {color}')
 
       self.rom.target.seek(mem_address, 0)
       self.rom.target.write(bytes([*color]))

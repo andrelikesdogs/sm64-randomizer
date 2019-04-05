@@ -1,5 +1,11 @@
-import argparse
+#!/usr/bin/env python
 import sys
+
+if __name__ != '__main__':
+  print("Dont import this")
+  sys.exit(2)
+
+import argparse
 import time
 from pathlib import Path
 from random import seed
@@ -16,6 +22,12 @@ from RandomModules.Mario import MarioRandomizer
 from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE
 
 print(f'  Super Mario 64 Randomizer  (Version: {__version__})\n')
+
+if len(sys.argv) <= 1:
+  # assume we want to start the GUI
+  print("starting gui...")
+  import gui
+  sys.exit(0)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("rom")

@@ -29,7 +29,7 @@ class MusicRandomizer:
     return (music_seq_ids, music_seq_pos)
 
   def shuffle_music(self, levels : List[Level]):
-    print("- Shuffling all Music")
+    print("Randomizing Level Music")
     (ids, pos) = self.find_music_seqs(levels)
 
     shuffle(ids)

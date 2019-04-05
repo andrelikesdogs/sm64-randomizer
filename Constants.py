@@ -196,6 +196,22 @@ PAINTING_IDS = {
   LVL_SL: 0x0C
 }
 
+PAINTING_OFFSETS = {
+   LVL_BOB: (0x0A800, 0x0B800),
+   LVL_CCM: (0x0C800, 0x0D800),
+   LVL_WF: (0x0E800, 0x0F800),
+   LVL_JRB: (0x10800, 0x11800),
+   LVL_LLL: (0x12800, 0x13800),
+   LVL_SSL: (0x14800, 0x15800),
+   # LVL_DDD: () # Is only one 32x32 Texture, difficult to replace
+   # LVL_HMC: () # Is only one 32x32 Texture, difficult to replace
+   LVL_WDW: (0x17800, 0x18800),
+   LVL_THI: (0x19800, 0x1A800),
+   LVL_TTM: (0x1B800, 0x1C800),
+   LVL_TTC: (0x1D800, 0x1E800),
+   LVL_SL: (0x1F800, 0x20800),
+}
+
 SONG_NAMES = [
   "No Music",
   "End Level",

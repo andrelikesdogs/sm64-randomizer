@@ -4,9 +4,10 @@ from random import shuffle
 from GeoLayout import GeoLayoutParser
 
 from Rom import ROM
-from Constants import ALL_LEVELS, LVL_CASTLE_INSIDE, LEVEL_ID_MAPPING, SPECIAL_WARP_IDS, WARP_ID_LOSE, WARP_ID_WIN, WARP_ID_RECOVER, PAINTING_IDS
+from Constants import ALL_LEVELS, LVL_CASTLE_INSIDE, LVL_BOB, LVL_CCM, LEVEL_ID_MAPPING, MISSION_LEVELS, SPECIAL_WARP_IDS, WARP_ID_LOSE, WARP_ID_WIN, WARP_ID_RECOVER, PAINTING_OFFSETS
 
-OFFSET_LVL_GEO = (0x3CF0D0, 0x3D0DC0)
+PAINTINGS_EXT_ROM_OFFSET = 0xE0BB07
+PAINTING_BYTE_SIZE = int(32*64*16 / 8) # 4096
 
 class CastlePaintingsRandomizer:
   def __init__(self, rom : ROM):
@@ -26,18 +27,32 @@ class CastlePaintingsRandomizer:
     return self.rom.read_cmds_from_level_block(LVL_CASTLE_INSIDE, [0x27])
 
   def shuffle_paintings(self):
-    print("- Shuffling all Castle Paintings")
-    parser = GeoLayoutParser(self.rom, 0x3D0190, 0x3d0535)
-    parser.process()
-    parser.dump()
-    
+    print("Randomizing Castle Level Entries")
+
     painting_level_mapping = {}
     painting_area_mapping = {}
     painting_target_ids = {}
-    painting_art_mapping = {}
 
     course_exits = []
     painting_entries = []
+
+    art_bytes = {}
+    if self.rom.rom_type == "EXTENDED":
+      # save all paintings
+      for level in MISSION_LEVELS:
+        if level in PAINTING_OFFSETS:
+          (upper_part, lower_part) = PAINTING_OFFSETS[level]
+          self.rom.file.seek(PAINTINGS_EXT_ROM_OFFSET + upper_part, 0)
+          upper_bytes = self.rom.file.read(PAINTING_BYTE_SIZE)
+          self.rom.file.seek(PAINTINGS_EXT_ROM_OFFSET + lower_part, 0)
+          lower_bytes = self.rom.file.read(PAINTING_BYTE_SIZE)
+
+          art_bytes[level] = {
+            "address": (upper_part, lower_part),
+            "bytes": (upper_bytes, lower_bytes)
+          }
+
+    #print([[hex(c) for c in b["address"]] for b in art_bytes.values()])
 
     for (cmd, data, pos) in self.find_painting_warps():
       warp_id = data[0]
@@ -52,14 +67,6 @@ class CastlePaintingsRandomizer:
       if level in painting_level_mapping:
         painting_level_mapping[level].append(pos)
         continue
-      
-      painting_pos = None
-      target_art_id = None
-      if level in PAINTING_IDS:
-        # determine which art currently is used
-        target_art_id = PAINTING_IDS[level]
-
-      painting_art_mapping[level] = target_art_id
         
       painting_level_mapping[level] = [pos]
 
@@ -106,11 +113,11 @@ class CastlePaintingsRandomizer:
         self.rom.target.seek(p)
         #print([hex(b) for b in self.rom.target.read(4)])
       #print(level.name, painting_warp_pos)
-      painting_entries.append((painting_area_mapping[level], painting_art_mapping[level], painting_warp_pos, painting_target_ids[level]))
+      painting_entries.append((painting_area_mapping[level], level, painting_warp_pos, painting_target_ids[level]))
 
     shuffle(course_exits)
 
-    for idx, (target_level_area, target_art_id, painting_warp_pos, warp_ids) in enumerate(painting_entries):
+    for idx, (target_level_area, orig_level, painting_warp_pos, warp_ids) in enumerate(painting_entries):
       course_exit = course_exits[idx]
       (target_level, win_warp_mem_pos, lose_warp_mem_pos, rec_warp_mem_pos) = course_exit
       (win_id, lose_id) = warp_ids[0:2]
@@ -141,21 +148,11 @@ class CastlePaintingsRandomizer:
         self.rom.target.write(bytes([target_level_area, lose_id])) # might screw up
 
       # update painting
-      """
-        for (art_cmd, art_data, art_pos) in self.rom.read_cmds_from_level_block(LVL_CASTLE_INSIDE, filter=[0x18]):
-          (art_type, art_id, c1, c2, c3, c4) = art_data
-          print([hex(b) for b in art_data])
 
-          # only these bytes are relevant for setting the painting art
-          if art_type == 0x0 and art_id == target_art_id and bytes([c1, c2, c3, c4]) == bytes([0x80, 0x2D, 0x5B, 0x98]):
-            print(f'found art for {level.name}')
-            # determine memory position for art
-            painting_pos = art_pos + 1
-            break
-        """
-
-      #if target_art_id:
-        #new_art_id = painting_art_mapping[target_level]
-        #print(f'replacing id {target_art_id}\'s painting with {target_level.name}\'s ID: {hex(new_art_id)}')
-        #occourences = parser.replace_command_values(0x18, 3, new_art_id, filter_lambda=(lambda data: data[4:8] == bytes([0x80, 0x2D, 0x5B, 0x98]) and data[2] == 1 and data[3] == target_art_id))
-        #print(f'replaced {occourences} paintings')
+      if orig_level in art_bytes and target_level in art_bytes:
+        (p1, p2) = art_bytes[orig_level]["address"]
+        (b1, b2) = art_bytes[target_level]["bytes"]
+        self.rom.target.seek(PAINTINGS_EXT_ROM_OFFSET + p1, 0)
+        self.rom.target.write(b1)
+        self.rom.target.seek(PAINTINGS_EXT_ROM_OFFSET + p2, 0)
+        self.rom.target.write(b2)
