@@ -1,4 +1,7 @@
-# Painting List
+# Painting Texture List
+[ 18 00 00 00 80 2D 5D 0C ]
+[ 18 00 XX YY 80 2D 5B 98 ]
+
 (XX == 0)
 00 = Shiny black pool in HMC = [07 02 55 1C]
 

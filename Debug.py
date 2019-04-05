@@ -1,4 +1,5 @@
 from Rom import ROM
+from GeoLayout import GeoLayoutParser
 
 from Constants import ALL_LEVELS
 
@@ -12,6 +13,42 @@ class Debug:
       print(level.name)
       for (cmd, data, pos) in self.rom.read_cmds_from_level_block(level, filter=[0x0C]):
         print([hex(byte) for byte in data])
+
+  def list_segment_areas(self):
+    for level in ALL_LEVELS:
+      print(level.name)
+      ram_banks = {}
+
+      for (cmd, data, pos) in self.rom.read_cmds_from_level_block(level, filter=[0x01, 0x05, 0x06, 0x0C, 0x17]):
+        if cmd == 0x01:
+          if data:
+            bank_id = data[1]
+            ram_banks[bank_id] = (int.from_bytes(data[3:7], self.rom.endianess), int.from_bytes(data[7:11], self.rom.endianess))
+
+            other_level = data[11:15]
+            print(f'0x01: JMP to {other_level} required')
+        if cmd == 0x05 or cmd == 0x06:
+          other_level = data[3:7]
+          print(f'{hex(cmd)}: JMP to {other_level} required')
+        if cmd == 0x0C:
+          other_level = data[7:11]
+          print(f'0x0C: JMP to {other_level} required')
+        if cmd == 0x17:
+          bank_id = data[1]
+          if bank_id == 0x0E:
+            print(f'0x17: Extended ROM Segment required')
+            ram_banks[bank_id] = (int.from_bytes(data[7:11], self.rom.endianess), int.from_bytes(data[11:15], self.rom.endianess))
+          else:
+            print([hex(b) for b in data])
+            ram_banks[bank_id] = (int.from_bytes(data[3:7], self.rom.endianess), int.from_bytes(data[7:10], self.rom.endianess))
+
+      print(ram_banks)
+      segments = []
+      for (cmd, data, pos) in self.rom.read_cmds_from_level_block(level, filter=[0x1F]):
+        segment = int.from_bytes(data[4:8], self.rom.endianess)
+        segments.append(segment)
+      
+      print(f'{level.name}\n{[hex(segment) for segment in segments]}')
 
   def read_data(self, address_start, address_end):
     self.rom.file.seek(address_start)

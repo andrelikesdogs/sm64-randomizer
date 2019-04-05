@@ -13,7 +13,7 @@ from RandomModules.Music import MusicRandomizer
 from RandomModules.CastlePaintings import CastlePaintingsRandomizer
 from RandomModules.Mario import MarioRandomizer
 
-from Constants import ALL_LEVELS, MISSION_LEVELS
+from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE
 
 print(f'  Super Mario 64 Randomizer  (Version: {__version__})\n')
 
@@ -49,7 +49,11 @@ with ROM(rom_path, out_path) as rom:
 
   print(f'using seed {used_seed}')
 
-  debugger = Debug(rom)
+  #debugger = Debug(rom)
+  #debugger.list_segment_areas()
+  
+  #print([hex(b) for b in debugger.read_data(0x3D00B8, 0x3D0DD0)[:200]])
+  #debugger.geo_layout_reader(0x3D00B8, 0x3D00B8 + 0x472) #0x3D0DD0)
 
   music_random = MusicRandomizer(rom)
   music_random.shuffle_music(ALL_LEVELS)
