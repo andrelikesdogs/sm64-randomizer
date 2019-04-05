@@ -15,7 +15,7 @@ Output will be a file with the same name, ending in `.out.z64`. Run this in your
 (* Requires Extended ROM)
 
 - Randomize Level Music
-- Randomize Paintings
+- Randomize Paintings (Entries and Art*)
 - Randomize Marios Color*
 - Use custom seed (pass `--seed <string>`)
 - ...many more to come
