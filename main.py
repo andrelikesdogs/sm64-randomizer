@@ -5,6 +5,7 @@ if __name__ != '__main__':
   print("Dont import this")
   sys.exit(2)
 
+import os
 import argparse
 import time
 from pathlib import Path
@@ -59,15 +60,6 @@ out_path = args.out or Path(rom_path.name[0:-4] + ".out.z64")
 if not rom_path.exists():
   raise Exception("invalid file, does not exist")
 
-with ROM(rom_path, out_path) as rom:
-  try:
-    rom.verify_header()
-    pretty_print_table("Your Settings", {argument_labels[label]: value for (label, value) in vars(args).items()})
-    rom.print_info()
-  except Exception as err:
-    print(err)
-    print("invalid rom, does not match known headers. make sure you use the z64 format")
-    sys.exit(2)
 
 
   #debugger = Debug(rom)
@@ -76,11 +68,26 @@ with ROM(rom_path, out_path) as rom:
   #print([hex(b) for b in debugger.read_data(0x3D00B8, 0x3D0DD0)[:200]])
   #debugger.geo_layout_reader(0x3D00B8, 0x3D00B8 + 0x472) #0x3D0DD0)
 
-  music_random = MusicRandomizer(rom)
-  music_random.shuffle_music(ALL_LEVELS)
+try:
+  with ROM(rom_path, out_path) as rom:
+    try:
+      rom.verify_header()
+      pretty_print_table("Your Settings", {argument_labels[label]: value for (label, value) in vars(args).items()})
+      rom.print_info()
+    except Exception as err:
+      print(err)
+      print("invalid rom, does not match known headers. make sure you use the z64 format")
+      sys.exit(2)
+    music_random = MusicRandomizer(rom)
+    music_random.shuffle_music(ALL_LEVELS)
 
-  mario_random = MarioRandomizer(rom)
-  mario_random.randomize_color()
+    mario_random = MarioRandomizer(rom)
+    mario_random.randomize_color()
 
-  castle_warp_random = CastlePaintingsRandomizer(rom)
-  castle_warp_random.shuffle_paintings(args.painting_shuffle)
+    castle_warp_random = CastlePaintingsRandomizer(rom)
+    castle_warp_random.shuffle_paintings(args.painting_shuffle)
+  
+  print(f'Completed! Your randomized ROM File can be found as "{os.path.relpath(out_path)}"')
+except Exception as err:
+  print(f'Unfortunately, the randomizer encountered an error, seen below:')
+  print(err)
