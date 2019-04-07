@@ -2,6 +2,7 @@ from pathlib import Path
 import shutil
 import os
 
+from randoutils import pretty_print_table
 from Level import Level
 from Constants import LEVEL_SCRIPT_FUNCS
 
@@ -69,17 +70,13 @@ class ROM:
     #return header in KNOWN_HEADERS
 
   def print_info(self):
-    output_vars = [
-      ('Loaded ROM', self.file.name),
-      ('Output ROM', self.target.name),
-      ('ROM Endianness', self.endianess.upper()),
-      ('ROM Region', self.region),
-      ('ROM Type', self.rom_type)
-    ]
-
-    for (label, value) in output_vars:
-      print(f'{(label + ":").ljust(20)}{value}')
-    print()
+    pretty_print_table("ROM Properties", {
+      'Loaded ROM': self.file.name,
+      'Output ROM': self.target.name,
+      'ROM Endianness': self.endianess.upper(),
+      'ROM Region': self.region,
+      'ROM Type': self.rom_type
+    })
 
   def read_cmds_from_level_block(self, level: Level, filter=[]):
     (start_position, end_position) = level.address
@@ -110,6 +107,9 @@ class ROM:
       if cursor > end_position:
         #print("Ending Level Sequence (end of bytes)")
         break
+
+  def read_geo_from_block(self, start, end):
+    self.file.seek(start, 0)
 
 
 '''

@@ -31,3 +31,7 @@ ehthumbs_vista.db
 .LSOverride
 Icon
 ._*
+
+# Project Crap
+build/
+dist/

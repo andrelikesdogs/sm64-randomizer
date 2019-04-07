@@ -1,5 +1,5 @@
 from Rom import ROM
-from random import randint
+from random import randint, choice
 
 MARIO_GEO_ADDRESS_START = 0x127C90
 MARIO_GEO_ADDRESS_END = 0x122E2C
@@ -14,6 +14,17 @@ MEM_COLOR_ADDRESSES = {
   'SHOES': 0x823BAC,
   'SKIN': 0x823BC4,
   'HAIR': 0x823BDC
+}
+
+CLOTH_COLORS = [(255, 255, 255), (234, 49, 49), (66, 137, 244), (131, 244, 66), (145, 40, 141), (232, 221, 20)]
+
+SENSIBLE_COLORS = {
+  'OVERALLS': CLOTH_COLORS,
+  'HAT_AND_SHIRT': CLOTH_COLORS,
+  'GLOVES': CLOTH_COLORS,
+  'SHOES': [(119, 95, 6), (0, 0, 0), (239, 239, 239), (255, 255, 255)], # black, brown, gray and white
+  'SKIN': [(45, 34, 30), (60, 46, 40), (75, 57, 50), (90, 69, 60), (105, 80, 70), (120, 92, 80), (120, 92, 80), (135, 103, 90), (150, 114, 100), (165, 126, 110), (180, 138, 120), (195, 149, 130), (210, 161, 140), (225, 172, 150), (240, 184, 160), (255, 195, 170), (255, 206, 108), (255, 220, 177)],
+  'HAIR': [(9, 6, 9), (44, 34, 43), (58, 48, 38), (78, 67, 63), (80, 68, 69), (106, 78, 86), (85, 72, 56), (167, 133, 106), (184, 151, 120), (220, 208, 186), (222, 168, 153), (151, 121, 97), (233, 206, 168), (228, 220, 168), (165, 137, 70), (145, 85, 61), (83, 61, 53), (113, 99, 90), (182, 166, 158), (214, 196, 194), (255, 24, 225), (202, 191, 177), (141, 74, 67), (181, 82, 57)],
 }
 
 '''
@@ -41,14 +52,17 @@ class MarioRandomizer:
   def __init__(self, rom : ROM):
     self.rom = rom
 
-  def randomize_color(self):
+  def randomize_color(self, enable_dumb_colors=False):
     print("Randomizing Mario\'s Colors")
     if self.rom.rom_type != 'EXTENDED':
       print('Can not modify Mario\'s color on a non-extended ROM. Please load an extended ROM')
       return
     
     for (part, mem_address) in MEM_COLOR_ADDRESSES.items():
-      color = (randint(0, 255), randint(0, 255), randint(0, 255), 255)
+      if enable_dumb_colors:
+        color = (randint(0, 255), randint(0, 255), randint(0, 255), 255)
+      else:
+        color = choice(SENSIBLE_COLORS[part])
       #print(f'{part} is now {color}')
 
       self.rom.target.seek(mem_address, 0)

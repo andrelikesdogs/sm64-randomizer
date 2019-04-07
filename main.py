@@ -14,6 +14,7 @@ from __version__ import __version__
 
 from Rom import ROM
 from Debug import Debug
+from randoutils import pretty_print_table
 
 from RandomModules.Music import MusicRandomizer
 from RandomModules.CastlePaintings import CastlePaintingsRandomizer
@@ -30,19 +31,27 @@ if len(sys.argv) <= 1:
   sys.exit(0)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("rom")
-parser.add_argument("--out", help="target of randomized rom")
-parser.add_argument("--seed", help="define a custom seed to have the same experience as someone else")
+parser.add_argument("rom", type=str)
+parser.add_argument("--out", type=str, help="target of randomized rom")
+parser.add_argument("--seed", type=int, default=round(time.time() * 256 * 1000), help="define a custom seed to have the same experience as someone else")
+parser.add_argument("--level-shuffle", type=bool, default=True, help="enables the shuffling of levels")
+parser.add_argument("--painting-shuffle", type=str, default="match", choices=["match", "random", "off"], help="change the behaviour of painting shuffle (\"match\" - matches randomized levels, i.e. paintings = level, \"random\" - independently randomize paintings, \"off\" - leave paintings untouched)")
+parser.add_argument("--mario-color-shuffle", type=bool, default=True, help="enables randomized mario colors")
+parser.add_argument
 args = parser.parse_args()
+
+argument_labels = {
+  "rom": "Input ROM",
+  "out": "Output ROM",
+  "seed": "RNG Seed",
+  "level_shuffle": "Enable Level Randomizer",
+  "painting_shuffle": "Enable Painting Randomizer",
+  "mario_color_shuffle": "Enable Random Color for Mario"
+}
 
 used_seed = None
 
-if args.seed:
-  used_seed = args.seed
-  seed(used_seed)
-else:
-  used_seed = round(time.time() * 256 * 1000)
-  seed(used_seed)
+seed(args.seed)
 
 rom_path = Path(args.rom)
 out_path = args.out or Path(rom_path.name[0:-4] + ".out.z64")
@@ -53,13 +62,13 @@ if not rom_path.exists():
 with ROM(rom_path, out_path) as rom:
   try:
     rom.verify_header()
+    pretty_print_table("Your Settings", {argument_labels[label]: value for (label, value) in vars(args).items()})
     rom.print_info()
   except Exception as err:
     print(err)
     print("invalid rom, does not match known headers. make sure you use the z64 format")
     sys.exit(2)
 
-  print(f'using seed {used_seed}')
 
   #debugger = Debug(rom)
   #debugger.list_segment_areas()
@@ -74,4 +83,4 @@ with ROM(rom_path, out_path) as rom:
   mario_random.randomize_color()
 
   castle_warp_random = CastlePaintingsRandomizer(rom)
-  castle_warp_random.shuffle_paintings()
+  castle_warp_random.shuffle_paintings(args.painting_shuffle)

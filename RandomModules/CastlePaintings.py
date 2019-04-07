@@ -26,7 +26,7 @@ class CastlePaintingsRandomizer:
   def find_painting_warps(self):
     return self.rom.read_cmds_from_level_block(LVL_CASTLE_INSIDE, [0x27])
 
-  def shuffle_paintings(self):
+  def shuffle_paintings(self, mode):
     print("Randomizing Castle Level Entries")
 
     painting_level_mapping = {}
@@ -37,7 +37,7 @@ class CastlePaintingsRandomizer:
     painting_entries = []
 
     art_bytes = {}
-    if self.rom.rom_type == "EXTENDED":
+    if mode != "off" and self.rom.rom_type == "EXTENDED":
       # save all paintings
       for level in MISSION_LEVELS:
         if level in PAINTING_OFFSETS:
@@ -148,11 +148,25 @@ class CastlePaintingsRandomizer:
         self.rom.target.write(bytes([target_level_area, lose_id])) # might screw up
 
       # update painting
+      if mode == "match":
+        if orig_level in art_bytes and target_level in art_bytes:
+          (p1, p2) = art_bytes[orig_level]["address"]
+          (b1, b2) = art_bytes[target_level]["bytes"]
+          self.rom.target.seek(PAINTINGS_EXT_ROM_OFFSET + p1, 0)
+          self.rom.target.write(b1)
+          self.rom.target.seek(PAINTINGS_EXT_ROM_OFFSET + p2, 0)
+          self.rom.target.write(b2)
 
-      if orig_level in art_bytes and target_level in art_bytes:
-        (p1, p2) = art_bytes[orig_level]["address"]
-        (b1, b2) = art_bytes[target_level]["bytes"]
-        self.rom.target.seek(PAINTINGS_EXT_ROM_OFFSET + p1, 0)
-        self.rom.target.write(b1)
-        self.rom.target.seek(PAINTINGS_EXT_ROM_OFFSET + p2, 0)
-        self.rom.target.write(b2)
+    if mode == "random":
+      shuffle(course_exits)
+      for idx, (target_level_area, orig_level, painting_warp_pos, warp_ids) in enumerate(painting_entries):
+        course_exit = course_exits[idx]
+        (target_level, win_warp_mem_pos, lose_warp_mem_pos, rec_warp_mem_pos) = course_exit
+        
+        if orig_level in art_bytes and target_level in art_bytes:
+          (p1, p2) = art_bytes[orig_level]["address"]
+          (b1, b2) = art_bytes[target_level]["bytes"]
+          self.rom.target.seek(PAINTINGS_EXT_ROM_OFFSET + p1, 0)
+          self.rom.target.write(b1)
+          self.rom.target.seek(PAINTINGS_EXT_ROM_OFFSET + p2, 0)
+          self.rom.target.write(b2)
