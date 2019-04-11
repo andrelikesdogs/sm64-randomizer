@@ -8,6 +8,7 @@ if __name__ != '__main__':
 import os
 import argparse
 import time
+import traceback
 from pathlib import Path
 from random import seed
 
@@ -20,6 +21,8 @@ from randoutils import pretty_print_table
 from RandomModules.Music import MusicRandomizer
 from RandomModules.CastlePaintings import CastlePaintingsRandomizer
 from RandomModules.Mario import MarioRandomizer
+from RandomModules.Levels import LevelRandomizer
+from RandomModules.Colors import ColorRandomizer
 
 from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE
 
@@ -78,16 +81,24 @@ try:
       print(err)
       print("invalid rom, does not match known headers. make sure you use the z64 format")
       sys.exit(2)
-    music_random = MusicRandomizer(rom)
-    music_random.shuffle_music(ALL_LEVELS)
+    #music_random = MusicRandomizer(rom)
+    #music_random.shuffle_music(ALL_LEVELS)
 
-    mario_random = MarioRandomizer(rom)
-    mario_random.randomize_color()
+    #mario_random = MarioRandomizer(rom)
+    #mario_random.randomize_color()
 
-    castle_warp_random = CastlePaintingsRandomizer(rom)
-    castle_warp_random.shuffle_paintings(args.painting_shuffle)
+    #castle_warp_random = CastlePaintingsRandomizer(rom)
+    #castle_warp_random.shuffle_paintings(args.painting_shuffle)
+
+    level_randomizer = LevelRandomizer(rom)
+    level_randomizer.shuffle_enemies()
+
+    #color_randomizer = ColorRandomizer(rom)
+    #color_randomizer.randomize_coin_colors()
   
   print(f'Completed! Your randomized ROM File can be found as "{os.path.relpath(out_path)}"')
 except Exception as err:
   print(f'Unfortunately, the randomizer encountered an error, seen below:')
   print(err)
+  print("Stacktrace:".center(40, '-'))
+  traceback.print_exc()

@@ -3,8 +3,7 @@ import shutil
 import os
 
 from randoutils import pretty_print_table
-from Level import Level
-from Constants import LEVEL_SCRIPT_FUNCS
+from Parsers.Level import Level
 
 class ROM:
   def __init__(self, path, out_path):
@@ -15,6 +14,8 @@ class ROM:
     self.endianess = None
     self.file_stats = None
     self.rom_type = None
+
+    self.segments = {}
 
   def __enter__(self):
     self.file_stats = os.stat(self.path)
@@ -67,6 +68,7 @@ class ROM:
     else:
       print("Warning: Could not determine ROM-Type from size")
 
+    self.set_initial_segments()
     #return header in KNOWN_HEADERS
 
   def print_info(self):
@@ -77,6 +79,10 @@ class ROM:
       'ROM Region': self.region,
       'ROM Type': self.rom_type
     })
+
+  def set_initial_segments(self):
+    self.set_segment(0x15, self.read_integer(0x2A622C, 4), self.read_integer(0x2A6230, 4))
+    pass
 
   def read_cmds_from_level_block(self, level: Level, filter=[]):
     (start_position, end_position) = level.address
@@ -108,44 +114,81 @@ class ROM:
         #print("Ending Level Sequence (end of bytes)")
         break
 
-  def read_geo_from_block(self, start, end):
-    self.file.seek(start, 0)
+  def set_segment(self, segment_num, segment_start, segment_end):
+    self.segments[segment_num] = (segment_start, segment_end)
+  
+  def read_segment_addr(self, addr):
+    segment_address = addr & 0x00FFFFFF
+    segment_id = (addr & 0xFF000000) >> 24
 
+    #print("Segment requested:", hex(segment_id), hex(segment_address))
 
-'''
-  def verify_levels(self):
-    for (start_position, end_position) in LEVEL_POSITIONS:
-      print(self.file.seek(start_position))
+    if segment_id == 0x0:
+      return None
 
-      # read cmd code
-      cmd = ''
-      while cmd != 0x02:
-        cmd = int.from_bytes(self.file.read(1), 'big')
-        cmd_length = int.from_bytes(self.file.read(1), 'big')
+    if segment_id not in self.segments:
+      return None
 
-        # move pos by cmd length (minus 2 bytes for the cmd and length)
-        self.file.seek(cmd_length - 2, 1)'''
+    (segment_start, _) = self.segments[segment_id]
+    return segment_start + segment_address
 
-'''
-  def alter_level_music(self, level_index, music_id):
-    (start_position, end_position) = LEVEL_POSITIONS[level_index]
-    print(self.file.seek(start_position))
+  def read_segment_id(self, addr):
+    return ((addr & 0xFF000000) >> 24)
+  
+  def read_segment_end(self, addr):
+    segment_id = (addr & 0xFF000000) >> 24
 
-    # read cmd code
-    cmd = ''
-    while cmd != 0x02:
-      cmd = int.from_bytes(self.file.read(1), 'little')
-      cmd_length = int.from_bytes(self.file.read(1), 'little')
+    #print("Segment requested:", hex(segment_id), hex(segment_address))
 
-      cmd_name = LEVEL_CMD_TITLES[cmd] or 'UNKNOWN'
+    if segment_id == 0x0:
+      return None
 
-      if cmd == 0x36:
-        # move cursor to sequence id pos
-        sequence_id_pos = self.file.seek(3, 1)
-        print(cmd, cmd_length, int.from_bytes(self.file.read(1), 'little'))
-        self.target.seek(sequence_id_pos)
-        self.target.write(music_id.to_bytes(1, 'little'))
-        break
+    if segment_id not in self.segments:
+      return None
 
-      # move pos by cmd length (minus 2 bytes for the cmd and length)
-      self.file.seek(cmd_length - 2, 1)'''
+    (_, segment_end) = self.segments[segment_id]
+
+    return segment_end
+
+  def get_segment(self, seg_id):
+    if seg_id not in self.segments:
+      return None
+
+    return self.segments[seg_id]
+
+  ''' Read Methods '''
+  def read_set_cursor(self, position):
+    self.file.seek(position, 0)
+
+  def read_byte(self, position = None):
+    if position:
+      self.file.seek(position, 0)
+    return self.file.read(1)
+  
+  def read_bytes(self, position = None, length : int = 1):
+    if position:
+      self.file.seek(position, 0)
+    return self.file.read(length)
+
+  def read_integer(self, position = None, length : int = 1, signed = False):
+    if position:
+      self.file.seek(position, 0)
+
+    if length == 1:
+      return self.file.read(1)[0]
+    else:
+      data = self.file.read(length)
+      return int.from_bytes(data, self.endianess, signed=signed)
+
+  ''' Write Methods '''
+  def write_byte(self, position, data : bytes):
+    self.target.seek(position, 0)
+    self.target.write(data)
+
+  def write_integer(self, position, num : int, length : int = 1, signed = False):
+    self.target.seek(position, 0)
+    self.target.write(num.to_bytes(length, self.endianess))
+
+  def write_word(self, position, string : str):
+    self.target.seek(position, 0)
+    self.target.write(string)

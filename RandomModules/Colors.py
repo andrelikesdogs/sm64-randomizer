@@ -1,0 +1,26 @@
+from random import randint
+
+from Rom import ROM
+
+COIN_COLOR_MEM_POS = {
+  'YELLOW': [(0x0AB7AD8, 0x0AB7AD9, 0x0AB7ADA), (0x0AB7AE8, 0x0AB7AE9, 0x0AB7AEA), (0x0AB7AF8, 0x0AB7AF9, 0x0AB7AFA), (0x0AB7B08, 0x0AB7B09, 0x0AB7B0A)],
+  'BLUE': [(0x0AB7B18, 0x0AB7B19, 0x0AB7B1A), (0x0AB7B28, 0x0AB7B29, 0x0AB7B2A), (0x0AB7B38, 0x0AB7B39, 0x0AB7B3A), (0x0AB7B48, 0x0AB7B49, 0x0AB7B4A)],
+  'RED': [(0x0AB7B58, 0x0AB7B59, 0x0AB7B5A), (0x0AB7B68, 0x0AB7B69, 0x0AB7B6A), (0x0AB7B78, 0x0AB7B79, 0x0AB7B7A), (0x0AB7B88, 0x0AB7B89, 0x0AB7B8A)]
+}
+
+class ColorRandomizer:
+  def __init__(self, rom : ROM):
+    self.rom = rom
+
+  def randomize_coin_colors(self):
+    print("Randomizing Coin Colors")
+    for coin_type, mem_addresses in COIN_COLOR_MEM_POS.items():
+      (r, g, b) = randint(0, 255), randint(0, 255), randint(0, 255)
+      #print(f'Coin Type: {coin_type} color: rgb({r}, {g}, {b})')
+      for mem_address in mem_addresses:
+        self.rom.target.seek(mem_address[0])
+        self.rom.target.write(bytes([r]))
+        self.rom.target.seek(mem_address[1])
+        self.rom.target.write(bytes([g]))
+        self.rom.target.seek(mem_address[2])
+        self.rom.target.write(bytes([b]))

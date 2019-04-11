@@ -1,7 +1,7 @@
 from random import shuffle
 from typing import List
 
-from Level import Level
+from Parsers.Level import Level
 from Constants import SONG_NAMES
 from Rom import ROM
 
