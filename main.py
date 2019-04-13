@@ -38,9 +38,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument("rom", type=str)
 parser.add_argument("--out", type=str, help="target of randomized rom")
 parser.add_argument("--seed", type=int, default=round(time.time() * 256 * 1000), help="define a custom seed to have the same experience as someone else")
-parser.add_argument("--level-shuffle", type=bool, default=True, help="enables the shuffling of levels")
-parser.add_argument("--painting-shuffle", type=str, default="match", choices=["match", "random", "off"], help="change the behaviour of painting shuffle (\"match\" - matches randomized levels, i.e. paintings = level, \"random\" - independently randomize paintings, \"off\" - leave paintings untouched)")
-parser.add_argument("--mario-color-shuffle", type=bool, default=True, help="enables randomized mario colors")
+parser.add_argument("--shuffle-levels", help="enables the shuffling of levels", action="store_true")
+parser.add_argument("--shuffle-paintings", default="match", choices=["match", "random", "off"], help="change the behaviour of painting shuffle (\"match\" - matches randomized levels, i.e. paintings = level, \"random\" - independently randomize paintings, \"off\" - leave paintings untouched)")
+parser.add_argument("--shuffle-mario-color", help="enables randomized mario colors", action="store_true")
+parser.add_argument("--shuffle-music", help="randomizes every song in every level", action="store_true")
+parser.add_argument("--shuffle-objects", help="shuffles objects in levels", action="store_true")
+parser.add_argument("--shuffle-colors", help="shuffles colors for various things", action="store_true")
 parser.add_argument
 args = parser.parse_args()
 
@@ -48,9 +51,12 @@ argument_labels = {
   "rom": "Input ROM",
   "out": "Output ROM",
   "seed": "RNG Seed",
-  "level_shuffle": "Enable Level Randomizer",
-  "painting_shuffle": "Enable Painting Randomizer",
-  "mario_color_shuffle": "Enable Random Color for Mario"
+  "shuffle_levels": "Enable Level Randomizer",
+  "shuffle_paintings": "Enable Painting Randomizer",
+  "shuffle_mario_color": "Enable Random Color for Mario",
+  "shuffle_music": "Enables random music in all levels",
+  "shuffle_objects": "Randomize object positions in levels",
+  "shuffle_colors": "Randomizes colors of various things"
 }
 
 used_seed = None
@@ -81,20 +87,28 @@ try:
       print(err)
       print("invalid rom, does not match known headers. make sure you use the z64 format")
       sys.exit(2)
-    #music_random = MusicRandomizer(rom)
-    #music_random.shuffle_music(ALL_LEVELS)
 
-    #mario_random = MarioRandomizer(rom)
-    #mario_random.randomize_color()
+    music_random = MusicRandomizer(rom)
+    if args.shuffle_music:
+      music_random.shuffle_music(ALL_LEVELS)
 
-    #castle_warp_random = CastlePaintingsRandomizer(rom)
-    #castle_warp_random.shuffle_paintings(args.painting_shuffle)
+    mario_random = MarioRandomizer(rom)
+    if args.shuffle_mario_color:
+      mario_random.randomize_color()
+
+
+    castle_warp_random = CastlePaintingsRandomizer(rom)
+    if args.shuffle_levels:
+      castle_warp_random.shuffle_paintings(args.shuffle_paintings)
 
     level_randomizer = LevelRandomizer(rom)
-    level_randomizer.shuffle_enemies()
+    if args.shuffle_objects:
+      level_randomizer.shuffle_enemies()
 
-    #color_randomizer = ColorRandomizer(rom)
-    #color_randomizer.randomize_coin_colors()
+    color_randomizer = ColorRandomizer(rom)
+
+    if args.shuffle_colors:
+      color_randomizer.randomize_coin_colors()
   
   print(f'Completed! Your randomized ROM File can be found as "{os.path.relpath(out_path)}"')
 except Exception as err:

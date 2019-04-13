@@ -18,6 +18,6 @@ class ColorRandomizer:
       (r, g, b) = randint(0, 255), randint(0, 255), randint(0, 255)
       #print(f'Coin Type: {coin_type} color: rgb({r}, {g}, {b})')
       for mem_address in mem_addresses:
-        self.rom.write_byte(mem_address[0], r)
-        self.rom.write_byte(mem_address[1], g)
-        self.rom.write_byte(mem_address[2], b)
+        self.rom.write_integer(mem_address[0], r, 2)
+        self.rom.write_integer(mem_address[1], g, 2)
+        self.rom.write_integer(mem_address[2], b, 2)

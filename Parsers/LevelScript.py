@@ -28,8 +28,11 @@ class LevelScriptParser:
     self.rom = rom
     self.address_start = start
     self.address_end = end or start + 0xFFFFFFFF # Todo: Actual segment length missing
-    self.structure = []
     self.objects = []
+    self.warps = []
+
+    self.commands = []
+    self.mario_spawn = None
     self.layer = layer
     self.level = level
     self.current_area = None
@@ -39,7 +42,7 @@ class LevelScriptParser:
     self.process(self.address_start, self.address_end)
 
   def process(self, start, end):
-    print(f'Decoding LevelScript: {hex(start)} to {hex(int(end))} (#{self.layer})')
+    #print(f'Decoding LevelScript: {hex(start)} to {hex(int(end))} (#{self.layer})')
     self.layer += 1
     self.checked_offsets.append(start)
     cmd_id = None
@@ -62,7 +65,7 @@ class LevelScriptParser:
         data = self.rom.read_bytes(cursor + 2, length)
         command = LevelCommand.from_id(cmd_id, length=length, data=data, position=cursor + 2)
         
-        self.structure.append((self.layer, command))
+        self.commands.append((self.layer, command))
         if command.identifier == 0x00 or command.identifier == 0x01:
           """ 0x00 LOAD_RAW_DATA_AND_JUMP_PLUS_CALL or 0x01 LOAD_RAW_DATA_AND_JUMP_PLUS_CALL """
           
@@ -177,19 +180,21 @@ class LevelScriptParser:
           segment_start = self.rom.read_segment_addr(segment_addr)
 
           if segment_start:
-            print(f'reading 0x2E from segment {hex(self.rom.read_segment_id(segment_addr))}: {hex(start)} to {hex(end)}')
+            #print(f'reading 0x2E from segment {hex(self.rom.read_segment_id(segment_addr))}: {hex(start)} to {hex(end)}')
             segment_end = self.rom.read_segment_end(segment_addr)
             self.process_special_objects_level(segment_start, segment_end)
         elif command.identifier == 0x24:
           """ 0x24 PLACE_OBJECT """
-          act_mask = self.rom.read_integer(cursor)
-          model_id = self.rom.read_integer()
-          position = (self.rom.read_integer(None, 2), self.rom.read_integer(None, 2), self.rom.read_integer(None, 2))
-          rotation = (self.rom.read_integer(None, 2), self.rom.read_integer(None, 2), self.rom.read_integer(None, 2))
+          #act_mask = self.rom.read_integer()
+          model_id = self.rom.read_integer(cursor + 3)
+          position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
+          rotation = (self.rom.read_integer(None, 2), True, self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
           (b1, b2, b3, b4) = tuple([self.rom.read_integer() for n in range(4)])
           b_script = self.rom.read_integer(None, 4)
 
-          self.objects.append(Object3D("PLACE_OBJ", model_id, position, rotation, b_script, b1, b2, b3, b4, cursor + 2))
+          entry = Object3D("PLACE_OBJ", model_id, position, rotation, b_script, b1, b2, b3, b4, cursor + 2)
+          entry.set_addr("position", cursor + 4, cursor + 10)
+          self.objects.append(entry)
         elif command.identifier == 0x39:
           """ 0x39 PLACE_MACRO_OBJECTS """
           #print(self.level.name)
@@ -215,6 +220,19 @@ class LevelScriptParser:
           
           #print("Loading Area", hex(area_id))
           self.current_area = area_id
+        elif command.identifier == 0x26:
+          """ 0x26 SETUP_WARPS """
+
+        elif command.identifier == 0x2B:
+          """ 0x2B SET_MARIOS_DEFAULT_POSITION """
+          spawn_area_id = self.rom.read_integer(cursor + 2)
+          rotation_y = self.rom.read_integer(cursor + 4, 2, True)
+          position = (self.rom.read_integer(cursor + 6, 2, True), self.rom.read_integer(cursor + 8, 2, True), self.rom.read_integer(cursor + 10, 2, True))
+
+          entry = Object3D("MARIO_SPAWN", None, position, (None, rotation_y, None), mem_address = cursor + 2)
+          entry.set_addr("position", cursor + 6, cursor + 12)
+          self.objects.append(entry)
+          #print(self.level.name, spawn_area_id, rotation_y, position)
         elif command.identifier == 0x20:
           """ 0x20 END_AREA """
           #print("Ending Area", hex(self.current_area))
@@ -265,7 +283,10 @@ class LevelScriptParser:
       else:
         preset = preset_table[preset_id]
         position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
-        objects_found.append(Object3D("MACRO_OBJ", preset.model_id, position, (None, rot_y, None), preset.behaviour_addr))
+
+        entry = Object3D("MACRO_OBJ", preset.model_id, position, (None, rot_y, None), preset.behaviour_addr, mem_address = cursor)
+        entry.set_addr("position", cursor + 2, cursor + 8)
+        objects_found.append(entry)
       cursor += 10
 
     self.objects = self.objects + objects_found
@@ -329,22 +350,27 @@ class LevelScriptParser:
           length = 8
           if preset:
             length = preset.length
+            entry = None
             if length == 8:
               model_id = preset.model_id
               position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
-              objects_found.append(Object3D("SPECIAL_MACRO_OBJ", model_id, position, None, preset.behaviour_addr))
-            if length == 10:
+              entry = Object3D("SPECIAL_MACRO_OBJ", model_id, position, None, preset.behaviour_addr, mem_address = cursor)
+            elif length == 10:
               model_id = preset.model_id
               position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
               rotation = (None, self.rom.read_integer(None, 2, True), None)
-              objects_found.append(Object3D("SPECIAL_MACRO_OBJ", model_id, position, rotation, preset.behaviour_addr))
-            if length == 12:
+              entry = Object3D("SPECIAL_MACRO_OBJ", model_id, position, rotation, preset.behaviour_addr, mem_address = cursor)
+            elif length == 12:
               model_id = preset.model_id
               position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
               rotation = (None, self.rom.read_integer(None, 2, True), None)
               (b1, b2) = (self.rom.read_integer(), self.rom.read_integer())
-              objects_found.append(Object3D("SPECIAL_MACRO_OBJ", model_id, position, rotation, preset.behaviour_addr, b1, b2))
+              entry = Object3D("SPECIAL_MACRO_OBJ", model_id, position, rotation, preset.behaviour_addr, b1, b2, mem_address = cursor)
+            else:
+              raise Exception("Invalid Preset Length")
 
+            entry.set_addr("position", cursor + 2, cursor + 8)
+            objects_found.append(entry)
             count += 1
 
           #print(format_binary(self.rom.read_bytes(cursor, length)))
@@ -368,13 +394,13 @@ class LevelScriptParser:
   def dump(self):
     output = ""
 
-    for (indent, command) in self.structure:
+    for (indent, command) in self.commands:
       output += "  " * (indent-1) + str(command) + "\n"
 
     return output
 
   def find_all(self, id):
-    for (indent, item) in self.structure:
+    for (indent, item) in self.commands:
       if type(item) is LevelScriptParser:
         return item.find_all(id)
       else:

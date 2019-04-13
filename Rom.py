@@ -187,7 +187,7 @@ class ROM:
 
   def write_integer(self, position, num : int, length : int = 1, signed = False):
     self.target.seek(position, 0)
-    self.target.write(num.to_bytes(length, self.endianess))
+    self.target.write(num.to_bytes(length, self.endianess, signed=signed ))
 
   def write_word(self, position, string : str):
     self.target.seek(position, 0)
