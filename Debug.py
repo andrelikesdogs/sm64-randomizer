@@ -4,7 +4,7 @@ from GeoLayout import GeoLayoutParser
 from Constants import ALL_LEVELS
 
 class Debug:
-  def __init__(self, rom : ROM):
+  def __init__(self, rom : 'ROM'):
     self.rom = rom
 
   def list_course_ids(self):

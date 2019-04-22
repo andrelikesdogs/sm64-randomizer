@@ -23,7 +23,7 @@ LVL_WDW=Level(0x419F90, 0x41A760, 0x0B, "Wet-Dry World") # 11
 LVL_TTM=Level(0x4EB1F0, 0x4EC000, 0x24, "Tall, Tall Mountain") # 12
 LVL_THI=Level(0x42C6E0, 0x42CF20, 0x0D, "Tiny-Huge Island") # 13
 LVL_TTC=Level(0x437400, 0x437870, 0x0E, "Tick Tock Clock") # 14
-LVL_RR=Level(0x44A140, 0x44ABC0, 0x1F, "Rainbow Ride") # 15
+LVL_RR=Level(0x44A140, 0x44ABC0, 0x0F, "Rainbow Ride") # 15
 
 LVL_VANISH_CAP=Level(0x461220, 0x4614D0, 0x12, "Vanish Cap") # 22
 LVL_METAL_CAP=Level(0x4BE9E0, 0x4BEC30, 0x1C, "Metal Cap") # 20
@@ -35,7 +35,7 @@ LVL_BOWSER_3= Level(0x477D00, 0x4784A0, 0x15, "Bowser in the Sky") # Bowser 3 "B
 
 LVL_SECRET_AQUARIUM=Level(0x46C1A0, 0x46C3A0, 0x14, "Secret Aquarium") # 24
 LVL_SECRET_PEACH_SLIDE=Level(0x4B7F10, 0x4B80D0, 0x1B, "Secret Slide") # 19
-LVL_SECRET_RAINBOW=Level(0x4CD930, 0x4CDBD0, None, "Over the Rainbow") # 23
+LVL_SECRET_RAINBOW=Level(0x4CD930, 0x4CDBD0, 0x1F, "Rainbow Bonus") # 23
 
 """ All courses, mostly in order """
 ALL_LEVELS = [

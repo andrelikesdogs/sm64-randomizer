@@ -51,6 +51,7 @@ optional arguments:
                         enables randomized mario colors
 ```
 
-## Sources
-- http://hack64.net/
+## Special Thanks
+- Wonderful SM64 Hacking Resources, clean, easy to use and great explanations: http://hack64.net/
+- Simpleflips Discord for help with SM64 weirdness (especially Felegg)
 - https://www.smwcentral.net/

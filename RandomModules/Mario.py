@@ -1,4 +1,3 @@
-from Rom import ROM
 from random import randint, choice
 
 MARIO_GEO_ADDRESS_START = 0x127C90
@@ -49,7 +48,7 @@ MEM_ADDRESSES = {
 '''
 
 class MarioRandomizer:
-  def __init__(self, rom : ROM):
+  def __init__(self, rom : 'ROM'):
     self.rom = rom
 
   def randomize_color(self, enable_dumb_colors=False):

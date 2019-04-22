@@ -37,7 +37,7 @@ CMD_LENGTH = {
 }
 
 class GeoLayoutParser:
-  def __init__(self, rom: ROM, address_start : int, address_end : int):
+  def __init__(self, rom : 'ROM', address_start : int, address_end : int):
     self.rom = rom
 
     self.address_start = address_start

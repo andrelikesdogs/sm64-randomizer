@@ -3,10 +3,9 @@ from typing import List
 
 from Parsers.Level import Level
 from Constants import SONG_NAMES
-from Rom import ROM
 
 class MusicRandomizer:
-  def __init__(self, rom : ROM):
+  def __init__(self, rom : 'ROM'):
     self.rom = rom
 
   def find_music_seqs(self, levels: List[Level]):

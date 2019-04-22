@@ -3,14 +3,13 @@ from random import shuffle
       
 from GeoLayout import GeoLayoutParser
 
-from Rom import ROM
 from Constants import ALL_LEVELS, LVL_CASTLE_INSIDE, LVL_BOB, LVL_CCM, LEVEL_ID_MAPPING, MISSION_LEVELS, SPECIAL_WARP_IDS, WARP_ID_LOSE, WARP_ID_WIN, WARP_ID_RECOVER, PAINTING_OFFSETS
 
 PAINTINGS_EXT_ROM_OFFSET = 0xE0BB07
 PAINTING_BYTE_SIZE = int(32*64*16 / 8) # 4096
 
 class CastlePaintingsRandomizer:
-  def __init__(self, rom : ROM):
+  def __init__(self, rom : 'ROM'):
     self.rom = rom
 
   def find_warps_for(self, level):
@@ -124,6 +123,7 @@ class CastlePaintingsRandomizer:
       #print(len(win_warp_mem_pos), len(lose_warp_mem_pos), len(rec_warp_mem_pos))
       # update painting
       for painting_mem_pos in painting_warp_pos:
+        print([hex(painting_mem_pos), hex(target_level.level_id)])
         self.rom.target.seek(painting_mem_pos + 1, 0)
         self.rom.target.seek(painting_mem_pos + 1, 0)
         self.rom.target.write(bytes([target_level.level_id]))

@@ -1,9 +1,8 @@
 from Constants import ALL_LEVELS, CAP_LEVELS, MISSION_LEVELS, BOWSER_STAGES, LVL_BOB, SPECIAL_LEVELS, LVL_MAIN_SCR, LVL_CASTLE_GROUNDS
-from Rom import ROM
 from randoutils import format_binary
 import sys
-from Object3D import Object3D
-from Parsers.LevelScript import LevelScriptParser
+from Entities.Object3D import Object3D
+#from Parsers.LevelScript import LevelScriptParser
 
 from random import shuffle
 
@@ -17,11 +16,11 @@ WHITELIST_SHUFFLING = [
   (None, 0x68), # Koopa (The Quick, Normal, etc)
   (0x130005B4, 0x10), # Rotating Platform WF
   (0x13002AA4, None), # Tree Behaviour
-  #(None, 0x65), # Scuttlebug
-  #(None, 0x19), # Tree (Snow)
-  #(None, 0x17), # Tree (In Courses)
+  (None, 0x65), # Scuttlebug
+  (None, 0x19), # Tree (Snow)
+  (None, 0x17), # Tree (In Courses)
   #(None, 0x18), # Tree (Courtyard)
-  #(None, 0x1B), # Tree (SSL)
+  (None, 0x1B), # Tree (SSL)
   (0x13001548, 0x59), # Heave-Ho
   (None, 0x78), # Heart
   (0x13004348, 0xDB), # Red Coin
@@ -72,22 +71,8 @@ WHITELIST_SHUFFLING = [
 BSCRIPT_START = 0x10209C
 
 class LevelRandomizer:
-  def __init__(self, rom : ROM):
+  def __init__(self, rom : 'ROM'):
     self.rom = rom
-
-    self.level_scripts = {}
-    for level in ALL_LEVELS:
-      with open(f"dumps/level_scripts/{level.name}.txt", "w+") as dump_target:
-        self.level_scripts[level] = LevelScriptParser.parse_for_level(self.rom, level)
-        #print(f'{level.name} has {len(self.level_scripts[level].objects)} objects')
-
-        special_objs = list(filter(lambda x: x.source == "SPECIAL_MACRO_OBJ", self.level_scripts[level].objects))
-        macro_objs = list(filter(lambda x: x.source == "MACRO_OBJ", self.level_scripts[level].objects))
-        normal_objs = list(filter(lambda x: x.source == "PLACE_OBJ", self.level_scripts[level].objects))
-        #print(f' - {len(special_objs)} Special 0x2E Objects')
-        #print(f' - {len(macro_objs)} Macro 0x39 Objects')
-        #print(f' - {len(normal_objs)} Normal 0x24 Objects')
-        dump_target.write(self.level_scripts[level].dump())
 
   @staticmethod
   def can_shuffle(obj : Object3D):
@@ -100,7 +85,7 @@ class LevelRandomizer:
       return False
 
   def shuffle_enemies(self):
-    for (level, parsed) in self.level_scripts.items():
+    for (level, parsed) in self.rom.levelscripts.items():
       if level in SPECIAL_LEVELS:
         continue
 
@@ -116,11 +101,8 @@ class LevelRandomizer:
 
       shuffle(positions)
       for idx, obj in enumerate(objects):
-        (pos_start, _) = obj.addr_for('position')
         position = positions[idx]
-
-        for pos_idx, comp in enumerate(position):
-          self.rom.write_integer(pos_start + pos_idx * 2, comp, 2, True)
+        #obj.set(self.rom, 'position', position)
     '''
     for level in self.level_scripts:
       positions = []

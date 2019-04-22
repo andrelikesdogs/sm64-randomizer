@@ -1,7 +1,5 @@
 from random import randint
 
-from Rom import ROM
-
 COIN_COLOR_MEM_POS = {
   'YELLOW': [(0x0AB7AD8, 0x0AB7AD9, 0x0AB7ADA), (0x0AB7AE8, 0x0AB7AE9, 0x0AB7AEA), (0x0AB7AF8, 0x0AB7AF9, 0x0AB7AFA), (0x0AB7B08, 0x0AB7B09, 0x0AB7B0A)],
   'BLUE': [(0x0AB7B18, 0x0AB7B19, 0x0AB7B1A), (0x0AB7B28, 0x0AB7B29, 0x0AB7B2A), (0x0AB7B38, 0x0AB7B39, 0x0AB7B3A), (0x0AB7B48, 0x0AB7B49, 0x0AB7B4A)],
@@ -9,7 +7,7 @@ COIN_COLOR_MEM_POS = {
 }
 
 class ColorRandomizer:
-  def __init__(self, rom : ROM):
+  def __init__(self, rom : 'ROM'):
     self.rom = rom
 
   def randomize_coin_colors(self):

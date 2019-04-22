@@ -23,6 +23,7 @@ from RandomModules.CastlePaintings import CastlePaintingsRandomizer
 from RandomModules.Mario import MarioRandomizer
 from RandomModules.Levels import LevelRandomizer
 from RandomModules.Colors import ColorRandomizer
+from RandomModules.Warps import WarpRandomizer
 
 from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE
 
@@ -31,7 +32,7 @@ print(f'  Super Mario 64 Randomizer  (Version: {__version__})\n')
 if len(sys.argv) <= 1:
   # assume we want to start the GUI
   print("starting gui...")
-  import gui
+  import Gui
   sys.exit(0)
 
 parser = argparse.ArgumentParser()
@@ -69,14 +70,6 @@ out_path = args.out or Path(rom_path.name[0:-4] + ".out.z64")
 if not rom_path.exists():
   raise Exception("invalid file, does not exist")
 
-
-
-  #debugger = Debug(rom)
-  #debugger.list_segment_areas()
-  
-  #print([hex(b) for b in debugger.read_data(0x3D00B8, 0x3D0DD0)[:200]])
-  #debugger.geo_layout_reader(0x3D00B8, 0x3D00B8 + 0x472) #0x3D0DD0)
-
 try:
   with ROM(rom_path, out_path) as rom:
     try:
@@ -96,19 +89,20 @@ try:
     if args.shuffle_mario_color:
       mario_random.randomize_color()
 
-
-    castle_warp_random = CastlePaintingsRandomizer(rom)
-    if args.shuffle_levels:
-      castle_warp_random.shuffle_paintings(args.shuffle_paintings)
-
+    warp_random = WarpRandomizer(rom)
+    warp_random.shuffle_level_entries()
+    #castle_warp_random = CastlePaintingsRandomizer(rom)
+    #castle_warp_random.shuffle_paintings(args.shuffle_paintings)
+    #if args.shuffle_levels:
+    
     level_randomizer = LevelRandomizer(rom)
     if args.shuffle_objects:
       level_randomizer.shuffle_enemies()
 
     color_randomizer = ColorRandomizer(rom)
 
-    if args.shuffle_colors:
-      color_randomizer.randomize_coin_colors()
+    #if args.shuffle_colors:
+    #  color_randomizer.randomize_coin_colors()
   
   print(f'Completed! Your randomized ROM File can be found as "{os.path.relpath(out_path)}"')
 except Exception as err:

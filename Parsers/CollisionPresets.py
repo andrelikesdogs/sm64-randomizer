@@ -1,5 +1,4 @@
 from typing import NamedTuple
-from Rom import ROM
 
 SPECIAL_CD_WITH_PARAMS = [0x04, 0x0E, 0x24, 0x25, 0x27, 0x2C, 0x2D]
 
@@ -14,7 +13,7 @@ class PresetEntry(NamedTuple):
 class CollisionPresetParser:
   instance = None
 
-  def __init__(self, rom : ROM):
+  def __init__(self, rom):
     self.rom = rom
     self.entries = {}
     self.special_entries = {}
@@ -25,7 +24,7 @@ class CollisionPresetParser:
     self.read_special_entries()
 
   @staticmethod
-  def get_instance(rom: ROM):
+  def get_instance(rom : 'ROM'):
     if CollisionPresetParser.instance is None:
       CollisionPresetParser.instance = CollisionPresetParser(rom)
     return CollisionPresetParser.instance

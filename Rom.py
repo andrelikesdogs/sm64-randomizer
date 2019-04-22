@@ -4,6 +4,8 @@ import os
 
 from randoutils import pretty_print_table
 from Parsers.Level import Level
+from Parsers.LevelScript import LevelScriptParser
+from Constants import ALL_LEVELS
 
 class ROM:
   def __init__(self, path, out_path):
@@ -16,6 +18,7 @@ class ROM:
     self.rom_type = None
 
     self.segments = {}
+    self.levelscripts = {}
 
   def __enter__(self):
     self.file_stats = os.stat(self.path)
@@ -69,7 +72,23 @@ class ROM:
       print("Warning: Could not determine ROM-Type from size")
 
     self.set_initial_segments()
+    self.read_levels()
     #return header in KNOWN_HEADERS
+
+  def read_levels(self):
+    for level in ALL_LEVELS:
+      with open(f"dumps/level_scripts/{level.name}.txt", "w+") as dump_target:
+        self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
+        dump_target.write(self.levelscripts[level].dump())
+        #print(f'{level.name} has {len(self.level_scripts[level].objects)} objects')
+
+        #special_objs = list(filter(lambda x: x.source == "SPECIAL_MACRO_OBJ", self.level_scripts[level].objects))
+        #macro_objs = list(filter(lambda x: x.source == "MACRO_OBJ", self.level_scripts[level].objects))
+        #normal_objs = list(filter(lambda x: x.source == "PLACE_OBJ", self.level_scripts[level].objects))
+        #print(f' - {len(special_objs)} Special 0x2E Objects')
+        #print(f' - {len(macro_objs)} Macro 0x39 Objects')
+        #print(f' - {len(normal_objs)} Normal 0x24 Objects')
+    pass
 
   def print_info(self):
     pretty_print_table("ROM Properties", {
@@ -186,6 +205,7 @@ class ROM:
     self.target.write(data)
 
   def write_integer(self, position, num : int, length : int = 1, signed = False):
+    print([hex(position), hex(num), length, signed])
     self.target.seek(position, 0)
     self.target.write(num.to_bytes(length, self.endianess, signed=signed ))
 
