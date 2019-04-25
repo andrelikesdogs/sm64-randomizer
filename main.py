@@ -28,7 +28,6 @@ from Spoiler import SpoilerLog
 from randoutils import pretty_print_table
 
 from RandomModules.Music import MusicRandomizer
-from RandomModules.CastlePaintings import CastlePaintingsRandomizer
 from RandomModules.Mario import MarioRandomizer
 from RandomModules.Levels import LevelRandomizer
 from RandomModules.Colors import ColorRandomizer

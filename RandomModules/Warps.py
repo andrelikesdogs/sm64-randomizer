@@ -1,5 +1,6 @@
-from Constants import LVL_CASTLE_COURTYARD, LVL_CASTLE_INSIDE, LVL_CASTLE_GROUNDS, ALL_LEVELS, LEVEL_ID_MAPPING
+from Constants import LVL_CASTLE_COURTYARD, LVL_CASTLE_INSIDE, LVL_CASTLE_GROUNDS, ALL_LEVELS, LEVEL_ID_MAPPING, LEVEL_SHORT_CODES
 from Spoiler import SpoilerLog
+from RandomModules.Textures import TextureAtlas
 from random import shuffle, choice
 import logging
 
@@ -126,8 +127,14 @@ class WarpRandomizer:
           warp.set(self.rom, "to_course_id", target_warp.to_course_id)
           warp.set(self.rom, "to_warp_id", target_warp.to_warp_id)
           warp.set(self.rom, "to_area_id", target_warp.to_area_id)
-        #for warp in warps:
-          #warp.set(self.rom, "")
+      
+      # set painting
+      if original_level_area[0] in LEVEL_SHORT_CODES and level_area_target[0] in LEVEL_SHORT_CODES:
+        from_code = f'painting_{LEVEL_SHORT_CODES[original_level_area[0]].lower()}'
+        to_code = f'painting_{LEVEL_SHORT_CODES[level_area_target[0]].lower()}'
+
+        if TextureAtlas.has_texture(from_code) and TextureAtlas.has_texture(to_code):
+          TextureAtlas.copy_texture_from_to(self.rom, from_code, to_code)
 
       idx += 1
 
