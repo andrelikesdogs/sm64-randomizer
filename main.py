@@ -24,6 +24,7 @@ from __version__ import __version__
 
 from Rom import ROM
 from Debug import Debug
+from Spoiler import SpoilerLog
 from randoutils import pretty_print_table
 
 from RandomModules.Music import MusicRandomizer
@@ -111,7 +112,7 @@ try:
 
     #if args.shuffle_colors:
     #  color_randomizer.randomize_coin_colors()
-  
+  SpoilerLog.output()
   print(f'Completed! Your randomized ROM File can be found as "{os.path.relpath(out_path)}"')
 except Exception as err:
   print(f'Unfortunately, the randomizer encountered an error, seen below:')

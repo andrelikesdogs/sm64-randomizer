@@ -1,4 +1,5 @@
 from Constants import LVL_CASTLE_COURTYARD, LVL_CASTLE_INSIDE, LVL_CASTLE_GROUNDS, ALL_LEVELS, LEVEL_ID_MAPPING
+from Spoiler import SpoilerLog
 from random import shuffle, choice
 import logging
 
@@ -108,6 +109,7 @@ class WarpRandomizer:
     idx = 0
     for (original_level_area, (entries, anim_exits)) in ow_warps.items():
       level_area_target = target_warp_levels[idx]
+      SpoilerLog.add_entry('warps', f'{original_level_area[0].name} leads to {level_area_target[0].name}')
       #print(f'{original_level_area[0].name} now leads to {level_area_target[0].name} ({len(entries)} entries updating)')
       for entry_warp in entries:
         #print(hex(level_area_target[0].level_id))
