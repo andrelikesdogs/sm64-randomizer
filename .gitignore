@@ -35,3 +35,4 @@ Icon
 # Project Crap
 build/
 dist/
+*.log
