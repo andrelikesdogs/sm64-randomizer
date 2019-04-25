@@ -39,7 +39,6 @@ class LevelScriptParser:
 
     self.checked_offsets = []
 
-    print(self.level.name)
     self.process(self.address_start, self.address_end)
 
   def process(self, start, end):

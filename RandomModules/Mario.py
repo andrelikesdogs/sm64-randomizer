@@ -1,4 +1,5 @@
 from random import randint, choice
+import logging
 
 MARIO_GEO_ADDRESS_START = 0x127C90
 MARIO_GEO_ADDRESS_END = 0x122E2C
@@ -52,9 +53,9 @@ class MarioRandomizer:
     self.rom = rom
 
   def randomize_color(self, enable_dumb_colors=False):
-    print("Randomizing Mario\'s Colors")
+    logging.info("Randomizing Mario\'s Colors")
     if self.rom.rom_type != 'EXTENDED':
-      print('Can not modify Mario\'s color on a non-extended ROM. Please load an extended ROM')
+      logging.error('Can not modify Mario\'s color on a non-extended ROM. Please load an extended ROM')
       return
     
     for (part, mem_address) in MEM_COLOR_ADDRESSES.items():

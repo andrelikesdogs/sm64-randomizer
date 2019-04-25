@@ -205,7 +205,6 @@ class ROM:
     self.target.write(data)
 
   def write_integer(self, position, num : int, length : int = 1, signed = False):
-    print([hex(position), hex(num), length, signed])
     self.target.seek(position, 0)
     self.target.write(num.to_bytes(length, self.endianess, signed=signed ))
 

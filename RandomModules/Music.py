@@ -1,5 +1,6 @@
 from random import shuffle
 from typing import List
+import logging
 
 from Parsers.Level import Level
 from Constants import SONG_NAMES
@@ -28,7 +29,7 @@ class MusicRandomizer:
     return (music_seq_ids, music_seq_pos)
 
   def shuffle_music(self, levels : List[Level]):
-    print("Randomizing Level Music")
+    logging.info("Randomizing Level Music")
     (ids, pos) = self.find_music_seqs(levels)
 
     shuffle(ids)

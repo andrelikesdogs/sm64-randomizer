@@ -1,5 +1,6 @@
 from Constants import LVL_CASTLE_COURTYARD, LVL_CASTLE_INSIDE, LVL_CASTLE_GROUNDS, ALL_LEVELS, LEVEL_ID_MAPPING
 from random import shuffle, choice
+import logging
 
 # Rainbow Clouds, Wing Cap, Vanish Cap, Rainbow Bonus, Secret Aquarium, Peach Slide
 COURSES_WITH_NO_PAINTING = [0x12, 0x1D, 0x1B, 0x1F, 0x14, 0x11, 0x13, 0x04]
@@ -85,21 +86,21 @@ class WarpRandomizer:
 
     # Debug View of all Warps found
     for ((level, area), (entry_warps, anim_warp_groups)) in ow_warps.items():
-      print(f'Level: {level.name} Area: {hex(area)}')
+      logging.debug(f'Level: {level.name} Area: {hex(area)}')
 
-      print("  Exits")
+      logging.debug("  Exits")
       for (warp_group, exit_warps) in lvl_warps[(level, area)].items():
-        print(" " * 2, warp_group)
-        print(" " * 4, [(hex(warp.to_warp_id), hex(warp.memory_address)) for warp in exit_warps])
-      print()
-      print("  Entries:")
-      print([(hex(warp.warp_id), hex(warp.memory_address)) for warp in entry_warps])
-      print()
-      print("  Anim Warps:")
+        logging.debug(" " * 2 + str(warp_group))
+        logging.debug(" " * 4 + repr([(hex(warp.to_warp_id), hex(warp.memory_address)) for warp in exit_warps]))
+      logging.debug('')
+      logging.debug("  Entries:")
+      logging.debug(repr([(hex(warp.warp_id), hex(warp.memory_address)) for warp in entry_warps]))
+      logging.debug('')
+      logging.debug("  Anim Warps:")
       for (anim_warp_group, entry_anim_warps) in anim_warp_groups.items():
-        print(" " * 2, anim_warp_group)
-        print(" " * 4, [(hex(warp.to_warp_id), hex(warp.memory_address)) for warp in entry_anim_warps])
-      print('-' * 50)
+        logging.debug(" " * 2 + str(anim_warp_group))
+        logging.debug(" " * 4 + repr([(hex(warp.to_warp_id), hex(warp.memory_address)) for warp in entry_anim_warps]))
+      logging.debug('-' * 50)
 
     target_warp_levels = list(lvl_warps.keys())
     shuffle(target_warp_levels)
@@ -117,9 +118,9 @@ class WarpRandomizer:
 
       # replace all exit warps in the target level with ones leading to the original entry
       for (group_name, warps) in level_exits.items():
+        logging.info(f'{level_area_target[0].name.ljust(40, " ")} (Area {hex(level_area_target[1])}): {group_name}: Animation Warps replacing {len(warps)} entries')
         for warp in warps:
           target_warp = self._pick_best_fitting_warp(group_name, warp, orig_exits)
-          print(target_warp)
           warp.set(self.rom, "to_course_id", target_warp.to_course_id)
           warp.set(self.rom, "to_warp_id", target_warp.to_warp_id)
           warp.set(self.rom, "to_area_id", target_warp.to_area_id)
