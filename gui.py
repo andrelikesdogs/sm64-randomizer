@@ -9,7 +9,9 @@ import tempfile
 import io
 import json
 import pyperclip
+import base64
 from platform import system
+from Icons import ICON_WIN
 from threading import Timer
 from shlex import quote
 from random import randint
@@ -101,17 +103,10 @@ class GuiApplication:
   def __init__(self):
     self.window = Tk()
 
-    platform = system()
-    logo_image = None
-    if platform == 'Windows':
-      logo_image = 'favicon.ico'
-    elif platform == 'Darwin':
-      logo_image = None
-    else:
-      logo_image = 'favicon.xbm'
-    
-    if logo_image:
-      self.window.wm_iconbitmap(logo_image)
+    if system() == 'Windows':
+      file_data = base64.decodebytes(ICON_WIN)
+      icon = PhotoImage(data=file_data)
+      self.window.iconphoto(True, icon)
     
     self.window.wm_title(MAIN_TITLE)
     self.window.resizable(False, False)
