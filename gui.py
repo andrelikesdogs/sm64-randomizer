@@ -103,11 +103,13 @@ class GuiApplication:
   def __init__(self):
     self.window = Tk()
 
+    # this is so dumb
     if system() == 'Windows':
-      file_data = base64.decodebytes(ICON_WIN)
-      icon = PhotoImage(data=file_data)
-      self.window.iconphoto(True, icon)
-    
+      with open('temp_icon.ico', 'wb') as temp_icon:
+        temp_icon.write(base64.b64decode(ICON_WIN))
+        self.window.iconbitmap('temp_icon.ico')
+      os.remove('temp_icon.ico')
+
     self.window.wm_title(MAIN_TITLE)
     self.window.resizable(False, False)
 
