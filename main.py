@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+from __version__ import __version__
+print(f'  Super Mario 64 Randomizer  (Version: {__version__})\n')
+
 import sys
 
 if __name__ != '__main__':
