@@ -36,3 +36,4 @@ Icon
 build/
 dist/
 *.log
+*.bin

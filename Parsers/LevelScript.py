@@ -185,12 +185,11 @@ class LevelScriptParser:
             self.process_special_objects_level(segment_start, segment_end)
         elif command.identifier == 0x24:
           """ 0x24 PLACE_OBJECT """
-          #act_mask = self.rom.read_integer()
           model_id = self.rom.read_integer(cursor + 3)
-          position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
-          rotation = (self.rom.read_integer(None, 2), True, self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
-          (b1, b2, b3, b4) = tuple([self.rom.read_integer() for n in range(4)])
-          b_script = self.rom.read_integer(None, 4)
+          position = (self.rom.read_integer(cursor + 4, 2, True), self.rom.read_integer(cursor + 6, 2, True), self.rom.read_integer(cursor + 8, 2, True))
+          rotation = (self.rom.read_integer(cursor + 10, 2, True), self.rom.read_integer(cursor + 12, 2, True), self.rom.read_integer(cursor + 14, 2, True))
+          (b1, b2, b3, b4) = tuple([self.rom.read_integer(cursor + 14 + n) for n in range(4)])
+          b_script = self.rom.read_integer(18, 4)
 
           self.objects.append(Object3D("PLACE_OBJ", model_id, position, rotation, b_script, [b1, b2, b3, b4], cursor + 2))
         elif command.identifier == 0x39:
@@ -277,8 +276,8 @@ class LevelScriptParser:
       preset_and_rot = self.rom.read_integer(cursor, 2)
       #print("Macro", hex(start), hex(cursor), format_binary(self.rom.read_bytes(cursor, 10)))
 
-      preset_id = preset_and_rot & 0x1FF # last 9 bytes
-      rot_y = preset_and_rot & 0xFE00 # first 7 bytes
+      preset_id = preset_and_rot & 0x1FF # last 9 bit
+      rot_y = preset_and_rot & 0xFE00 # first 7 bit
       
       if preset_id == 0 or preset_id == 0x1E or preset_id not in preset_table:
         break

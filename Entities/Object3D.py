@@ -18,12 +18,19 @@ class Object3D(BaseMemoryRecord):
     self.position = position
     self.rotation = rotation
     self.behaviour = behaviour
-    self.memory_address = mem_address
+    self.mem_address = mem_address
     
     if mem_address is not None:
-      if source == 'MARIO_SPAWN' or source == 'PLACE_OBJ':
-        self.add_mapping('position', ('int', 'int', 'int'), mem_address + 4, mem_address + 12)
-      elif source == 'SPECIAL_MACRO_OBJ' or source == 'MACRO_OBJ':
-        self.add_mapping('position', ('int', 'int', 'int'), mem_address + 3, mem_address + 11)
+      if source == 'PLACE_OBJ':
+        self.add_mapping('position', ('int', 'int', 'int'), mem_address + 2, mem_address + 8)
+      elif source == source == 'MARIO_SPAWN':
+        self.add_mapping('position', ('int', 'int', 'int'), mem_address + 4, mem_address + 10)
+      elif source == 'MACRO_OBJ':
+        self.add_mapping('position', ('int', 'int', 'int'), mem_address + 2, mem_address + 8)
+      elif source == 'SPECIAL_MACRO_OBJ':
+        self.add_mapping('position', ('int', 'int', 'int'), mem_address + 2, mem_address + 8)
       else:
         pass
+      
+  def __str__(self):
+    return f'Object3D: Source: {self.source}, Model-ID: {self.model_id}, position: {repr(self.position)}, rotation: {repr(self.rotation)}, bparams: {repr(self.bparams)}, bscript: {hex(self.behaviour or 0)}, mem_pos: {hex(self.mem_address)}'

@@ -19,7 +19,7 @@ WHITELIST_SHUFFLING = [
   (None, 0x65), # Scuttlebug
   (None, 0x19), # Tree (Snow)
   (None, 0x17), # Tree (In Courses)
-  #(None, 0x18), # Tree (Courtyard)
+  (None, 0x18), # Tree (Courtyard)
   (None, 0x1B), # Tree (SSL)
   (0x13001548, 0x59), # Heave-Ho
   (None, 0x78), # Heart
@@ -53,18 +53,17 @@ WHITELIST_SHUFFLING = [
   (0x13000054, None), # Eye-Ball
   (0x13001108, None), # Flamethrower
   (0x130046DC, 0xDC), # Fly-Guy
-  #(None, 0x89), # Item-Box
+  (None, 0x89), # Item-Box
   (0x13003700, 0x65), # Ice Bully (Big)
   (0x130036C8, 0x64), # Ice Bully (Small)
-  #(None, 0x81), # Breakable Box
-  #(None, 0x82), # Grabbable Box
+  (None, 0x81), # Breakable Box
+  (None, 0x82), # Grabbable Box
   (0x13001650, 0x00), # Bouncing Box
   (0x130027E4, 0x65), # Boo
   (0x130027D0, 0x00), # Boo (x3)
   (0x13002794, 0x65), # Big Boo
   (0x130007F8, 0x7A), # Star
   (0x13001B70, 0x00), # Checkerboard Elevator (Logic: DON'T TOUCH FOR VANISH CAP LEVEL)
-  # cant shuffle the plumber
   (0x13002F74, 0x00), # Mario Start 1
 ]
 
@@ -89,7 +88,6 @@ class LevelRandomizer:
       if level in SPECIAL_LEVELS:
         continue
 
-      #print(f'Shuffling {len(parsed.objects)} in {level.name}')
       # randomize positions
       positions = []
       objects = []
@@ -102,7 +100,7 @@ class LevelRandomizer:
       shuffle(positions)
       for idx, obj in enumerate(objects):
         position = positions[idx]
-        #obj.set(self.rom, 'position', position)
+        obj.set(self.rom, 'position', position)
     '''
     for level in self.level_scripts:
       positions = []

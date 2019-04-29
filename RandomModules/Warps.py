@@ -28,7 +28,7 @@ class WarpRandomizer:
     target_key = choice(list(warps_available.keys()))
     return choice(warps_available[target_key])
 
-  def shuffle_level_entries(self):
+  def shuffle_level_entries(self, painting_mode : str):
     # levels that contain entries to levels
     entry_levels = [LVL_CASTLE_COURTYARD, LVL_CASTLE_GROUNDS, LVL_CASTLE_INSIDE]
     entry_level_course_ids = [level.level_id for level in entry_levels]
@@ -129,12 +129,16 @@ class WarpRandomizer:
           warp.set(self.rom, "to_area_id", target_warp.to_area_id)
       
       # set painting
-      if original_level_area[0] in LEVEL_SHORT_CODES and level_area_target[0] in LEVEL_SHORT_CODES:
-        from_code = f'painting_{LEVEL_SHORT_CODES[original_level_area[0]].lower()}'
-        to_code = f'painting_{LEVEL_SHORT_CODES[level_area_target[0]].lower()}'
+      if painting_mode == 'match':
+        if original_level_area[0] in LEVEL_SHORT_CODES and level_area_target[0] in LEVEL_SHORT_CODES:
+          from_code = f'painting_{LEVEL_SHORT_CODES[original_level_area[0]].lower()}'
+          to_code = f'painting_{LEVEL_SHORT_CODES[level_area_target[0]].lower()}'
 
-        if TextureAtlas.has_texture(from_code) and TextureAtlas.has_texture(to_code):
-          TextureAtlas.copy_texture_from_to(self.rom, from_code, to_code)
+          if TextureAtlas.has_texture(from_code):
+            if TextureAtlas.has_texture(to_code):
+              TextureAtlas.copy_texture_from_to(self.rom, from_code, to_code)
+            else:
+              TextureAtlas.copy_texture_from_to(self.rom, from_code, 'painting_unknown')
 
       idx += 1
 

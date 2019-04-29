@@ -48,8 +48,8 @@ class TextureAtlas:
       texs_b.append(rom.read_bytes(texture.position, texture.size))
     
     for idx in range(len(texs_a)):
-      bytes_from = texs_a[idx]
-      tex_to = texture_b.textures[idx]
+      bytes_from = texs_b[idx]
+      tex_to = texture_a.textures[idx]
 
       rom.write_byte(tex_to.position, bytes_from)
 
@@ -58,13 +58,13 @@ paintings = [
   ('ccm', 0xC800, 0xD800),
   ('wf', 0xE800, 0xF800),
   ('jrb', 0x10800, 0x11800),
-  ('lll', 0x12800, 0x13800),
+  ('lll', 0x13800, 0x12800),
   ('ssl', 0x14800, 0x15800),
   ('wdw', 0x17800, 0x18800),
   ('thi', 0x19800, 0x1A800),
   ('ttm', 0x1B800, 0x1C800),
   ('ttc', 0x1D800, 0x1E800),
-  ('sl', 0x1F800, 0x20800),
+  ('sl', 0x1F800, 0x20800)
 ]
 
 for (lvl_name, upper, lower) in paintings:
@@ -87,3 +87,23 @@ for (lvl_name, upper, lower) in paintings:
       ),
     ]
   ))
+
+TextureAtlas.add_texture_definition('painting_unknown', MultiTexture(
+  'unknown',
+  [
+    Texture(
+      0xD78271 + 0x6800,
+        int(32*64*16 / 8),
+        64,
+        32,
+        f'painting_unknown_upper'
+    ),
+      Texture(
+        0xD78271 + 0x6800,
+          int(32*64*16 / 8),
+          64,
+          32,
+          f'painting_unknown_lower'
+      )
+  ]
+))

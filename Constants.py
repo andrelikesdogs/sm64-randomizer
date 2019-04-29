@@ -99,6 +99,15 @@ LEVEL_SHORT_CODES = {
   LVL_THI: 'THI',
   LVL_TTC: 'TTC',
   LVL_RR: 'RR',
+  LVL_BOWSER_1: 'BIDW',
+  LVL_BOWSER_2: 'BIFS',
+  LVL_BOWSER_3: 'BITS',
+  LVL_SECRET_AQUARIUM: 'AQUARIUM',
+  LVL_SECRET_PEACH_SLIDE: 'SLIDE',
+  LVL_SECRET_RAINBOW: 'OTR',
+  LVL_VANISH_CAP: 'VC',
+  LVL_METAL_CAP: 'MC',
+  LVL_WING_CAP: 'WC'
 }
 
 """ Castle Levels, inside, outside and courtyard """

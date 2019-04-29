@@ -1,4 +1,5 @@
 from typing import NamedTuple, Union
+import math
 
 class MemoryMapping(NamedTuple):
   address_start: int
@@ -28,8 +29,9 @@ class BaseMemoryRecord:
     elif memory_information.data_type == 'int':
       rom.write_integer(memory_information.address_start, value, memory_information.size, True)
     elif type(memory_information.data_type) == tuple:
+      size = math.floor(memory_information.size / len(memory_information.data_type))
       for index, value_type in enumerate(list(memory_information.data_type)):
-        rom.write_integer(memory_information.address_start + index * memory_information.size, value[index], 2, value_type == 'int')
+        rom.write_integer(memory_information.address_start + index * size, value[index], size, value_type == 'int')
     else:
       raise TypeError(f'Datatype unknown, can\'t format this data for writing')
 
