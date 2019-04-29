@@ -77,7 +77,7 @@ gameplay_settings = {
   )
 }
 
-asthetic_settings = {
+aesthetic_settings = {
   'shuffle_paintings': SettingField(
     type="select",
     choices=[("off", "Vanilla"), ("match", "Match Levels"), ("random", "Random Levels")],
@@ -113,16 +113,16 @@ class GuiApplication:
     self.frames = {
       'rom-settings': ttk.Frame(self.notebook),
       'gameplay': ttk.Frame(self.notebook),
-      'asthetics': ttk.Frame(self.notebook),
+      'aesthetic': ttk.Frame(self.notebook),
     }
 
     self.notebook.add(self.frames['rom-settings'], text='ROM Options')
     self.notebook.add(self.frames['gameplay'], text='Gameplay Rules')
-    self.notebook.add(self.frames['asthetics'], text='Asthetic Rules')
+    self.notebook.add(self.frames['aesthetic'], text='Aesthetic Rules')
 
     self.add_rom_settings()
     self.add_gameplay_settings()
-    self.add_asthetic_settings()
+    self.add_aesthetic_settings()
 
     self.notebook.pack(fill=BOTH, expand=True, padx=5, pady=5)
     self.add_main_settings()
@@ -200,13 +200,16 @@ class GuiApplication:
     for (key, tkinter_var) in self.selections.items():
       if key in json_data:
         tkinter_var.set(json_data[key])
-    
-    self.pasteSettings.configure(text="Succefully Applied!")
-    s = Timer(1, lambda: self.pasteSettings.configure(text="Paste Settings from Clipboard"))
+    self.seed_entry.set(json_data["seed"])
+    self.set_seed_as_num()
+
+    self.pasteSettings.configure(text="Settings applied!")
+    self.window.update()
+    s = Timer(2, lambda: self.pasteSettings.configure(text="Paste Settings from Clipboard"))
     s.start()
 
   def find_setting_definition(self, key):
-    for setting_dict in [gameplay_settings, asthetic_settings]:
+    for setting_dict in [gameplay_settings, aesthetic_settings]:
       for (setting_key, definition) in setting_dict.items():
         if setting_key == key:
           return definition
@@ -223,11 +226,12 @@ class GuiApplication:
     # this makes no sense for other people
     del output['input_rom']
     del output['output_rom']
+    output['seed'] = self.seed_entry.get()
     
     pyperclip.copy(json.dumps(output))
 
-    self.copySettings.configure(text="Succefully Copied!")
-    s = Timer(1, lambda: self.copySettings.configure(text="Copy Settings to Clipboard"))
+    self.copySettings.configure(text="Settings copied!")
+    s = Timer(2, lambda: self.copySettings.configure(text="Copy Settings to Clipboard"))
     s.start()
 
   def generate_rom(self):
@@ -326,8 +330,8 @@ class GuiApplication:
   def add_gameplay_settings(self):
     self.add_setting_fields(gameplay_settings, self.frames['gameplay'])
 
-  def add_asthetic_settings(self):
-    self.add_setting_fields(asthetic_settings, self.frames['asthetics'])
+  def add_aesthetic_settings(self):
+    self.add_setting_fields(aesthetic_settings, self.frames['aesthetic'])
 
   def add_main_settings(self):
     self.seed_entry = StringVar()
@@ -342,18 +346,18 @@ class GuiApplication:
     seedEntry = Entry(seedFrame, textvariable=self.seed_entry)
     seedRandom = ttk.Button(seedFrame, text='New', command=self.set_random_seed, width=10)
     seedRandom.pack(side=RIGHT)
-    seedEntry.pack(fill=X)
+    seedEntry.pack(expand=True, fill=X)
 
     seedFrame.pack(fill=BOTH)
 
     buttonsFrame = Frame(self.window, padx=12, pady=8, height=60)
     buttonsFrame.pack_propagate(0)
 
-    generateButton = ttk.Button(buttonsFrame, text="Generate ROM", command=self.generate_rom)
+    generateButton = ttk.Button(buttonsFrame, text="Generate ROM", command=self.generate_rom, width=15)
     generateButton.pack(side=LEFT, fill=Y, expand=True)
-    self.copySettings = ttk.Button(buttonsFrame, text="Copy Settings to Clipboard", command=self.copy_to_clipboard)
+    self.copySettings = ttk.Button(buttonsFrame, text="Copy Settings to Clipboard", command=self.copy_to_clipboard, width=30)
     self.copySettings.pack(side=LEFT, fill=Y, expand=False)
-    self.pasteSettings = ttk.Button(buttonsFrame, text="Paste Settings from Clipboard", command=self.read_from_clipboard)
+    self.pasteSettings = ttk.Button(buttonsFrame, text="Paste Settings from Clipboard", command=self.read_from_clipboard, width=30)
     self.pasteSettings.pack(side=LEFT, fill=Y, expand=True)
 
     buttonsFrame.pack(fill=BOTH, anchor=CENTER, expand=True, side=TOP)

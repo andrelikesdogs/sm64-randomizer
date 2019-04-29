@@ -8,7 +8,7 @@ if __name__ != '__main__':
 if len(sys.argv) <= 1:
   # assume we want to start the GUI
   print("starting gui...")
-  import Gui
+  import gui
   sys.exit(0)
 
 import os

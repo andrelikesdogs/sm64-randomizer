@@ -1,0 +1,1 @@
+pyinstaller --noconfirm --onefile --add-data="README.md;." --add-data="LICENSE;." main.py
