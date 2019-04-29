@@ -1,6 +1,6 @@
 from __version__ import __version__
 from typing import NamedTuple
-from tkinter import Tk, ttk, BOTH, LEFT, RIGHT, TOP, CENTER, W, X, Y, Frame, Label, Button, Entry, filedialog, StringVar, Checkbutton, BooleanVar, Menu, Toplevel, OptionMenu, messagebox
+from tkinter import Tk, ttk, BOTH, LEFT, RIGHT, TOP, CENTER, W, X, Y, Frame, Label, Button, Entry, filedialog, StringVar, Checkbutton, BooleanVar, Menu, Toplevel, OptionMenu, messagebox, PhotoImage
 import subprocess
 import re
 import os
@@ -9,6 +9,7 @@ import tempfile
 import io
 import json
 import pyperclip
+from platform import system
 from threading import Timer
 from shlex import quote
 from random import randint
@@ -99,6 +100,19 @@ aesthetic_settings = {
 class GuiApplication:
   def __init__(self):
     self.window = Tk()
+
+    platform = system()
+    logo_image = None
+    if platform == 'Windows':
+      logo_image = 'favicon.ico'
+    elif platform == 'Darwin':
+      logo_image = None
+    else:
+      logo_image = 'favicon.xbm'
+    
+    if logo_image:
+      self.window.wm_iconbitmap(logo_image)
+    
     self.window.wm_title(MAIN_TITLE)
     self.window.resizable(False, False)
 
