@@ -1,3 +1,5 @@
+print(f'  Super Mario 64 Randomizer  (Version: {__version__})\n')
+
 import sys
 import os
 import argparse
@@ -23,8 +25,6 @@ from RandomModules.Text import TextRandomizer
 from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE
 
 
-print(f'  Super Mario 64 Randomizer  (Version: {__version__})\n')
-print(sys.argv)
 parser = argparse.ArgumentParser()
 parser.add_argument("rom", type=str)
 parser.add_argument("--out", type=str, help="target of randomized rom")
