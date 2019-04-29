@@ -1,3 +1,4 @@
+from __version__ import __version__
 print(f'  Super Mario 64 Randomizer  (Version: {__version__})\n')
 
 import sys
@@ -7,8 +8,6 @@ import time
 import traceback
 from pathlib import Path
 from random import seed
-
-from __version__ import __version__
 
 from Rom import ROM
 from Debug import Debug
