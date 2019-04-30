@@ -1,6 +1,6 @@
 from __version__ import __version__
 from typing import NamedTuple
-from tkinter import Tk, ttk, BOTH, LEFT, RIGHT, TOP, CENTER, W, X, Y, Frame, Label, Button, Entry, filedialog, StringVar, Checkbutton, BooleanVar, Menu, Toplevel, OptionMenu, messagebox, PhotoImage
+from tkinter import Tk, ttk, BOTH, LEFT, RIGHT, TOP, BOTTOM, CENTER, W, X, Y, Frame, Label, Entry, filedialog, StringVar, Checkbutton, BooleanVar, Menu, Toplevel, OptionMenu, messagebox, PhotoImage
 import subprocess
 import re
 import os
@@ -102,7 +102,8 @@ aesthetic_settings = {
 class GuiApplication:
   def __init__(self):
     self.window = Tk()
-
+    self.window.title(MAIN_TITLE)
+    
     # this is so dumb
     if system() == 'Windows':
       with open('temp_icon.ico', 'wb') as temp_icon:
@@ -111,7 +112,11 @@ class GuiApplication:
       os.remove('temp_icon.ico')
 
     self.window.wm_title(MAIN_TITLE)
-    self.window.resizable(False, False)
+    #self.window.resizable(False, False)
+
+    # stupid shit only happens on mac???
+    if system() == "Darwin":
+      self.window.tk_setPalette(background="#e8e8e8")
 
     self.initialize_gui()
 
@@ -120,23 +125,31 @@ class GuiApplication:
     self.combobox_selections = {}
     self.checkbox_text = {}
 
-    self.notebook = ttk.Notebook(self.window)
+    self.main_frame = Frame(self.window)
+    
+    self.gridcontainer = Frame(self.main_frame)
     self.frames = {
-      'rom-settings': ttk.Frame(self.notebook),
-      'gameplay': ttk.Frame(self.notebook),
-      'aesthetic': ttk.Frame(self.notebook),
+      'rom-settings': ttk.LabelFrame(self.gridcontainer, text="ROM Settings"),
+      'gameplay': ttk.LabelFrame(self.gridcontainer, text="Gameplay Settings"),
+      'aesthetic': ttk.LabelFrame(self.gridcontainer, text="Aesthetic Settings"),
     }
 
-    self.notebook.add(self.frames['rom-settings'], text='ROM Options')
-    self.notebook.add(self.frames['gameplay'], text='Gameplay Rules')
-    self.notebook.add(self.frames['aesthetic'], text='Aesthetic Rules')
+    self.frames['rom-settings'].pack(side=TOP, fill=X, padx=2, pady=2)
+    self.frames['gameplay'].pack(side=LEFT, fill=BOTH, expand=True, anchor="w", padx=2, pady=2)
+    self.frames['aesthetic'].pack(side=RIGHT, fill=BOTH, expand=True, anchor="w", padx=2, pady=2)
+
+    #self.gridcontainer.add(self.frames['rom-settings'], text='ROM Options')
+    #self.gridcontainer.add(self.frames['gameplay'], text='Gameplay Rules')
+    #self.gridcontainer.add(self.frames['aesthetic'], text='Aesthetic Rules')
 
     self.add_rom_settings()
     self.add_gameplay_settings()
     self.add_aesthetic_settings()
 
-    self.notebook.pack(fill=BOTH, expand=True, padx=5, pady=5)
     self.add_main_settings()
+
+    self.gridcontainer.pack(expand=True, fill=BOTH, anchor="center", padx=5, pady=5)
+    self.main_frame.pack(expand=True, fill=BOTH)
 
     self.window.update_idletasks()
     self.window.mainloop()
@@ -304,23 +317,15 @@ class GuiApplication:
     for key, fieldtuple in settings.items():
       optionFrame = Frame(master)
 
-      optionLabel = Label(optionFrame, text=fieldtuple.label, width=20)
-      optionLabel.pack(side=LEFT)
-
       if fieldtuple.type == 'checkbox':
         self.selections[key] = BooleanVar(optionFrame)
-        self.checkbox_text[key] = StringVar()
-
-        if bool(fieldtuple.value):
-          self.checkbox_text[key].set("Enabled")
-        else:
-          self.checkbox_text[key].set("Disabled")
-        
-        self.selections[key].trace('w', lambda *args, sel_key=key: self.checkbox_text[sel_key].set("Enabled" if self.selections[sel_key].get() else "Disabled"))
-        checkboxField = ttk.Checkbutton(optionFrame, textvariable=self.checkbox_text[key], variable=self.selections[key])
-        CreateToolTip(optionLabel, fieldtuple.help)
+        checkboxField = ttk.Checkbutton(optionFrame, text=fieldtuple.label, variable=self.selections[key])
+        CreateToolTip(checkboxField, fieldtuple.help)
         checkboxField.pack(side=LEFT)
       elif fieldtuple.type == 'select':
+        optionLabel = ttk.Label(optionFrame, text=fieldtuple.label)
+        optionLabel.pack(side=LEFT)
+
         self.selections[key] = StringVar(optionFrame)
         self.combobox_selections[key] = StringVar(optionFrame)
 
@@ -340,7 +345,7 @@ class GuiApplication:
         
         optionsField.pack(side=LEFT)
 
-      optionFrame.pack(side=TOP, anchor=W, padx=5, pady=(5,1))
+      optionFrame.pack(side=TOP, padx=5, pady=(5,1), fill=X)
 
       
 
@@ -351,58 +356,58 @@ class GuiApplication:
     self.add_setting_fields(aesthetic_settings, self.frames['aesthetic'])
 
   def add_main_settings(self):
+    buttonsFrame = Frame(self.main_frame, padx=12, pady=8, height=60)
+    buttonsFrame.pack_propagate(0)
+
+    generateButton = ttk.Button(buttonsFrame, text="Generate ROM", command=self.generate_rom, width=10)
+    generateButton.pack(side=LEFT, fill=Y, expand=True)
+    self.copySettings = ttk.Button(buttonsFrame, text="Copy Settings to Clipboard", command=self.copy_to_clipboard, width=20)
+    self.copySettings.pack(side=LEFT, fill=Y, expand=False)
+    self.pasteSettings = ttk.Button(buttonsFrame, text="Paste Settings from Clipboard", command=self.read_from_clipboard, width=30)
+    self.pasteSettings.pack(side=LEFT, fill=Y, expand=True)
+
+    buttonsFrame.pack(fill=BOTH, anchor="center", side=BOTTOM)
+
+  def add_rom_settings(self):
+    inputFrame = Frame(self.frames['rom-settings'])
     self.seed_entry = StringVar()
     self.seed_entry.trace('w', self.set_seed_as_num)
 
     self.selections['seed'] = StringVar()
     self.set_random_seed()
-    seedFrame = Frame(self.window, padx=12, pady=8)
+    seedFrame = Frame(inputFrame)
 
-    seedLabel = Label(seedFrame, text="Seed")
+    seedLabel = Label(seedFrame, text="Seed", width=10)
     seedLabel.pack(side=LEFT)
     seedEntry = Entry(seedFrame, textvariable=self.seed_entry)
+    seedEntry.pack(side=LEFT, fill=BOTH, expand=True)
     seedRandom = ttk.Button(seedFrame, text='New', command=self.set_random_seed, width=10)
     seedRandom.pack(side=RIGHT)
-    seedEntry.pack(expand=True, fill=X)
 
-    seedFrame.pack(fill=BOTH)
+    seedFrame.pack(side=TOP, fill=X, expand=True)
 
-    buttonsFrame = Frame(self.window, padx=12, pady=8, height=60)
-    buttonsFrame.pack_propagate(0)
-
-    generateButton = ttk.Button(buttonsFrame, text="Generate ROM", command=self.generate_rom, width=15)
-    generateButton.pack(side=LEFT, fill=Y, expand=True)
-    self.copySettings = ttk.Button(buttonsFrame, text="Copy Settings to Clipboard", command=self.copy_to_clipboard, width=30)
-    self.copySettings.pack(side=LEFT, fill=Y, expand=False)
-    self.pasteSettings = ttk.Button(buttonsFrame, text="Paste Settings from Clipboard", command=self.read_from_clipboard, width=30)
-    self.pasteSettings.pack(side=LEFT, fill=Y, expand=True)
-
-    buttonsFrame.pack(fill=BOTH, anchor=CENTER, expand=True, side=TOP)
-
-  def add_rom_settings(self):
-    inputFrame = Frame(self.frames['rom-settings'])
     self.selections['input_rom'] = StringVar()
 
-    baseRomLabel = Label(inputFrame, text="Input ROM", width=20)
+    baseRomLabel = Label(inputFrame, text="Input ROM", width=10)
     baseRomLabel.pack(side=LEFT, padx=(0,0))
-    baseRomEntry = Entry(inputFrame, width=40, textvariable=self.selections['input_rom'])
-    baseRomEntry.pack(side=LEFT)
+    baseRomEntry = Entry(inputFrame, textvariable=self.selections['input_rom'])
+    baseRomEntry.pack(side=LEFT, fill=BOTH, expand=True)
     romSelectButton = ttk.Button(inputFrame, text='Select ROM', command=self.select_rom_input, width=10)
-    romSelectButton.pack(side=LEFT)
+    romSelectButton.pack(side=RIGHT)
 
-    inputFrame.pack(side=TOP, anchor=W, padx=5, pady=(5,1))
+    inputFrame.pack(side=TOP, fill=X, expand=True)
 
     outputFrame = Frame(self.frames['rom-settings'])
     self.selections['output_rom'] = StringVar()
 
-    outputPathLabel = Label(outputFrame, text="Output ROM", width=20)
+    outputPathLabel = Label(outputFrame, text="Output ROM", width=10)
     outputPathLabel.pack(side=LEFT, padx=(0,0))
-    outputRomEntry = Entry(outputFrame, width=40, textvariable=self.selections['output_rom'])
-    outputRomEntry.pack(side=LEFT)
+    outputRomEntry = Entry(outputFrame, textvariable=self.selections['output_rom'])
+    outputRomEntry.pack(side=LEFT, fill=BOTH, expand=True)
     outputSelectButton = ttk.Button(outputFrame, text='Select Output', command=self.select_rom_output, width=10)
-    outputSelectButton.pack(side=LEFT)
+    outputSelectButton.pack(side=RIGHT)
 
-    outputFrame.pack(side=TOP, anchor=W, padx=5, pady=(5,1))
+    outputFrame.pack(side=TOP, fill=X, expand=True)
 
 
 GuiApplication()
