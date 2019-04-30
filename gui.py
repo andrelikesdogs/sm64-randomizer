@@ -161,7 +161,7 @@ class GuiApplication:
       self.selections['input_rom'].set(input_rom)
       if self.selections['output_rom'].get() == "":
         path_parts = input_rom.split(".")
-        guessed_output_file = f'{"".join(path_parts[:-1])}.out.{path_parts[-1]}'
+        guessed_output_file = f'{".".join(path_parts[:-1])}.out.{path_parts[-1]}'
         self.selections['output_rom'].set(guessed_output_file)
 
   def select_rom_output(self):
@@ -325,7 +325,8 @@ class GuiApplication:
       elif fieldtuple.type == 'select':
         optionLabel = ttk.Label(optionFrame, text=fieldtuple.label)
         optionLabel.pack(side=LEFT)
-
+        CreateToolTip(optionLabel, fieldtuple.help)
+        
         self.selections[key] = StringVar(optionFrame)
         self.combobox_selections[key] = StringVar(optionFrame)
 
@@ -341,9 +342,9 @@ class GuiApplication:
           command=lambda *args, sel_key=key, choices=choice_dict: self.selections[sel_key].set(choices[self.combobox_selections[sel_key].get()])
         )
         self.selections[key].trace('w', lambda *args, sel_key=key, choices=choice_dict_invert: self.combobox_selections[sel_key].set(choice_dict_invert[self.selections[sel_key].get()]))
-        CreateToolTip(optionLabel, fieldtuple.help)
         
-        optionsField.pack(side=LEFT)
+        optionsField.pack(side=LEFT, fill=X, expand=True)
+
 
       optionFrame.pack(side=TOP, padx=5, pady=(5,1), fill=X)
 
@@ -356,17 +357,17 @@ class GuiApplication:
     self.add_setting_fields(aesthetic_settings, self.frames['aesthetic'])
 
   def add_main_settings(self):
-    buttonsFrame = Frame(self.main_frame, padx=12, pady=8, height=60)
+    buttonsFrame = Frame(self.main_frame, padx=5, pady=5, height=60)
     buttonsFrame.pack_propagate(0)
 
     generateButton = ttk.Button(buttonsFrame, text="Generate ROM", command=self.generate_rom, width=10)
-    generateButton.pack(side=LEFT, fill=Y, expand=True)
+    generateButton.pack(side=LEFT, fill=BOTH, expand=True)
     self.copySettings = ttk.Button(buttonsFrame, text="Copy Settings to Clipboard", command=self.copy_to_clipboard, width=20)
-    self.copySettings.pack(side=LEFT, fill=Y, expand=False)
+    self.copySettings.pack(side=LEFT, fill=BOTH, expand=True)
     self.pasteSettings = ttk.Button(buttonsFrame, text="Paste Settings from Clipboard", command=self.read_from_clipboard, width=30)
-    self.pasteSettings.pack(side=LEFT, fill=Y, expand=True)
+    self.pasteSettings.pack(side=LEFT, fill=BOTH, expand=True)
 
-    buttonsFrame.pack(fill=BOTH, anchor="center", side=BOTTOM)
+    buttonsFrame.pack(fill=X, anchor="center", side=BOTTOM)
 
   def add_rom_settings(self):
     inputFrame = Frame(self.frames['rom-settings'])
@@ -381,7 +382,7 @@ class GuiApplication:
     seedLabel.pack(side=LEFT)
     seedEntry = Entry(seedFrame, textvariable=self.seed_entry)
     seedEntry.pack(side=LEFT, fill=BOTH, expand=True)
-    seedRandom = ttk.Button(seedFrame, text='New', command=self.set_random_seed, width=10)
+    seedRandom = ttk.Button(seedFrame, text='New', command=self.set_random_seed, width=15)
     seedRandom.pack(side=RIGHT)
 
     seedFrame.pack(side=TOP, fill=X, expand=True)
@@ -392,7 +393,7 @@ class GuiApplication:
     baseRomLabel.pack(side=LEFT, padx=(0,0))
     baseRomEntry = Entry(inputFrame, textvariable=self.selections['input_rom'])
     baseRomEntry.pack(side=LEFT, fill=BOTH, expand=True)
-    romSelectButton = ttk.Button(inputFrame, text='Select ROM', command=self.select_rom_input, width=10)
+    romSelectButton = ttk.Button(inputFrame, text='Select ROM', command=self.select_rom_input, width=15)
     romSelectButton.pack(side=RIGHT)
 
     inputFrame.pack(side=TOP, fill=X, expand=True)
@@ -404,7 +405,7 @@ class GuiApplication:
     outputPathLabel.pack(side=LEFT, padx=(0,0))
     outputRomEntry = Entry(outputFrame, textvariable=self.selections['output_rom'])
     outputRomEntry.pack(side=LEFT, fill=BOTH, expand=True)
-    outputSelectButton = ttk.Button(outputFrame, text='Select Output', command=self.select_rom_output, width=10)
+    outputSelectButton = ttk.Button(outputFrame, text='Select Output', command=self.select_rom_output, width=15)
     outputSelectButton.pack(side=RIGHT)
 
     outputFrame.pack(side=TOP, fill=X, expand=True)
