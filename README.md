@@ -11,9 +11,9 @@ This is a work in progress project to build an [https://github.com/AmazingAmphar
 
 - Randomize level music
 - Randomize level entries (entries and paintings)
-- Randomize mario's outfit
-- Randomize object colors
-- Randomize text (cutscenes, signs, prompts, etc)
+- Randomize mario's outfit*
+- Randomize object colors*
+- Randomize text (cutscenes, signs, prompts, etc)*
 - Nice GUI to setup things without using the CLI tool.
 - Use custom seed (pass `--seed <string>`)
 - ...many more to come
