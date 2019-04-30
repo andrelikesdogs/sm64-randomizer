@@ -148,7 +148,7 @@ class GuiApplication:
       self.selections['input_rom'].set(input_rom)
       if self.selections['output_rom'].get() == "":
         path_parts = input_rom.split(".")
-        guessed_output_file = f'{"".join(path_parts[:1])}.out.{path_parts[-1]}'
+        guessed_output_file = f'{"".join(path_parts[:-1])}.out.{path_parts[-1]}'
         self.selections['output_rom'].set(guessed_output_file)
 
   def select_rom_output(self):
@@ -246,54 +246,60 @@ class GuiApplication:
     s.start()
 
   def generate_rom(self):
-    if not self.check_validity():
-      messagebox.showerror(title="ROM Generation Failed", message=self.check_error)
-      return
-    
-    params = []
-    input_rom = None
-
-    for (key, tkinter_var) in self.selections.items():
-      key_in_arg_format = f"--{key.replace('_', '-')}"
-      
-      if key == 'input_rom':
-        input_rom = tkinter_var.get()
-      elif key == 'output_rom':
-        params.append('--out')
-        params.append(os.path.relpath(tkinter_var.get()))
-      elif isinstance(tkinter_var, BooleanVar):
-        # boolean args work by adding the param or not
-        if tkinter_var.get():
-          params.append(key_in_arg_format)
-      elif isinstance(tkinter_var, StringVar):
-        params.append(key_in_arg_format)
-        params.append(quote(tkinter_var.get()))
-      else:
-        raise NotImplementedError(f'arg format for {type(tkinter_var)} is not implemented yet')
-    
-    args = [os.path.relpath(input_rom), *params]
-    from Rom import ROM
-
-    test_output = os.path.join(tempfile.gettempdir(), 'test_output.z64')
-    with ROM(input_rom, test_output) as test_rom:
-      try:
-        test_rom.verify_header()
-      except Exception as err:
-        messagebox.showerror(title="ROM Header Invalid", message=f'Sorry, the specified ROM is not valid. Verification failed with error: {err.message}')
-    
-    sys.argv = ['main.py', *args]
     try:
-      import CLI
-    except Exception as err:
-      messagebox.showerror(f"Unfortunately, generation failed with error:\n {err}\nPlease submit this error to the projects github: https://github.com/andre-meyer/sm64-randomizer/issues")
-      print(err)
+      if not self.check_validity():
+        messagebox.showerror(title="ROM Generation Failed", message=self.check_error)
+        return
+      
+      params = []
+      input_rom = None
 
-    rom_output = self.selections['output_rom'].get()
-    (folder_containing_rom, filename_output) = os.path.split(rom_output)
-    messagebox.showinfo(title="ROM Generation completed!", message=f"Your randomized ROM was created as \"{filename_output}\"! Have fun!")
-    webbrowser.open("file:///" + folder_containing_rom)
-    return True
+      for (key, tkinter_var) in self.selections.items():
+        key_in_arg_format = f"--{key.replace('_', '-')}"
+        
+        if key == 'input_rom':
+          input_rom = tkinter_var.get()
+        elif key == 'output_rom':
+          params.append('--out')
+          params.append(tkinter_var.get())
+        elif isinstance(tkinter_var, BooleanVar):
+          # boolean args work by adding the param or not
+          if tkinter_var.get():
+            params.append(key_in_arg_format)
+        elif isinstance(tkinter_var, StringVar):
+          params.append(key_in_arg_format)
+          params.append(quote(tkinter_var.get()))
+        else:
+          raise NotImplementedError(f'arg format for {type(tkinter_var)} is not implemented yet')
+      
+      args = [input_rom, *params]
+      from Rom import ROM
 
+      test_output = os.path.join(tempfile.gettempdir(), 'test_output.z64')
+      try:
+        with ROM(input_rom, test_output) as test_rom:
+          test_rom.verify_header()
+      except Exception as excp:
+        messagebox.showerror(title="ROM Generation failed", message=f'Sorry, the specified ROM is not valid. Verification failed with error: {excp}')
+        
+      sys.argv = ['main.py', *args]
+      try:
+        import CLI
+      except Exception as err:
+        messagebox.showerror(f"Unfortunately, generation failed with error:\n {err}\nPlease submit this error to the projects github: https://github.com/andre-meyer/sm64-randomizer/issues")
+        print(err)
+
+      rom_output = self.selections['output_rom'].get()
+      (folder_containing_rom, filename_output) = os.path.split(rom_output)
+      messagebox.showinfo(title="ROM Generation completed!", message=f"Your randomized ROM was created as \"{filename_output}\"! Have fun!")
+      if system() == "Windows":
+        subprocess.Popen('explorer /select,"' + rom_output.replace("/", "\\") + '"', shell=True)
+      else:
+        webbrowser.open("file:///" + folder_containing_rom)
+      return True
+    except Exception as excp:
+      messagebox.showerror(title="ROM Generation failed", message=f'Sorry, ROM generation failed with error:\n {excp}\nPlease submit this error to the projects github: https://github.com/andre-meyer/sm64-randomizer/issues')
+      
   def add_setting_fields(self, settings, master):
     for key, fieldtuple in settings.items():
       optionFrame = Frame(master)

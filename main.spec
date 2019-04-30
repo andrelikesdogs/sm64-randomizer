@@ -1,12 +1,12 @@
-# -*- mode: python ; coding: utf-8 -*-
+# -*- mode: python -*-
 
 block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['/Users/andremeyer/Documents/Own/mario-64-rom-hacking/sm64-randomizer'],
+             pathex=['C:\\Users\\Andre\\Desktop\\Projects\\sm64-randomizer\\x64'],
              binaries=[],
-             datas=[('README.md', '.'), ('LICENSE', '.')],
+             datas=[('README.md', '.'), ('LICENSE', '.'), ('favicon.ico', '.')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -29,8 +29,4 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False , icon='favicon.icns')
-app = BUNDLE(exe,
-             name='main.app',
-             icon='favicon.icns',
-             bundle_identifier='com.andremeyer.sm64-randomizer')
+          console=False , icon='favicon.ico')

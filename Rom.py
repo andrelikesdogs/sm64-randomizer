@@ -77,17 +77,23 @@ class ROM:
 
   def read_levels(self):
     for level in ALL_LEVELS:
-      with open(f"dumps/level_scripts/{level.name}.txt", "w+") as dump_target:
-        self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
-        dump_target.write(self.levelscripts[level].dump())
-        #print(f'{level.name} has {len(self.level_scripts[level].objects)} objects')
+      if 'DEBUG' in os.environ:
+        if not os.path.exists('dumps/level_scripts'):
+          os.makedirs('dumps/level_scripts')
+        
+        with open(f"dumps/level_scripts/{level.name}.txt", "w+") as dump_target:
+          self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
+          dump_target.write(self.levelscripts[level].dump())
+          print(f'{level.name} has {len(self.level_scripts[level].objects)} objects')
 
-        #special_objs = list(filter(lambda x: x.source == "SPECIAL_MACRO_OBJ", self.level_scripts[level].objects))
-        #macro_objs = list(filter(lambda x: x.source == "MACRO_OBJ", self.level_scripts[level].objects))
-        #normal_objs = list(filter(lambda x: x.source == "PLACE_OBJ", self.level_scripts[level].objects))
-        #print(f' - {len(special_objs)} Special 0x2E Objects')
-        #print(f' - {len(macro_objs)} Macro 0x39 Objects')
-        #print(f' - {len(normal_objs)} Normal 0x24 Objects')
+          #special_objs = list(filter(lambda x: x.source == "SPECIAL_MACRO_OBJ", self.level_scripts[level].objects))
+          #macro_objs = list(filter(lambda x: x.source == "MACRO_OBJ", self.level_scripts[level].objects))
+          #normal_objs = list(filter(lambda x: x.source == "PLACE_OBJ", self.level_scripts[level].objects))
+          #print(f' - {len(special_objs)} Special 0x2E Objects')
+          #print(f' - {len(macro_objs)} Macro 0x39 Objects')
+          #print(f' - {len(normal_objs)} Normal 0x24 Objects')
+      else:
+        self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
     pass
 
   def print_info(self):
