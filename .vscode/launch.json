@@ -9,7 +9,7 @@
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/main.py",
-      "args": ["Super Mario 64 (U) [\\!].ext.z64"],
+      "args": ["Super Mario 64 (U) [\\!].ext.z64", "--shuffle-objects", "--shuffle-levels", "--shuffle-mario-color", "--shuffle-music", "--shuffle-colors", "--shuffle-dialog", "--seed", "1337"],
       "console": "integratedTerminal"
     },
     {

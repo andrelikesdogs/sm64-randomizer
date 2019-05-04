@@ -175,36 +175,39 @@ class LevelScriptParser:
 
           self.rom.set_segment(segment_id, segment_addr, segment_end)
         elif command.identifier == 0x2E:
-          """ 0x2E LOAD_COLLISION """
-          segment_addr = self.rom.read_integer(cursor + 4, 4)
-          segment_start = self.rom.read_segment_addr(segment_addr)
+          if self.rom.rom_type == 'EXTENDED':
+            """ 0x2E LOAD_COLLISION """
+            segment_addr = self.rom.read_integer(cursor + 4, 4)
+            segment_start = self.rom.read_segment_addr(segment_addr)
 
-          if segment_start:
-            #print(f'reading 0x2E from segment {hex(self.rom.read_segment_id(segment_addr))}: {hex(start)} to {hex(end)}')
-            segment_end = self.rom.read_segment_end(segment_addr)
-            self.process_special_objects_level(segment_start, segment_end)
+            if segment_start:
+              #print(f'reading 0x2E from segment {hex(self.rom.read_segment_id(segment_addr))}: {hex(start)} to {hex(end)}')
+              segment_end = self.rom.read_segment_end(segment_addr)
+              self.process_special_objects_level(segment_start, segment_end)
         elif command.identifier == 0x24:
           """ 0x24 PLACE_OBJECT """
+          # Example: 24 18 01 56  06 64 10 92  EA 41 00 00  FF 6D 00 00  00 00 00 00  13 00 01 F4
           model_id = self.rom.read_integer(cursor + 3)
           position = (self.rom.read_integer(cursor + 4, 2, True), self.rom.read_integer(cursor + 6, 2, True), self.rom.read_integer(cursor + 8, 2, True))
           rotation = (self.rom.read_integer(cursor + 10, 2, True), self.rom.read_integer(cursor + 12, 2, True), self.rom.read_integer(cursor + 14, 2, True))
-          (b1, b2, b3, b4) = tuple([self.rom.read_integer(cursor + 14 + n) for n in range(4)])
-          b_script = self.rom.read_integer(18, 4)
+          (b1, b2, b3, b4) = tuple([self.rom.read_integer(cursor + 16 + n) for n in range(4)])
+          b_script = self.rom.read_integer(cursor + 20, 4)
 
           self.objects.append(Object3D("PLACE_OBJ", model_id, position, rotation, b_script, [b1, b2, b3, b4], cursor + 2))
         elif command.identifier == 0x39:
-          """ 0x39 PLACE_MACRO_OBJECTS """
-          #print(self.level.name)
-          #print("Found Macro")
-          #print(format_binary(data))
-          # Length < 6 makes no sense
-          if length >= 6:
-            segment_addr = self.rom.read_integer(cursor + 4, 4)
-            segment_start = self.rom.read_segment_addr(segment_addr)
-            #print(hex(segment_start) if segment_start else None, hex(segment_addr))
-            if segment_start:
-              segment_end = self.rom.read_segment_end(segment_addr)
-              self.process_macro_objects(segment_start, segment_end)
+          if self.rom.rom_type == 'EXTENDED':
+            """ 0x39 PLACE_MACRO_OBJECTS """
+            #print(self.level.name)
+            #print("Found Macro")
+            #print(format_binary(data))
+            # Length < 6 makes no sense
+            if length >= 6:
+              segment_addr = self.rom.read_integer(cursor + 4, 4)
+              segment_start = self.rom.read_segment_addr(segment_addr)
+              #print(hex(segment_start) if segment_start else None, hex(segment_addr))
+              if segment_start:
+                segment_end = self.rom.read_segment_end(segment_addr)
+                self.process_macro_objects(segment_start, segment_end)
         elif command.identifier == 0x1F:
           """ 0x1F START_AREA_AND_LOAD_GEODATA """
           area_id = self.rom.read_integer(cursor + 2)
@@ -351,6 +354,9 @@ class LevelScriptParser:
         while count < amount:
           preset_id = self.rom.read_integer(cursor, 2)
           preset = preset_table[preset_id] if preset_id in preset_table else None
+
+          if preset is None:
+            print("preset not found")
 
           length = 8
           if preset:

@@ -1,4 +1,5 @@
 from Parsers.Level import Level
+import json
 
 LVL_MAIN=Level(0x108A10,	0x108A40, None, "Main Entry")
 LVL_GAME_OVER=Level(0x269EA0, 0x26A3A0, None, "Game Over")
@@ -221,3 +222,9 @@ WARP_ID_LOSE=0xf1
 WARP_ID_RECOVER=0xf3
 
 SPECIAL_WARP_IDS = [WARP_ID_WIN, WARP_ID_LOSE, WARP_ID_RECOVER]
+
+BEHAVIOUR_NAMES = {}
+with open("./Data/behaviorNames.json", "r") as behavior_file:
+  BEHAVIOUR_NAMES = json.loads(behavior_file.read())
+
+  BEHAVIOUR_NAMES = dict({ hex(int(key, 16)): name for (key, name) in BEHAVIOUR_NAMES.items()})

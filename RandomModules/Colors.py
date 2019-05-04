@@ -14,9 +14,9 @@ class ColorRandomizer:
   def randomize_coin_colors(self):
     logging.info("Randomizing Coin Colors")
     for coin_type, mem_addresses in COIN_COLOR_MEM_POS.items():
-      (r, g, b) = randint(0, 255), randint(0, 255), randint(0, 255)
+      (r, g, b) = randint(120, 255), randint(120, 255), randint(120, 255)
       #print(f'Coin Type: {coin_type} color: rgb({r}, {g}, {b})')
       for mem_address in mem_addresses:
-        self.rom.write_integer(mem_address[0], r, 2)
-        self.rom.write_integer(mem_address[1], g, 2)
-        self.rom.write_integer(mem_address[2], b, 2)
+        self.rom.write_integer(mem_address[0], r)
+        self.rom.write_integer(mem_address[1], g)
+        self.rom.write_integer(mem_address[2], b)

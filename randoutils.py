@@ -18,7 +18,7 @@ def pretty_print_table(title, data):
   longest_line = max([len(label) for label in data.keys()])
 
   for (label, value ) in data.items():
-    print(f' {str(label).ljust(longest_line + 2, " ")} {str(value).ljust(longest_line + 2, " ")}')
+    print(f' {str(label).ljust(longest_line + 2, " ")} {str(value).ljust(longest_line + 2, " ")}', end='\n')
     
   print("-" * 73)
-  print()
+  #print()

@@ -20,32 +20,34 @@ from RandomModules.Text import TextRandomizer
 
 from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument("rom", type=str)
+parser.add_argument("--no-extend", default=False, help="disable auto-extend of ROM, which might fail on some systems", action="store_true")
 parser.add_argument("--out", type=str, help="target of randomized rom")
 parser.add_argument("--seed", type=int, default=round(time.time() * 256 * 1000), help="define a custom seed to have the same experience as someone else")
-parser.add_argument("--shuffle-levels", help="enables the shuffling of levels", action="store_true")
+parser.add_argument("--shuffle-levels", help="enables the shuffling of level objects", action="store_true")
 parser.add_argument("--shuffle-paintings", default="match", choices=["match", "random", "off"], help="change the behaviour of painting shuffle (\"match\" - matches randomized levels, i.e. paintings = level, \"random\" - independently randomize paintings, \"off\" - leave paintings untouched)")
+parser.add_argument("--shuffle-entries", help="enables random level entries, mixing paintings, level entries and secret level entries", action="store_true")
 parser.add_argument("--shuffle-mario-color", help="enables randomized mario colors", action="store_true")
 parser.add_argument("--shuffle-music", help="randomizes every song in every level", action="store_true")
 parser.add_argument("--shuffle-objects", help="shuffles objects in levels", action="store_true")
 parser.add_argument("--shuffle-colors", help="shuffles colors for various things", action="store_true")
 parser.add_argument("--shuffle-dialog", help="shuffles dialog texts. might look weird for prompts", action="store_true")
-parser.add_argument
 args = parser.parse_args()
 
 argument_labels = {
   "rom": "Input ROM",
   "out": "Output ROM",
+  "no_extend": "Disable automatic extending",
   "seed": "RNG Seed",
-  "shuffle_levels": "Enable Level Randomizer",
+  "shuffle_levels": "Enable Level Object Randomizer",
   "shuffle_paintings": "Enable Painting Randomizer",
   "shuffle_mario_color": "Enable Random Color for Mario",
   "shuffle_music": "Enables random music in all levels",
   "shuffle_objects": "Randomize object positions in levels",
   "shuffle_colors": "Randomizes colors of various things",
-  "shuffle_dialog": "Random Dialog Texts (Cutscenes, Signs, etc)."
+  "shuffle_dialog": "Random Dialog Texts (Cutscenes, Signs, etc).",
+  "shuffle_entries": "Random Level Entries"
 }
 
 used_seed = None
@@ -60,14 +62,27 @@ if not rom_path.exists():
 
 try:
   with ROM(rom_path, out_path) as rom:
+    pretty_print_table("Your Settings", {argument_labels[label]: value for (label, value) in vars(args).items()})
+
     try:
       rom.verify_header()
-      pretty_print_table("Your Settings", {argument_labels[label]: value for (label, value) in vars(args).items()})
-      rom.print_info()
     except Exception as err:
       print(err)
       print("invalid rom, does not match known headers. make sure you use the z64 format")
       sys.exit(2)
+
+    if rom.rom_type == 'VANILLA' and not args.no_extend:
+      print("The specified ROM file is not extended yet, we\'ll try to extend it for you")
+      try:
+        rom.try_extend()
+        rom.verify_header()
+      except Exception as err:
+        print("Unfortunately, the ROM could not be extended. Please see the log below to figure out why. The Randomizer will continue using the vanilla rom. Please note not all functionality is available in this mode.")
+        print(err)
+    rom.print_info()
+    
+    rom.set_initial_segments()
+    rom.read_levels()
 
     music_random = MusicRandomizer(rom)
     if args.shuffle_music:
@@ -78,7 +93,7 @@ try:
       mario_random.randomize_color()
 
     warp_random = WarpRandomizer(rom)
-    if args.shuffle_levels:
+    if args.shuffle_entries:
       warp_random.shuffle_level_entries(args.shuffle_paintings)
     
     level_randomizer = LevelRandomizer(rom)

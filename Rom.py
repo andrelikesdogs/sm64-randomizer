@@ -1,6 +1,8 @@
 from pathlib import Path
 import shutil
 import os
+import subprocess
+import time
 
 from randoutils import pretty_print_table
 from Parsers.Level import Level
@@ -64,16 +66,28 @@ class ROM:
     else:
       raise Exception('invalid region in ROM')
 
-    if self.file_stats.st_size == 25165824:
+    if self.file_stats.st_size > 8388608:
       self.rom_type = 'EXTENDED'
     elif self.file_stats.st_size == 8388608:
       self.rom_type = 'VANILLA'
     else:
       print("Warning: Could not determine ROM-Type from size")
 
-    self.set_initial_segments()
-    self.read_levels()
-    #return header in KNOWN_HEADERS
+  def try_extend(self):
+    # make copy
+    in_path_parts = str(self.path).split('.')
+    ext_path_parts = [*in_path_parts[:-1], 'ext', in_path_parts[-1]]
+    ext_path = '.'.join(ext_path_parts)
+    print("Creating Extended ROM as ", ext_path)
+    shutil.copy(self.path, ext_path)
+
+    # close initial file
+    self.file.close()
+
+    subprocess.check_call(['./3rdparty/sm64extend_mac_x64', '-s', '24', str(self.path), ext_path])
+    self.path = Path(ext_path)
+    self.file_stats = os.stat(self.path)
+    self.file = open(ext_path, 'rb')
 
   def read_levels(self):
     for level in ALL_LEVELS:
