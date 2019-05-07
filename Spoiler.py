@@ -1,3 +1,5 @@
+import os
+
 class SpoilerLog:
   entries : dict = {}
 
@@ -10,7 +12,7 @@ class SpoilerLog:
 
   @staticmethod
   def output():
-    with open('./sm64_rando_spoiler.log', 'w') as spoiler_log_file:
+    with open('sm64_rando_spoiler.log', 'w') as spoiler_log_file:
       for module in list(SpoilerLog.entries.keys()):
         spoiler_log_file.write(module.upper().center(40, '-') + '\n')
         for entry in SpoilerLog.entries[module]:

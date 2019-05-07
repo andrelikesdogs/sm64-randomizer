@@ -33,7 +33,6 @@ parser.add_argument("--shuffle-music", help="randomizes every song in every leve
 parser.add_argument("--shuffle-objects", help="shuffles objects in levels", action="store_true")
 parser.add_argument("--shuffle-colors", help="shuffles colors for various things", action="store_true")
 parser.add_argument("--shuffle-dialog", help="shuffles dialog texts. might look weird for prompts", action="store_true")
-args = parser.parse_args()
 
 argument_labels = {
   "rom": "Input ROM",
@@ -50,68 +49,71 @@ argument_labels = {
   "shuffle_entries": "Random Level Entries"
 }
 
-used_seed = None
+def run_with_args(opt_args):
+  seed(opt_args.seed)
 
-seed(args.seed)
+  rom_path = Path(opt_args.rom)
+  out_path = opt_args.out or Path(rom_path.name[0:-4] + ".out.z64")
 
-rom_path = Path(args.rom)
-out_path = args.out or Path(rom_path.name[0:-4] + ".out.z64")
+  if not rom_path.exists():
+    raise Exception("invalid file, does not exist")
 
-if not rom_path.exists():
-  raise Exception("invalid file, does not exist")
+  try:
+    with ROM(rom_path, out_path) as rom:
+      pretty_print_table("Your Settings", {argument_labels[label]: value for (label, value) in vars(opt_args).items()})
 
-try:
-  with ROM(rom_path, out_path) as rom:
-    pretty_print_table("Your Settings", {argument_labels[label]: value for (label, value) in vars(args).items()})
-
-    try:
-      rom.verify_header()
-    except Exception as err:
-      print(err)
-      print("invalid rom, does not match known headers. make sure you use the z64 format")
-      sys.exit(2)
-
-    if rom.rom_type == 'VANILLA' and not args.no_extend:
-      print("The specified ROM file is not extended yet, we\'ll try to extend it for you")
       try:
-        rom.try_extend()
         rom.verify_header()
       except Exception as err:
-        print("Unfortunately, the ROM could not be extended. Please see the log below to figure out why. The Randomizer will continue using the vanilla rom. Please note not all functionality is available in this mode.")
         print(err)
-    rom.print_info()
-    
-    rom.set_initial_segments()
-    rom.read_levels()
+        print("invalid rom, does not match known headers. make sure you use the z64 format")
+        sys.exit(2)
 
-    music_random = MusicRandomizer(rom)
-    if args.shuffle_music:
-      music_random.shuffle_music(ALL_LEVELS)
+      if rom.rom_type == 'VANILLA' and not opt_args.no_extend:
+        print("The specified ROM file is not extended yet, we\'ll try to extend it for you")
+        try:
+          new_rom = rom.try_extend()
+          new_args = {**vars(opt_args)}
+          new_args['rom'] = new_rom
+          return run_with_args(argparse.Namespace(**new_args))
+        except Exception as err:
+          print("Unfortunately, the ROM could not be extended. Please see the log below to figure out why. The Randomizer will continue using the vanilla rom. Please note not all functionality is available in this mode.")
+          print(err)
+      rom.print_info()
+      
+      rom.set_initial_segments()
+      rom.read_levels()
 
-    mario_random = MarioRandomizer(rom)
-    if args.shuffle_mario_color:
-      mario_random.randomize_color()
+      music_random = MusicRandomizer(rom)
+      if opt_args.shuffle_music:
+        music_random.shuffle_music(ALL_LEVELS)
 
-    warp_random = WarpRandomizer(rom)
-    if args.shuffle_entries:
-      warp_random.shuffle_level_entries(args.shuffle_paintings)
-    
-    level_randomizer = LevelRandomizer(rom)
-    if args.shuffle_objects:
-      level_randomizer.shuffle_enemies()
+      mario_random = MarioRandomizer(rom)
+      if opt_args.shuffle_mario_color:
+        mario_random.randomize_color()
 
-    text_randomizer = TextRandomizer(rom)
-    if args.shuffle_dialog:
-      text_randomizer.shuffle_dialog_pointers()
+      warp_random = WarpRandomizer(rom)
+      if opt_args.shuffle_entries:
+        warp_random.shuffle_level_entries(opt_args.shuffle_paintings)
+      
+      level_randomizer = LevelRandomizer(rom)
+      if opt_args.shuffle_objects:
+        level_randomizer.shuffle_enemies()
 
-    color_randomizer = ColorRandomizer(rom)
-    if args.shuffle_colors:
-      color_randomizer.randomize_coin_colors()
-    
-  SpoilerLog.output()
-  print(f'Completed! Your randomized ROM File can be found as "{os.path.relpath(out_path)}"')
-except Exception as err:
-  print(f'Unfortunately, the randomizer encountered an error, seen below:')
-  print(err)
-  print("Stacktrace:".center(40, '-'))
-  traceback.print_exc()
+      text_randomizer = TextRandomizer(rom)
+      if opt_args.shuffle_dialog:
+        text_randomizer.shuffle_dialog_pointers()
+
+      color_randomizer = ColorRandomizer(rom)
+      if opt_args.shuffle_colors:
+        color_randomizer.randomize_coin_colors()
+      
+    SpoilerLog.output()
+    print(f'Completed! Your randomized ROM File can be found as "{os.path.relpath(out_path)}"')
+  except Exception as err:
+    print(f'Unfortunately, the randomizer encountered an error, seen below:')
+    print(err)
+    print("Stacktrace:".center(40, '-'))
+    traceback.print_exc()
+
+run_with_args(parser.parse_args())

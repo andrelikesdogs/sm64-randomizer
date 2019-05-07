@@ -81,7 +81,6 @@ WHITELIST_SHUFFLING = [
   (0x13004FD4, None), # BBH: Haunted Chair
   (0x13005024, None), # BBH: Piano
   (0x1300506C, None), # BBH: Bookend
-
 ]
 
 BSCRIPT_START = 0x10209C
@@ -109,6 +108,7 @@ class LevelRandomizer:
       positions = []
       objects = []
       for obj in parsed.objects:
+        #print(obj)
         if LevelRandomizer.can_shuffle(obj):
           #print(obj.position)
           positions.append(obj.position)
@@ -118,7 +118,7 @@ class LevelRandomizer:
       shuffle(positions)
       for idx, obj in enumerate(objects):
         position = positions[idx]
-        print(hex(obj.behaviour) if obj.behaviour else "None", BEHAVIOUR_NAMES[hex(obj.behaviour)] if obj.behaviour and hex(obj.behaviour) in BEHAVIOUR_NAMES else "Unknown Behaviour", hex(obj.model_id) if obj.model_id else "None")
+        #print(hex(obj.behaviour) if obj.behaviour else "None", BEHAVIOUR_NAMES[hex(obj.behaviour)] if obj.behaviour and hex(obj.behaviour) in BEHAVIOUR_NAMES else "Unknown Behaviour", hex(obj.model_id) if obj.model_id else "None")
         obj.set(self.rom, 'position', position)
     '''
     for level in self.level_scripts:

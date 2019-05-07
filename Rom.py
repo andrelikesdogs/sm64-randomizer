@@ -1,10 +1,11 @@
 from pathlib import Path
 import shutil
 import os
+from platform import system, architecture
 import subprocess
 import time
 
-from randoutils import pretty_print_table
+from randoutils import pretty_print_table, generate_debug_materials, generate_obj_for_level_geometry
 from Parsers.Level import Level
 from Parsers.LevelScript import LevelScriptParser
 from Constants import ALL_LEVELS
@@ -82,23 +83,31 @@ class ROM:
     shutil.copy(self.path, ext_path)
 
     # close initial file
-    self.file.close()
+    #self.file.close()
 
-    subprocess.check_call(['./3rdparty/sm64extend_mac_x64', '-s', '24', str(self.path), ext_path])
-    self.path = Path(ext_path)
-    self.file_stats = os.stat(self.path)
-    self.file = open(ext_path, 'rb')
+    operating_sys = system()
+    #arch = architecture()
+    #bits = arch[0]
+    args = ['-s', '24', str(self.path), ext_path]
+    if operating_sys == 'Darwin':
+      subprocess.check_call(['./3rdparty/sm64extend_mac_x64', *args])
+    elif operating_sys == 'Windows':
+      subprocess.check_call(['3rdparty/sm64extend_win_x86.exe', *args])
+    else:
+      raise Exception("Sorry, no sm64extend is available for your OS. Please raise an issue on our github, and we'll try to add it!")
+    
+    return ext_path
 
   def read_levels(self):
     for level in ALL_LEVELS:
       if 'DEBUG' in os.environ:
-        if not os.path.exists('dumps/level_scripts'):
-          os.makedirs('dumps/level_scripts')
+        if not os.path.exists(os.path.join("dumps", "level_scripts")):
+          os.makedirs(os.path.join("dumps", "level_scripts"))
         
-        with open(f"dumps/level_scripts/{level.name}.txt", "w+") as dump_target:
+        with open(os.path.join("dumps", "level_scripts", "{level.name}.txt"), "w+") as dump_target:
           self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
           dump_target.write(self.levelscripts[level].dump())
-          print(f'{level.name} has {len(self.level_scripts[level].objects)} objects')
+          #print(f'{level.name} has {len(self.level_scripts[level].objects)} objects')
 
           #special_objs = list(filter(lambda x: x.source == "SPECIAL_MACRO_OBJ", self.level_scripts[level].objects))
           #macro_objs = list(filter(lambda x: x.source == "MACRO_OBJ", self.level_scripts[level].objects))
@@ -106,9 +115,19 @@ class ROM:
           #print(f' - {len(special_objs)} Special 0x2E Objects')
           #print(f' - {len(macro_objs)} Macro 0x39 Objects')
           #print(f' - {len(normal_objs)} Normal 0x24 Objects')
+
+        if not os.path.exists(os.path.join("dumps", "level_geometry")):
+          os.makedirs(os.path.join("dumps", "level_geometry"))
+        
+        with open(os.path.join("dumps", "level_geometry", "debug.mtl"), "w+") as mtl_debug:
+          mtl_debug.write(generate_debug_materials())
+          
+        with open(os.path.join("dumps", "level_geometry", "{level.name}.obj"), "w+") as obj_output:
+          data = generate_obj_for_level_geometry(self.levelscripts[level].level_geometry)
+          obj_output.write(data)
+          
       else:
         self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
-    pass
 
   def print_info(self):
     pretty_print_table("ROM Properties", {

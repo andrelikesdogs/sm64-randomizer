@@ -2,6 +2,7 @@ from Parsers.Level import Level, LevelCommand
 from Parsers.CollisionPresets import CollisionPresetParser, SPECIAL_CD_WITH_PARAMS
 from Entities.Object3D import Object3D
 from Entities.Warp import Warp
+from Entities.LevelGeometry import LevelGeometry
 from Constants import LVL_MAIN
 
 from randoutils import format_binary
@@ -36,6 +37,9 @@ class LevelScriptParser:
     self.layer = layer
     self.level = level
     self.current_area = None
+
+    self.level_geometry = LevelGeometry(level)
+    self.level_collisions = []
 
     self.checked_offsets = []
 
@@ -310,34 +314,47 @@ class LevelScriptParser:
       raise Exception("Invalid special object table")
     
     vertice_count = self.rom.read_integer(cursor + 2, 2)
+    vertices = []
+    collision_tris = []
 
     # checksum read + vertice read
     cursor += 4
 
-    # skip vertices
-    cursor += vertice_count * 6
-
+    # read vertices
+    for _ in range(vertice_count):
+      vertices.append((
+        self.rom.read_integer(cursor, 2, True),
+        self.rom.read_integer(cursor + 2, 2, True),
+        self.rom.read_integer(cursor + 4, 2, True)
+      ))
+      cursor += 6
+      
     # read collision data
     while cursor < end:
       cd_type = self.rom.read_bytes(cursor, 2)
       cd_type_int = self.rom.read_integer(cursor, 2)
       cursor += 2
-      #print(f'CD Type: {cd_type}')
-        
-      if cd_type == b'\x00\x41':
-        #print("encountered end")
-        break
+
+      if cd_type == b'\x00\x41': break
 
       amount = self.rom.read_integer(cursor, 2)
       cursor += 2
 
-      #print(f'Defined {amount} collision tris')
+      triangles = []
 
       for _ in range(amount):
-        cd_length = 8 if cd_type_int in SPECIAL_CD_WITH_PARAMS else 6
-        cursor += cd_length
-      #print("list ended", cursor)
-  
+        indices = (
+          self.rom.read_integer(cursor, 2),
+          self.rom.read_integer(cursor + 2, 2),
+          self.rom.read_integer(cursor + 4, 2)
+        )
+
+        cursor += 8 if cd_type_int in SPECIAL_CD_WITH_PARAMS else 6
+
+        triangles.append(indices)
+      #print(f'{len(triangles)} {hex(cd_type_int)} ({format_binary(cd_type)})')
+      self.level_geometry.add_area(self.current_area, vertices, triangles, cd_type_int)
+
     # read object definitions
     while cursor < end:
       special_type = self.rom.read_bytes(cursor, 2)
@@ -400,7 +417,7 @@ class LevelScriptParser:
       
     self.objects = self.objects + objects_found
     #print(f"Done parsing special level objects: {len(objects_found)}")
-    
+
   def dump(self):
     output = ""
 

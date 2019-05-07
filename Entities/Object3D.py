@@ -32,7 +32,7 @@ class Object3D(BaseMemoryRecord):
       else:
         pass
     
-    print(self)
+    #print(self)
   
   def __str__(self):
     return f'Object3D: Source: {self.source}, Model-ID: {self.model_id}, position: {repr(self.position)}, rotation: {repr(self.rotation)}, bparams: {repr(self.bparams)}, bscript: {hex(self.behaviour or 0)}, mem_pos: {hex(self.mem_address)}'
