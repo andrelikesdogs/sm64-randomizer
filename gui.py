@@ -56,12 +56,6 @@ class SettingField(NamedTuple):
   initial: str = None
 
 gameplay_settings = {
-  'shuffle_levels': SettingField(
-    type="checkbox",
-    help="Enable shuffling of all level objects in the game",
-    label="Shuffle Levels Objects",
-    value=False
-  ),
   'shuffle_entries': SettingField(
     type="checkbox",
     help="Enable shuffling of all level entries the game",

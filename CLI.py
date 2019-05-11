@@ -25,7 +25,6 @@ parser.add_argument("rom", type=str)
 parser.add_argument("--no-extend", default=False, help="disable auto-extend of ROM, which might fail on some systems", action="store_true")
 parser.add_argument("--out", type=str, help="target of randomized rom")
 parser.add_argument("--seed", type=int, default=round(time.time() * 256 * 1000), help="define a custom seed to have the same experience as someone else")
-parser.add_argument("--shuffle-levels", help="enables the shuffling of level objects", action="store_true")
 parser.add_argument("--shuffle-paintings", default="match", choices=["match", "random", "off"], help="change the behaviour of painting shuffle (\"match\" - matches randomized levels, i.e. paintings = level, \"random\" - independently randomize paintings, \"off\" - leave paintings untouched)")
 parser.add_argument("--shuffle-entries", help="enables random level entries, mixing paintings, level entries and secret level entries", action="store_true")
 parser.add_argument("--shuffle-mario-color", help="enables randomized mario colors", action="store_true")
@@ -39,7 +38,6 @@ argument_labels = {
   "out": "Output ROM",
   "no_extend": "Disable automatic extending",
   "seed": "RNG Seed",
-  "shuffle_levels": "Enable Level Object Randomizer",
   "shuffle_paintings": "Enable Painting Randomizer",
   "shuffle_mario_color": "Enable Random Color for Mario",
   "shuffle_music": "Enables random music in all levels",
@@ -98,7 +96,7 @@ def run_with_args(opt_args):
       
       level_randomizer = LevelRandomizer(rom)
       if opt_args.shuffle_objects:
-        level_randomizer.shuffle_enemies()
+        level_randomizer.shuffle_objects()
 
       text_randomizer = TextRandomizer(rom)
       if opt_args.shuffle_dialog:

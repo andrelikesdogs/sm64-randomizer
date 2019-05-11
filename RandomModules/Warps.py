@@ -1,4 +1,4 @@
-from Constants import LVL_CASTLE_COURTYARD, LVL_CASTLE_INSIDE, LVL_CASTLE_GROUNDS, ALL_LEVELS, LEVEL_ID_MAPPING, LEVEL_SHORT_CODES
+from Constants import LVL_CASTLE_COURTYARD, LVL_CASTLE_INSIDE, LVL_CASTLE_GROUNDS, LVL_THI, ALL_LEVELS, LEVEL_ID_MAPPING, LEVEL_SHORT_CODES
 from Spoiler import SpoilerLog
 from RandomModules.Textures import TextureAtlas
 from random import shuffle, choice
@@ -16,6 +16,8 @@ WARP_BEHAVIOURS = {
   0x13002F8C: ['SUCCESS'], # Hole Exit
   0x13002F84: ['RESTORE'], # Restore to Lobby
 }
+
+MUST_MATCH_AREA_LEVELS = [LVL_THI]
 
 class WarpRandomizer:
   def __init__(self, rom : 'ROM'):
@@ -78,13 +80,14 @@ class WarpRandomizer:
         # 2. warp must lead to one of the OW levels
         # 3. warp must be of one of the warp types
         if warp.to_warp_id in anim_warp_ids and warp.to_course_id in entry_level_course_ids and warp.warp_id in warp_types:
-          warp_type = warp_types[warp.warp_id]
+          if level not in MUST_MATCH_AREA_LEVELS or warp.area_id == area_id:
+            warp_type = warp_types[warp.warp_id]
 
-          # add a specific warp-type to the exits list
-          lvl_warps[key].setdefault(warp_type, []).append(warp)
-          
-          # add all the anim warps that this warp refers to
-          ow_warps[key][1].setdefault(warp_type, []).extend([anim_warp for anim_warp in anim_warps if anim_warp.warp_id == warp.to_warp_id])
+            # add a specific warp-type to the exits list
+            lvl_warps[key].setdefault(warp_type, []).append(warp)
+            
+            # add all the anim warps that this warp refers to
+            ow_warps[key][1].setdefault(warp_type, []).extend([anim_warp for anim_warp in anim_warps if anim_warp.warp_id == warp.to_warp_id])
 
     # Debug View of all Warps found
     for ((level, area), (entry_warps, anim_warp_groups)) in ow_warps.items():
@@ -115,6 +118,7 @@ class WarpRandomizer:
       for entry_warp in entries:
         #print(hex(level_area_target[0].level_id))
         entry_warp.set(self.rom, "to_course_id", level_area_target[0].level_id)
+        entry_warp.set(self.rom, "to_area_id", level_area_target[1])
 
       orig_exits = lvl_warps[original_level_area]
       level_exits = lvl_warps[level_area_target]

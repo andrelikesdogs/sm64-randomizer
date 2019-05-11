@@ -99,7 +99,7 @@ class LevelRandomizer:
           return True
       return False
 
-  def shuffle_enemies(self):
+  def shuffle_objects(self):
     for (level, parsed) in self.rom.levelscripts.items():
       if level in SPECIAL_LEVELS:
         continue
