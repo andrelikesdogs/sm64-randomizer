@@ -3,8 +3,11 @@ import os
 import argparse
 import time
 import traceback
+import json
 from pathlib import Path
 from random import seed
+
+from __version__ import __version__
 
 from Rom import ROM
 from Debug import Debug
@@ -20,33 +23,48 @@ from RandomModules.Text import TextRandomizer
 
 from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE
 
+randomizer_params = []
+with open(os.path.join("Data", "configurableParams.json"), "r") as json_params_file:
+  randomizer_params = json.loads(json_params_file.read())
+
 parser = argparse.ArgumentParser()
 parser.add_argument("rom", type=str)
 parser.add_argument("--no-extend", default=False, help="disable auto-extend of ROM, which might fail on some systems", action="store_true")
 parser.add_argument("--out", type=str, help="target of randomized rom")
 parser.add_argument("--seed", type=int, default=round(time.time() * 256 * 1000), help="define a custom seed to have the same experience as someone else")
-parser.add_argument("--shuffle-paintings", default="match", choices=["match", "random", "off"], help="change the behaviour of painting shuffle (\"match\" - matches randomized levels, i.e. paintings = level, \"random\" - independently randomize paintings, \"off\" - leave paintings untouched)")
-parser.add_argument("--shuffle-entries", help="enables random level entries, mixing paintings, level entries and secret level entries", action="store_true")
-parser.add_argument("--shuffle-mario-color", help="enables randomized mario colors", action="store_true")
-parser.add_argument("--shuffle-music", help="randomizes every song in every level", action="store_true")
-parser.add_argument("--shuffle-objects", help="shuffles objects in levels", action="store_true")
-parser.add_argument("--shuffle-colors", help="shuffles colors for various things", action="store_true")
-parser.add_argument("--shuffle-dialog", help="shuffles dialog texts. might look weird for prompts", action="store_true")
-
+parser.add_argument('--version', action='version', version=f'v{__version__}')
 argument_labels = {
   "rom": "Input ROM",
   "out": "Output ROM",
   "no_extend": "Disable automatic extending",
   "seed": "RNG Seed",
-  "shuffle_paintings": "Enable Painting Randomizer",
-  "shuffle_mario_color": "Enable Random Color for Mario",
-  "shuffle_music": "Enables random music in all levels",
-  "shuffle_objects": "Randomize object positions in levels",
-  "shuffle_colors": "Randomizes colors of various things",
-  "shuffle_dialog": "Random Dialog Texts (Cutscenes, Signs, etc).",
-  "shuffle_entries": "Random Level Entries"
 }
+for field in randomizer_params:
+  argument_args = []
+  argument_kwargs = {}
 
+  argument_args.append(f'--{field["name"]}')
+
+  if field["type"] == 'select':
+    argument_kwargs["choices"] = [option["value"] for option in field["options"]]
+  elif field["type"] == 'checkbox':
+    argument_kwargs["action"] = "store_true"
+  
+  if "default" in field:
+    if type(field["default"]) is dict and "CLI" in field["default"]:
+      argument_kwargs["default"] = field["default"]["CLI"]
+    else:
+      argument_kwargs["default"] = field["default"]
+
+  if "help" in field:
+    argument_kwargs["help"] = field["help"]
+
+  if "label" in field:
+    argparse_name = field["name"]
+    argument_labels[field["name"].replace("-", "_")] = field["label"]
+  
+  parser.add_argument(*argument_args, **argument_kwargs)
+print(argument_labels)
 def run_with_args(opt_args):
   seed(opt_args.seed)
 
@@ -87,7 +105,7 @@ def run_with_args(opt_args):
         music_random.shuffle_music(ALL_LEVELS)
 
       mario_random = MarioRandomizer(rom)
-      if opt_args.shuffle_mario_color:
+      if opt_args.shuffle_mario_outfit:
         mario_random.randomize_color()
 
       warp_random = WarpRandomizer(rom)
@@ -99,7 +117,7 @@ def run_with_args(opt_args):
         level_randomizer.shuffle_objects()
 
       text_randomizer = TextRandomizer(rom)
-      if opt_args.shuffle_dialog:
+      if opt_args.shuffle_text:
         text_randomizer.shuffle_dialog_pointers()
 
       color_randomizer = ColorRandomizer(rom)
