@@ -131,20 +131,19 @@ class GuiApplication:
     self.frames = {
       'rom-settings': ttk.LabelFrame(self.gridcontainer, text="ROM Settings"),
       'gameplay': ttk.LabelFrame(self.gridcontainer, text="Gameplay Settings"),
-      'aesthetic': ttk.LabelFrame(self.gridcontainer, text="Aesthetic Settings"),
+      'aesthetics': ttk.LabelFrame(self.gridcontainer, text="Aesthetic Settings"),
     }
 
     self.frames['rom-settings'].pack(side=TOP, fill=X, padx=2, pady=2)
     self.frames['gameplay'].pack(side=LEFT, fill=BOTH, expand=True, anchor="w", padx=2, pady=2)
-    self.frames['aesthetic'].pack(side=RIGHT, fill=BOTH, expand=True, anchor="w", padx=2, pady=2)
+    self.frames['aesthetics'].pack(side=RIGHT, fill=BOTH, expand=True, anchor="w", padx=2, pady=2)
 
     #self.gridcontainer.add(self.frames['rom-settings'], text='ROM Options')
     #self.gridcontainer.add(self.frames['gameplay'], text='Gameplay Rules')
     #self.gridcontainer.add(self.frames['aesthetic'], text='Aesthetic Rules')
 
     self.add_rom_settings()
-    self.add_gameplay_settings()
-    self.add_aesthetic_settings()
+    self.add_settings_from_file()
 
     self.add_main_settings()
 
@@ -313,48 +312,59 @@ class GuiApplication:
     except Exception as excp:
       messagebox.showerror(title="ROM Generation failed", message=f'Sorry, ROM generation failed with error:\n {excp}\nPlease submit this error to the projects github: https://github.com/andre-meyer/sm64-randomizer/issues')
       
-  def add_setting_fields(self, settings, master):
-    for key, fieldtuple in settings.items():
-      optionFrame = Frame(master)
+  def add_setting_field(self, field):
+    master = self.frames[field['category']]
+    optionFrame = Frame(master)
+    key = field['name']
 
-      if fieldtuple.type == 'checkbox':
-        self.selections[key] = BooleanVar(optionFrame)
-        checkboxField = ttk.Checkbutton(optionFrame, text=fieldtuple.label, variable=self.selections[key])
-        CreateToolTip(checkboxField, fieldtuple.help)
-        checkboxField.pack(side=LEFT)
-      elif fieldtuple.type == 'select':
-        optionLabel = ttk.Label(optionFrame, text=fieldtuple.label)
-        optionLabel.pack(side=LEFT)
-        CreateToolTip(optionLabel, fieldtuple.help)
-        
-        self.selections[key] = StringVar(optionFrame)
-        self.combobox_selections[key] = StringVar(optionFrame)
-
-        choice_dict = { label: value for (value, label) in fieldtuple.choices}
-        choice_dict_invert = { value: label for (value, label) in fieldtuple.choices}
-        self.selections[key].set(fieldtuple.choices[0][0])
-
-        optionsField = ttk.OptionMenu(
-          optionFrame,
-          self.combobox_selections[key],
-          fieldtuple.choices[0][1],
-          *[label for (value, label) in fieldtuple.choices],
-          command=lambda *args, sel_key=key, choices=choice_dict: self.selections[sel_key].set(choices[self.combobox_selections[sel_key].get()])
-        )
-        self.selections[key].trace('w', lambda *args, sel_key=key, choices=choice_dict_invert: self.combobox_selections[sel_key].set(choice_dict_invert[self.selections[sel_key].get()]))
-        
-        optionsField.pack(side=LEFT, fill=X, expand=True)
-
-
-      optionFrame.pack(side=TOP, padx=5, pady=(5,1), fill=X)
-
+    if field['type'] == 'checkbox':
+      self.selections[key] = BooleanVar(optionFrame)
+      checkboxField = ttk.Checkbutton(optionFrame, text=field['label'], variable=self.selections[key])
+      if 'help' in field:
+        CreateToolTip(checkboxField, field['help'])
       
+      checkboxField.pack(side=LEFT)
+    elif field['type'] == 'select':
+      optionLabel = ttk.Label(optionFrame, text=field['label'])
+      optionLabel.pack(side=LEFT)
+      if 'help' in field:
+        CreateToolTip(optionLabel, field['help'])
+      
+      self.selections[key] = StringVar(optionFrame)
+      self.combobox_selections[key] = StringVar(optionFrame)
 
+      choice_dict = { option['label']: option['value'] for option in field['options']}
+      choice_dict_invert = { option['value']: option['label'] for option in field['options']}
+      self.selections[key].set(field['options'][0]['value'])
+
+      optionsField = ttk.OptionMenu(
+        optionFrame,
+        self.combobox_selections[key],
+        field['options'][0]['label'],
+        *[option['label'] for option in field['options']],
+        command=lambda *args, sel_key=key, choices=choice_dict: self.selections[sel_key].set(choices[self.combobox_selections[sel_key].get()])
+      )
+      self.selections[key].trace('w', lambda *args, sel_key=key, choices=choice_dict_invert: self.combobox_selections[sel_key].set(choice_dict_invert[self.selections[sel_key].get()]))
+      
+      optionsField.pack(side=LEFT, fill=X, expand=True)
+
+
+    optionFrame.pack(side=TOP, padx=5, pady=(5,1), fill=X)
+
+  def add_settings_from_file(self):
+    with open(os.path.join('Data', 'configurableParams.json')) as json_file:
+      fields = json.loads(json_file.read())
+
+      for field in fields:
+        self.add_setting_field(field)
+
+  """
   def add_gameplay_settings(self):
     self.add_setting_fields(gameplay_settings, self.frames['gameplay'])
 
   def add_aesthetic_settings(self):
     self.add_setting_fields(aesthetic_settings, self.frames['aesthetic'])
+  """
 
   def add_main_settings(self):
     buttonsFrame = Frame(self.main_frame, padx=5, pady=5, height=60)
