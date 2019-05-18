@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Super Mario 64 Randomizer - Re-experience the classic game in new challenging ways">
+    <meta name="keywords" content="Super Mario 64, SM64, SM64 Randomizer, Modding, Hacking, SM64 Rando, Super Mario 64 Randomizer">
+    
+    <title>Super Mario 64 Randomizer</title>
+
+    <link href="css/normalize.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+    <link href="css/generator.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <script src="js/jquery-3.4.1.min.js"></script>
+    <script src="configurableParams.js"></script>
+    <script src="js/dropzone.js"></script>
+    <script src="js/zip.js"></script>
+    <script>
+      zip.workerScriptsPath = "js/lib/";
+      Dropzone.autoDiscover = false;
+    </script>
+    <script src="js/generator.js"></script>
+  </head>
+  <body>
+    <section class="title-section">
+      <div class="inner">
+        <div class="logo-scale">
+          <img src="img/logo.png" class="logo" alt="Logo" />
+          <img src="img/text.png" class="text" alt="Super Mario 64 Randomizer" />
+        </div>
+      </div>
+    </section>
+    <section class="content-section">
+      <div class="inner">
+        <h1>Generating a new ROM</h1>
+        <form name="generator" action="/" method="post">
+          <div class="category" id="category-general">
+            <h1>General</h1>
+            <div class="field field--type--file">
+              <div class="fallback">
+                <input type="file" name="input_rom" />
+                <input type="hidden" name="hidden_upload" />
+              </div>
+            </div>
+            <div class="hints">
+                <p><em>Please note that currently only the US Version is supported. Please also ensure that your ROM is a <code>.z64</code> file.</em></p>
+                <p class="message"></p>
+            </div>
+            <div class="clearfix" />
+          </div>
+          
+          <div class="category" id="category-gameplay">
+            <h1>Gameplay</h1>
+          </div>
+
+          <div class="category" id="category-aesthetics">
+            <h1>Aesthetics</h1>
+          </div>
+
+          <div class="summary">
+            <button class="like-button primary">Queue for generation</button>
+            <p>Special Thanks to Hannes for <abbr title="superskalar.org">superskalar</abbr> for generator hosting</p>
+          </div>
+        </form>
+      </div>
+    </section>
+    <section class="footer-section">
+      <div class="inner">
+        <div class="links">
+          <a href="legal.html">Legal</a>
+          <a href="https://github.com/andre-meyer/sm64-randomizer" target="_blank"><i class="icon icon-github"></i> Github</a>
+          <!-- <a href="https://twitter.com/andremeyer93" target="_blank"><i class="icon icon-twitter"></i> Dev Twitter</a> -->
+        </div>
+
+        <p class="footnote">
+            In-game imagery and system logos Copyright © Nintendo, 1998-2019 — This page does not distribute any copyrighted material.
+        </p>
+      </div>
+    </section>
+    <div class="bg-art">
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+      <div class="cloud cloud-3"></div>
+      <div class="cloud cloud-4"></div>
+      <img class="castle" src="img/bg/castle.png"></div>
+    </div>
+  </body>
+</html>
