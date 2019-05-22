@@ -125,7 +125,10 @@ class ROM:
         with open(os.path.join("dumps", "level_geometry", "{level.name}.obj"), "w+") as obj_output:
           data = generate_obj_for_level_geometry(self.levelscripts[level].level_geometry)
           obj_output.write(data)
-          
+        
+        if os.environ['DEBUG'] == 'PLOT':
+          self.levelscripts[level].level_geometry.plot()
+
       else:
         self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
 

@@ -156,7 +156,7 @@ $(document).ready(() => {
   const updateInputStatus = (status, message) => {
     // clear everything
     $targetInputField.prop('disabled', false)
-    $message = $fieldContainer.closest('.message').text('')
+    $message = $('.message').text('')
     $message.addClass(status)
     $message.text(message)
 
@@ -165,6 +165,7 @@ $(document).ready(() => {
   }
 
   $targetInputField.on('change', async function() {
+    $fileInputStyled.text('Select your ROM-File')
     updateInputStatus('pending')
 
     let blob

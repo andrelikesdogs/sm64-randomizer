@@ -55,50 +55,6 @@ class SettingField(NamedTuple):
   choices: list = []
   initial: str = None
 
-gameplay_settings = {
-  'shuffle_entries': SettingField(
-    type="checkbox",
-    help="Enable shuffling of all level entries the game",
-    label="Shuffle Levels Entries",
-    value=False
-  ),
-  'shuffle_objects': SettingField(
-    type="checkbox",
-    help="Enable shuffling of all object positions in all levels",
-    label="Shuffle Objects",
-    value=False
-  ),
-  'shuffle_music': SettingField(
-    type="checkbox",
-    help="Enable shuffling of all songs in all levels",
-    label="Shuffle Music"
-  ),
-  'shuffle_dialog': SettingField(
-    type="checkbox",
-    help="Enable shuffling of all dialogs in cutscenes, signs, prompts and from NPCs. This might act weird with prompts, e.g. when Koopa the Quick asks for a race.",
-    label="Shuffle Dialog"
-  )
-}
-
-aesthetic_settings = {
-  'shuffle_paintings': SettingField(
-    type="select",
-    choices=[("off", "Vanilla"), ("match", "Match Levels"), ("random", "Random Levels")],
-    help="How should castle paintings behave? Vanilla - no change at all, same painting as before. Match - matches random levels (without random levels, this is vanilla). Random - Completely shuffles paintings.",
-    label="Shuffle Paintings"
-  ),
-  'shuffle_colors': SettingField(
-    type="checkbox",
-    help="Shuffle colors of various objects",
-    label="Shuffle Colors"
-  ),
-  'shuffle_mario_color': SettingField(
-    type="checkbox",
-    help="Shuffle various parts of marios",
-    label="Shuffle Marios Color"
-  )
-}
-
 class GuiApplication:
   def __init__(self):
     self.window = Tk()
@@ -231,13 +187,6 @@ class GuiApplication:
     s = Timer(2, lambda: self.pasteSettings.configure(text="Paste Settings from Clipboard"))
     s.start()
 
-  def find_setting_definition(self, key):
-    for setting_dict in [gameplay_settings, aesthetic_settings]:
-      for (setting_key, definition) in setting_dict.items():
-        if setting_key == key:
-          return definition
-    return None
-
   def copy_to_clipboard(self):
     output = {
       "version": __version__
@@ -316,6 +265,10 @@ class GuiApplication:
     master = self.frames[field['category']]
     optionFrame = Frame(master)
     key = field['name']
+
+    if 'default' in field and type(field) is dict:
+      if 'GUI' in field['default']:
+        self.selections
 
     if field['type'] == 'checkbox':
       self.selections[key] = BooleanVar(optionFrame)
