@@ -1,6 +1,8 @@
 from Constants import ALL_LEVELS, CAP_LEVELS, MISSION_LEVELS, BOWSER_STAGES, LVL_BOB, SPECIAL_LEVELS, LVL_MAIN_SCR, LVL_CASTLE_GROUNDS, BEHAVIOUR_NAMES
 from randoutils import format_binary
+import random
 import sys
+import numpy as np
 from Entities.Object3D import Object3D
 #from Parsers.LevelScript import LevelScriptParser
 
@@ -99,27 +101,124 @@ class LevelRandomizer:
           return True
       return False
 
+  def is_valid_position(self, level_geometry, object3d, position):
+    # count intersections below ( % 2 == 1 to ensure it's never oob, in walls, etc)
+    ray_start = np.array(position)
+    ray_start[2] += 1 # to ensure we're above the floor
+
+    ray_end = np.array(position)
+    ray_end[2] -= 1e10 # far down
+
+    intersection_count = 0
+    intersection_points = []
+    for triangle in level_geometry.get_triangles():
+      [p1, p2, p3] = triangle
+      tri_edge_1 = p2 - p1
+      tri_edge_2 = p3 - p1
+
+      edge_crs = np.cross(tri_edge_1, tri_edge_2)
+      edge_off = np.dot(edge_crs, p1) * -1
+
+      line_edge = ray_end - ray_start
+      line_dot = np.dot(edge_crs, line_edge)
+
+      if abs(line_dot) < 1e-20:
+        # this triangle is parallel to the line
+        continue
+
+      intersect_mag = ((np.dot(edge_crs, ray_start) + edge_off) / line_dot) * -1
+      intersect_point = ray_start + intersect_mag * line_dot
+
+      edge_a = np.cross(edge_crs, tri_edge_1)
+      edge_a_dot = np.dot(edge_a, p1) * -1
+
+      if np.dot(edge_a, intersect_point) + edge_a_dot <= 0:
+        #print("outside edge a")
+        # outside edge_a
+        continue
+
+      tri_edge_3 = p3 - p2
+      edge_b = np.cross(edge_crs, tri_edge_3)
+      edge_b_dot = np.dot(edge_b, p2) * -1
+
+      if np.dot(edge_b, intersect_point) + edge_b_dot <= 0:
+        #print("outside edge b")
+        # outside edge_b
+        continue
+
+      edge_c = np.cross(edge_crs, -tri_edge_2)
+      edge_c_dot = np.dot(edge_c, p3) * -1
+
+      if np.dot(edge_c, intersect_point) + edge_c_dot <= 0:
+        #print("outside edge c")
+        # outside edge_c
+        continue
+      
+      intersection_count += 1
+      intersection_points.append(intersect_point)
+
+    print(intersection_count, intersection_points)
+
+    
+    return True
+
   def shuffle_objects(self):
     for (level, parsed) in self.rom.levelscripts.items():
       if level in SPECIAL_LEVELS:
         continue
 
+      floor_triangles = parsed.level_geometry.get_floor_triangles()
+      shufflable_objects = list(filter(LevelRandomizer.can_shuffle, parsed.objects))
+
+      while len(shufflable_objects) > 0:
+        obj = shufflable_objects.pop()
+
+        [p1, p2, p3] = random.choice(floor_triangles)
+        
+        r1 = random.random()
+        r2 = random.random()
+
+        if r1 + r2 > 1:
+          r1 = r1 - 1
+          r2 = r2 - 1
+        
+        point = p1 + (r1 * (p2 - p1)) + (r2 * (p3 - p1))
+
+        if not self.is_valid_position(parsed.level_geometry, obj, point):
+          shufflable_objects.append(obj)
+        else:
+          point[2] += 100
+          obj.set(self.rom, 'position', tuple([int(p) for p in list(point)]))
+
       # randomize positions
-      positions = []
-      objects = []
       for obj in parsed.objects:
-        #print(obj)
         if LevelRandomizer.can_shuffle(obj):
+          [p1, p2, p3] = random.choice(floor_triangles)
+          #print(p1, p2, p3)
+          
+          r1 = random.random()
+          r2 = random.random()
+
+          if r1 + r2 > 1:
+            r1 = r1 - 1
+            r2 = r2 - 1
+          
+          point = p1 + (r1 * (p2 - p1)) + (r2 * (p3 - p1))
+          #print(point)
+          #print(tuple(point))
+          point[2] += 100
+          obj.set(self.rom, 'position', tuple([int(p) for p in list(point)]))
+
           #print(obj.position)
-          positions.append(obj.position)
-          objects.append(obj)
+          #positions.append(obj.position)
+          #objects.append(obj)
 
       #print(f'randomized {len(positions)} in {level.name}')
-      shuffle(positions)
-      for idx, obj in enumerate(objects):
-        position = positions[idx]
+      #shuffle(positions)
+      #for idx, obj in enumerate(objects):
+        #position = positions[idx]
         #print(hex(obj.behaviour) if obj.behaviour else "None", BEHAVIOUR_NAMES[hex(obj.behaviour)] if obj.behaviour and hex(obj.behaviour) in BEHAVIOUR_NAMES else "Unknown Behaviour", hex(obj.model_id) if obj.model_id else "None")
-        obj.set(self.rom, 'position', position)
+        #obj.set(self.rom, 'position', position)
     '''
     for level in self.level_scripts:
       positions = []
