@@ -38,6 +38,7 @@ dist/
 romfiles/
 *.z64
 *.z64.zip
+release/
 
 # js crap
 node_modules/

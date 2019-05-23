@@ -23,11 +23,12 @@ pyinstaller --noconfirm --noconsole --onefile --add-data="README.md;." --add-dat
 mv "dist/main.exe" "dist/SM64 Randomizer GUI.exe"
 
 mkdir ./dist/3rdparty -ErrorAction SilentlyContinue
+mkdir ./dist/Data -ErrorAction SilentlyContinue
 
 cp 3rdparty/*win* ./dist/3rdparty
 cp 3rdparty/LICENSE ./dist/3rdparty
 cp 3rdparty/README.md ./dist/3rdparty
-cp Data ./dist
+cp Data ./dist/Data
 
 $ArchiveName = "release/sm64-randomizer-$RandoVersion-win32.zip"
 del $ArchiveName -ErrorAction SilentlyContinue
@@ -48,6 +49,7 @@ pyinstaller --noconfirm --noconsole --onefile --add-data="README.md;." --add-dat
 mv "dist/main.exe" "dist/SM64 Randomizer GUI.exe"
 
 mkdir ./dist/3rdparty -ErrorAction SilentlyContinue
+mkdir ./dist/Data -ErrorAction SilentlyContinue
 
 cp 3rdparty/*win* ./dist/3rdparty
 cp 3rdparty/LICENSE ./dist/3rdparty
