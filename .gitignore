@@ -37,6 +37,7 @@ dist/
 *.log
 *.bin
 romfiles/
+*.z64.zip
 
 # js crap
 node_modules/
