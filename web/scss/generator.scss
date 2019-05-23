@@ -156,6 +156,7 @@ button.help:hover .tooltip-content {
   text-align: center;
   float: left;
   margin-right: 1em;
+<<<<<<< HEAD
   cursor: pointer;
 
   .like-button {
@@ -164,6 +165,11 @@ button.help:hover .tooltip-content {
     display: block;
     cursor: pointer;
     pointer-events: none;
+=======
+
+  .like-button {
+    padding: 0;
+>>>>>>> 4b060e46564f7771d95c8c5f8a3fa2f764ac6a08
   }
 }
 
@@ -178,6 +184,7 @@ button.help:hover .tooltip-content {
   opacity: 0;
 }
 
+<<<<<<< HEAD
 .file-upload-wrapper {
   input[type="file"] {
     &:disabled {
@@ -200,4 +207,8 @@ button.help:hover .tooltip-content {
 
 .message {
   margin: 1em 0;
+=======
+.file-upload-wrapper input[type="file"]:disabled + .like-button {
+  @extend .field.disabled;
+>>>>>>> 4b060e46564f7771d95c8c5f8a3fa2f764ac6a08
 }
