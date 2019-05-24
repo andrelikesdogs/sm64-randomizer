@@ -64,7 +64,7 @@ for field in randomizer_params:
     argument_labels[field["name"].replace("-", "_")] = field["label"]
   
   parser.add_argument(*argument_args, **argument_kwargs)
-print(argument_labels)
+
 def run_with_args(opt_args):
   seed(opt_args.seed)
 
