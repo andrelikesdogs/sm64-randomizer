@@ -6,17 +6,16 @@
 [Ll]ib
 [Ll]ib64
 [Ll]ocal
+[Ss]cripts
+[Ss]hare
+[Ee]tc
 pyvenv.cfg
 .venv
 pip-selfcheck.json
 __pycache__
 .history
 .DS_Store
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode
 # Windows Crap
 Thumbs.db
 ehthumbs.db
@@ -41,7 +40,7 @@ romfiles/
 release/
 # dont need to commit psd files and that crap
 dumps/
-web/design 
+web/design
 
 # js crap
 node_modules/
