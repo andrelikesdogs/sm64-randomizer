@@ -266,13 +266,6 @@ class GuiApplication:
     optionFrame = Frame(master)
     key = field['name']
 
-<<<<<<< HEAD
-    if 'default' in field and type(field) is dict:
-      if 'GUI' in field['default']:
-        self.selections
-
-=======
->>>>>>> 4b060e46564f7771d95c8c5f8a3fa2f764ac6a08
     if field['type'] == 'checkbox':
       self.selections[key] = BooleanVar(optionFrame)
       checkboxField = ttk.Checkbutton(optionFrame, text=field['label'], variable=self.selections[key])
