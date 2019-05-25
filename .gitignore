@@ -39,6 +39,9 @@ romfiles/
 *.z64
 *.z64.zip
 release/
+# dont need to commit psd files and that crap
+dumps/
+web/design 
 
 # js crap
 node_modules/
