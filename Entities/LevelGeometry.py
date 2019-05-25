@@ -1,6 +1,10 @@
 import numpy as np
-import plotly.offline as py
-import plotly.graph_objs as go
+import os
+
+if "DEBUG" in os.environ and os.environ["DEBUG"] == 'PLOT':
+  import plotly.offline as py
+  import plotly.graph_objs as go
+
 import math
 
 WALKABLE_COLLISION_TYPES = [
