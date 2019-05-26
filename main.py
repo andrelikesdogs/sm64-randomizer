@@ -22,4 +22,9 @@ if 'DEBUG' in os.environ:
 else:
   logging.basicConfig(filename="sm64_rando_debug.log", level=logging.DEBUG, filemode="w", format="%(asctime)s %(module)s %(message)s")
 
-import CLI
+from CLI import run_with_args
+try:
+  run_with_args()
+except Exception as err:
+  print(f'Unfortunately, the randomizer encountered an error, seen below:')
+  raise err

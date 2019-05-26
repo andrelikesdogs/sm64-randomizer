@@ -10,11 +10,13 @@ import io
 import json
 import pyperclip
 import base64
+from pathlib import Path
 from platform import system
 from Icons import ICON_WIN
 from threading import Timer
 from shlex import quote
 from random import randint
+from CLI import run_with_args
 import webbrowser
 
 MAIN_TITLE = f"SM64 Randomizer by @andremeyer93 - v{__version__}"
@@ -110,17 +112,37 @@ class GuiApplication:
     self.window.mainloop()
 
   def select_rom_input(self):
-    input_rom = filedialog.askopenfilename(title="Select Input ROM", filetypes=[("ROM Files", (".z64")), ("All Files", "*")])
-
-    if input_rom != "":
-      self.selections['input_rom'].set(input_rom)
-      if self.selections['output_rom'].get() == "":
-        path_parts = input_rom.split(".")
-        guessed_output_file = f'{".".join(path_parts[:-1])}.out.{path_parts[-1]}'
-        self.selections['output_rom'].set(guessed_output_file)
+    input_rom = filedialog.askopenfilename(title="Select Input ROM", filetypes=[("ROM Files", (".z64", ".n64")), ("All Files", "*")])
+    self.selections['input_rom'].set(input_rom)
+      
+    #if input_rom != "":
+    #if self.selections['output_rom'].get() == "":
+    #path_parts = input_rom.split(".")
+    #guessed_output_file = f'{".".join(path_parts[:-1])}.out.{path_parts[-1]}'
+    #self.selections['output_rom'].set(guessed_output_file)
 
   def select_rom_output(self):
-    output_rom = filedialog.asksaveasfilename(title="Select Output Path", filetypes=[("ROM Files", (".z64"))], initialdir=self.selections["output_rom"], initialfile=self.selections["output_rom"].get().split(os.path.sep)[-1])
+    output_suggestion = 'SM64_Randomizer.z64'
+    current_input = self.selections['input_rom'].get()
+    if current_input:
+      path = Path(current_input)
+      file = path.stem
+      ext = path.suffix
+      output_suggestion = f'{file}.out{ext}'
+    
+    output_int = 1
+    while os.path.exists(output_suggestion):
+      file = ".".join(output_suggestion.split(".")[:-1])
+      ext = output_suggestion.split(".")[-1]
+
+      output_suggestion = f'{file}.{output_int}.{ext}'
+      
+
+    output_rom = filedialog.asksaveasfilename(
+      title="Select Output Path",
+      filetypes=[("ROM Files", (".z64"))],
+      #initialdir=self.selections["output_rom"], 
+      initialfile=output_suggestion)
 
     if output_rom != "":
       self.selections['output_rom'].set(output_rom)
@@ -242,21 +264,21 @@ class GuiApplication:
           test_rom.verify_header()
       except Exception as excp:
         messagebox.showerror(title="ROM Generation failed", message=f'Sorry, the specified ROM is not valid. Verification failed with error: {excp}')
-        
-      sys.argv = ['main.py', *args]
+
       try:
-        import CLI
+        run_with_args(args)
       except Exception as err:
-        messagebox.showerror(f"Unfortunately, generation failed with error:\n {err}\nPlease submit this error to the projects github: https://github.com/andre-meyer/sm64-randomizer/issues")
+        messagebox.showerror(title="ROM Generation failed", message=f"Unfortunately, generation failed with error:\n {err}\nPlease submit this error to the projects github: https://github.com/andre-meyer/sm64-randomizer/issues")
         print(err)
+        return
 
       rom_output = self.selections['output_rom'].get()
       (folder_containing_rom, filename_output) = os.path.split(rom_output)
       messagebox.showinfo(title="ROM Generation completed!", message=f"Your randomized ROM was created as \"{filename_output}\"! Have fun!")
-      if system() == "Windows":
-        subprocess.Popen('explorer /select,"' + rom_output.replace("/", "\\") + '"', shell=True)
-      else:
-        webbrowser.open("file:///" + folder_containing_rom)
+      #if system() == "Windows":
+      #subprocess.Popen('explorer /select,"' + rom_output.replace("/", "\\") + '"', shell=True)
+      #else:
+      #webbrowser.open("file:///" + folder_containing_rom)
       return True
     except Exception as excp:
       messagebox.showerror(title="ROM Generation failed", message=f'Sorry, ROM generation failed with error:\n {excp}\nPlease submit this error to the projects github: https://github.com/andre-meyer/sm64-randomizer/issues')

@@ -43,8 +43,7 @@ class Geometry:
       u = p2 - p1
       v = p3 - p1
       cross = np.cross(u, v)
-      #print(cross)
-      norm = cross / np.max(np.abs(cross))
+      norm = np.linalg.norm([cross, cross], axis=0)
       self.normals.append(norm)
 
       is_floor = norm[1] > 0.01

@@ -20,17 +20,19 @@ This is a work in progress project to build an [https://www.ootrandomizer.com/](
 - ...many more to come
 
 # GUI
-The randomizer includes a simple GUI for easy setup without any knowledge about CLI tools.
+The randomizer includes a simple GUI for easy setup without any knowledge about the command line. Simply download the latest [release](/releases/latest) and open `SM64 Randomizer GUI`.
 
 ![SM64 Randomizer GUI](https://i.imgur.com/erEk4Dh.png)
 
 
 # Usage CLI
-To use this package, download the repository and run using **python >= 3.5**, passing your Vanilla SM64 ROM or an Extended ROM:
+To use this package:
+- Download [a release](/releases/latest), which includes a GUI and the CLI.
+- Download or `git clone` the repository and run using **python >= 3.5**, passing your SM64 ROM:
 ```
 python main.py ./Super_Mario_64_(U)_[!].z64 --shuffle-levels --shuffle-mario-color --shuffle-paintings match --seed 123
 ```
-_Note: Only accepts z64 format. Currently only supports North American version_
+_Note: Currently only supports North American version ("USA")_
 
 Output will be a file with the same name, ending in `.out.z64`. Run this in your emulator.
 
