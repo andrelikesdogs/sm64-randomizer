@@ -15,88 +15,80 @@ WALKABLE_COLLISION_TYPES = [
   0x0B, # close camera
 ]
 
+class Face:
+  def __init__(self, vertices, triangle_index):
+    self.vertices = np.array(vertices)
+    self.index = triangle_index
+    self.vertices_transposed = np.transpose(self.vertices)
+
+    self.normal = np.array([0, 0, 0])
+    self.type = None
+    self.bounding_box = None
+
+    self.calc_props()
+  
+  def calc_props(self):
+    [p1, p2, p3] = self.vertices
+    u = p2 - p1
+    v = p3 - p1
+    
+    # calc normal
+    cross = np.cross(u, v)
+    #print(cross)
+    biggest_var = np.max(np.abs(cross))
+
+    if biggest_var != 0:
+      self.normal = cross / np.max(np.abs(cross))
+
+    is_floor = self.normal[1] > 0.01
+    is_ceiling = self.normal[1] < -0.01
+
+    if is_floor:
+      self.type = 'FLOOR'
+    elif is_ceiling:
+      self.type = 'CEILING'
+    else:
+      self.type = 'WALL'
+    
+    self.center = np.mean(self.vertices, axis=0)
+    self.bounding_box = (
+      np.min(self.vertices_transposed[0]), # -X
+      np.max(self.vertices_transposed[0]), # +X
+      np.min(self.vertices_transposed[1]), # -Y
+      np.max(self.vertices_transposed[1]), # +Y
+      np.min(self.vertices_transposed[2]), # -Z
+      np.max(self.vertices_transposed[2]), # +Z
+    )
+    
+
 class Geometry:
   def __init__(self, vertices, triangles, collision_type, index):
     self.vertices = np.array(vertices)
     self.triangles = np.array(triangles)
+    self.faces = []
+    self.faces_by_type = {'FLOOR': [], 'CEILING': [], 'WALL': []}
     self.collision_type = collision_type
     self.index = index
-    self.normals = []
-    self.centroids = []
-    self.triangle_types = []
 
-    self.calc_normals()
-    self.calc_centroids()
+    self.convert_to_faces()
 
-
-  def calc_centroids(self):
-    for vertice_indices in self.triangles:
-      (p1, p2, p3) = tuple(map(lambda i : self.vertices[i], vertice_indices))
-
-      centroid = np.mean([p1, p2, p3], axis=0)
-      self.centroids.append(centroid)
-
-  def calc_normals(self):
-    for vertice_indices in self.triangles:
-      (p1, p2, p3) = tuple(map(lambda i : self.vertices[i], vertice_indices))
-
-      u = p2 - p1
-      v = p3 - p1
-      cross = np.cross(u, v)
-      norm = np.linalg.norm([cross, cross], axis=0)
-      self.normals.append(norm)
-
-      is_floor = norm[1] > 0.01
-      is_ceiling = norm[1] < -0.01
-      
-      triangle_type = "WALL"
-      if is_floor:
-        triangle_type = "FLOOR"
-      elif is_ceiling:
-        triangle_type = "CEILING"
-
-      self.triangle_types.append(triangle_type)
-
-  def get_floor_triangles(self):
-    triangles = []
-    for (triangle_index, vertice_indices) in enumerate(self.triangles):
-      if self.triangle_types[triangle_index] == 'FLOOR':
-        triangles.append(self.vertices[vertice_indices])
-    
-    return triangles
-
-  def get_triangles(self):
-    return self.vertices[self.triangles]
+  def convert_to_faces(self):
+    for face_index, vertices in enumerate(self.vertices[self.triangles]):
+      face = Face(vertices, face_index)
+      self.faces.append(face)
+      self.faces_by_type[face.type].append(face)
 
   def plot_get_color(self):
-    mesh = self.vertices[self.triangles]
-
-    ref = np.array([0, 1, 0])
     colors = []
-    type_colors = [
-      (0, 0, 1),
-      (0, 1, 0),
-      (1, 0, 0),
-    ]
-    for index, vert_indices in enumerate(self.triangles):
-      normal_vec = self.normals[index]
-      dot = np.dot(normal_vec, ref)
-      angle = math.acos(dot)
-      slope = math.tan(angle)
-      slope_deg = slope * 180/math.pi
-      is_floor = normal_vec[1] > 0.01
-      is_ceiling = normal_vec[1] < -0.01
-      #is_wall = not is_floor and not is_ceiling
 
-      surface_type = 1
-      if is_floor:
-        surface_type = 0
-      elif is_ceiling:
-        surface_type = 2
-
-
-      colors.append(type_colors[surface_type])
-
+    colors = []
+    type_colors = {
+      'FLOOR': (0, 0, 1),
+      'WALL': (0, 1, 0),
+      'CEILING': (1, 0, 0),
+    }
+    for face in self.faces:
+      colors.append(type_colors[face.type])
     return colors
 
   def plot(self):
@@ -132,21 +124,15 @@ class LevelGeometry:
     geometry = Geometry(vertices, triangles, collision_type, len(self.area_geometries[area_id]))
     self.area_geometries[area_id].append(geometry)
   
-  def get_triangles(self):
-    triangles = []
+  def get_triangles(self, floor_type = None):
+    faces = []
     for (area_id, areas) in self.area_geometries.items():
       for area in areas:
-        triangles.extend(area.get_triangles())
-    
-    return triangles
-
-  def get_floor_triangles(self):
-    triangles = []
-    for (area_id, areas) in self.area_geometries.items():
-      for area in areas:
-        triangles.extend(area.get_floor_triangles())
-
-    return triangles
+        if not floor_type:
+          faces.extend(area.faces)
+        else:
+          faces.extend(area.faces_by_type[floor_type])
+    return faces
 
   def plot(self):
     traces = []

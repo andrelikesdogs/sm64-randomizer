@@ -104,7 +104,7 @@ class ROM:
         if not os.path.exists(os.path.join("dumps", "level_scripts")):
           os.makedirs(os.path.join("dumps", "level_scripts"))
         
-        with open(os.path.join("dumps", "level_scripts", "{level.name}.txt"), "w+") as dump_target:
+        with open(os.path.join("dumps", "level_scripts", f"{level.name}.txt"), "w+") as dump_target:
           self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
           dump_target.write(self.levelscripts[level].dump())
           #print(f'{level.name} has {len(self.level_scripts[level].objects)} objects')
@@ -122,7 +122,7 @@ class ROM:
         with open(os.path.join("dumps", "level_geometry", "debug.mtl"), "w+") as mtl_debug:
           mtl_debug.write(generate_debug_materials())
           
-        with open(os.path.join("dumps", "level_geometry", "{level.name}.obj"), "w+") as obj_output:
+        with open(os.path.join("dumps", "level_geometry", f"{level.name}.obj"), "w+") as obj_output:
           data = generate_obj_for_level_geometry(self.levelscripts[level].level_geometry)
           obj_output.write(data)
         

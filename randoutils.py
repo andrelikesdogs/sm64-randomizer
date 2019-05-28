@@ -47,17 +47,17 @@ def generate_obj_for_level_geometry(level_geometry : "LevelGeometry"):
     
     for layer_index, geometry in enumerate(layers):
       #print(collision_entry)
-      collision_type = geometry.collision_type
+      #collision_type = geometry.collision_type
       #output += f"usemtl debug_{collision_type}\n"
-      output += f"# Collision Type: {hex(collision_type)}\n"
+      #output += f"# Collision Type: {hex(collision_type)}\n"
 
       for vertex in geometry.vertices:
         output += "v " + " ".join(list(map(str, map(format_float, vertex)))) + "\n"
       
       # dont output triangles on layer 0, origin layer
       for (index, triangle) in enumerate(geometry.triangles):
-        normal = round(clamp(abs(geometry.normals[index][1]), 0, 1000) / 1000)
-        output += f"usemtl debug_gradient_{normal}\n"
+        #normal = round(clamp(abs(geometry.normals[index][1]), 0, 1000) / 1000)
+        #output += f"usemtl debug_gradient_{normal}\n"
         output += "f " + " ".join(list(map(lambda x: str(vertex_total + x + 1), triangle))) + "\n"
 
 
