@@ -1,4 +1,5 @@
 from Entities.BaseMemoryRecord import BaseMemoryRecord, MemoryMapping
+from Constants import BEHAVIOUR_NAMES
 
 class Object3D(BaseMemoryRecord):
   source: str # SPECIAL_MACRO_OBJ, PLACE_OBJ, MACRO_OBJ, MARIO_SPAWN
@@ -6,9 +7,23 @@ class Object3D(BaseMemoryRecord):
   position: tuple = (0, 0, 0) # (X, Y, Z)
   rotation: tuple = (0, 0, 0) # (X, Y, Z)
   behaviour: int = None # addr
+  behaviour_name: str = None
   bparams: list = []
   mem_address: int = None
   memory_mapping: dict = {}
+
+  def generate_name(self):
+    if self.behaviour and hex(self.behaviour) in BEHAVIOUR_NAMES:
+      behaviour_name = BEHAVIOUR_NAMES[hex(self.behaviour)]
+      return f'{behaviour_name} (#{hex(self.behaviour)})'
+    
+    if self.model_id:
+      return f'Unknown (Model-ID: #{hex(self.model_id)}'
+
+    if self.source == 'MARIO_SPAWN':
+      return f'Mario\'s Spawn Point'
+
+    return f'Unknown (Source: {self.source})'
 
   def __init__(self, source, model_id, position, rotation = None, behaviour = None, bparams = [], mem_address = None):
     super().__init__()
@@ -18,6 +33,7 @@ class Object3D(BaseMemoryRecord):
     self.position = position
     self.rotation = rotation
     self.behaviour = behaviour
+    self.behaviour_name = self.generate_name()
     self.mem_address = mem_address
     
     if mem_address is not None:

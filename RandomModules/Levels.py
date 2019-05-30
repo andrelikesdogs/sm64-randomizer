@@ -46,11 +46,13 @@ WHITELIST_SHUFFLING = [
   (0x13004668, 0x55), # Pokeys Head
   (0x130030A4, None), # Blue Coin
   (None, 0x7C), # Sign
+  (0x13003EAC, 0xD7),
   (None, 0x74), # Coin Type 1
   (None, 0x75), # Coin Type 2
   (None, 0x74), # Coin Type 3
   (None, 0x75), # Multiple Coins
   (None, 0xD4), # One-Up
+  (0x13001F3C, None), # Koopa Shell
   (0x130020E8, 0x57), # Lost Penguin
   (0x13002E58, None), # Wandering Penguin
   (0x13004148, 0xD4), # Homing-One-Up
@@ -87,6 +89,12 @@ WHITELIST_SHUFFLING = [
 
 BSCRIPT_START = 0x10209C
 
+HEIGHT_OFFSETS = {
+  (None, 0x89): 200,
+  (0x130007F8, 0x7A): 200, 
+  (0x13002250, None): 200,
+}
+
 def signed_tetra_volume(a, b, c, d):
   return np.sign(np.dot(np.cross(b-a, c-a), d-a)/6.0)
 
@@ -107,8 +115,8 @@ def trace_geometry_intersections(level_geometry, ray, face_type = None):
 
     # precheck bounds
     if ray_is_vertical:
+      # for vertical rays we can quickly check if the coordinates are atleast in the bounding box of the tri
       if ray_origin[0] < xmin or ray_origin[1] > xmax or ray_origin[1] < ymin or ray_origin[1] > ymax:
-        #print("ray out of triangle bounds")
         continue
 
     edge_a = p2 - p1
@@ -198,6 +206,12 @@ class LevelRandomizer:
           return True
       return False
 
+  def get_height_offset(self, obj : Object3D):
+    for (target_bscript_address, target_model_id) in HEIGHT_OFFSETS:
+      if (target_model_id is None or target_model_id == obj.model_id) and (target_bscript_address is None or target_bscript_address == obj.behaviour):
+        return HEIGHT_OFFSETS[(target_bscript_address, target_model_id)]
+
+    return 1 # fallback to ensure it doesn't fail oob check or falls out of level
 
 
   def is_valid_position(self, level_geometry, object3d, position):
@@ -238,6 +252,10 @@ class LevelRandomizer:
 
       floor_triangles = parsed.level_geometry.get_triangles('FLOOR')
       shufflable_objects = list(filter(LevelRandomizer.can_shuffle, parsed.objects))
+      other_objects = list(filter(lambda x: not LevelRandomizer.can_shuffle(x), parsed.objects))
+
+      for other_object in other_objects:
+        parsed.level_geometry.add_debug_marker(other_object.position, other_object, color=(100, 100, 255))
 
       while len(shufflable_objects) > 0:
         obj = shufflable_objects.pop()
@@ -254,73 +272,13 @@ class LevelRandomizer:
         
         point = p1 + (r1 * (p2 - p1)) + (r2 * (p3 - p1))
 
+        # match bscript and model_id
+        height_offset = self.get_height_offset(obj)
+        point[2] += height_offset
+
         if not self.is_valid_position(parsed.level_geometry, obj, point):
           #print('invalid position')
           shufflable_objects.append(obj)
         else:
-          point[2] += 100
           obj.set(self.rom, 'position', tuple([int(p) for p in list(point)]))
-
-      # randomize positions
-      for obj in parsed.objects:
-        if LevelRandomizer.can_shuffle(obj):
-          face = random.choice(floor_triangles)
-          [p1, p2, p3] = face.vertices
-          #print(p1, p2, p3)
-          
-          r1 = random.random()
-          r2 = random.random()
-
-          if r1 + r2 > 1:
-            r1 = r1 - 1
-            r2 = r2 - 1
-          
-          point = p1 + (r1 * (p2 - p1)) + (r2 * (p3 - p1))
-          #print(point)
-          #print(tuple(point))
-          point[2] += 100
-          obj.set(self.rom, 'position', tuple([int(p) for p in list(point)]))
-
-          #print(obj.position)
-          #positions.append(obj.position)
-          #objects.append(obj)
-
-      #print(f'randomized {len(positions)} in {level.name}')
-      #shuffle(positions)
-      #for idx, obj in enumerate(objects):
-        #position = positions[idx]
-        #print(hex(obj.behaviour) if obj.behaviour else "None", BEHAVIOUR_NAMES[hex(obj.behaviour)] if obj.behaviour and hex(obj.behaviour) in BEHAVIOUR_NAMES else "Unknown Behaviour", hex(obj.model_id) if obj.model_id else "None")
-        #obj.set(self.rom, 'position', position)
-    '''
-    for level in self.level_scripts:
-      positions = []
-      objects = []
-
-      if self.level_scripts[level].mario_spawn:
-        mario_spawn = self.level_scripts[level].mario_spawn
-        positions.append(mario_spawn[1])
-        objects.append(mario_spawn)
-      
-      for obj in self.level_scripts[level].objects:
-        if LevelRandomizer.can_shuffle(obj.model_id, obj.behaviour):
-          positions.append(obj.position)
-          objects.append(obj)
-      
-      shuffle(positions)
-      for idx, obj in enumerate(objects):
-        position = positions[idx]
-
-        if type(obj) is Object3D:
-          obj.change_position(self.rom, position)
-        elif type(obj) is tuple: # temp mario thing:
-          #print(level.name, "rando mario")
-          (area_id, translate, rotation, mem_address) = obj
-          #print("changing", translate, "to", position)
-          #print(position)
-          self.rom.write_integer(mem_address + 4, position[0], 2, True)
-          self.rom.write_integer(mem_address + 6, position[1], 2, True)
-          self.rom.write_integer(mem_address + 8, position[2], 2, True)
-
-    pass
-
-    '''  
+          parsed.level_geometry.add_debug_marker(point, obj, color=(255, 100, 100))

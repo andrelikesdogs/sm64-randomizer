@@ -21,7 +21,8 @@ class Face:
     self.index = triangle_index
     self.vertices_transposed = np.transpose(self.vertices)
 
-    self.normal = np.array([0, 0, 0])
+    self.normal = np.array([0.0, 0.0, 0.0])
+    self.center = np.array([0.0, 0.0, 0.0])
     self.type = None
     self.bounding_box = None
 
@@ -50,7 +51,7 @@ class Face:
     else:
       self.type = 'WALL'
     
-    self.center = np.mean(self.vertices, axis=0)
+    self.center = np.mean(self.vertices, axis=0, dtype=float)
     self.bounding_box = (
       np.min(self.vertices_transposed[0]), # -X
       np.max(self.vertices_transposed[0]), # +X
@@ -97,8 +98,8 @@ class Geometry:
 
     if len(mesh_components) > 0:
       return go.Mesh3d(
-        x=np.negative(mesh_components[0]),
-        y=mesh_components[2],
+        x=np.negative(mesh_components[0]), # x neg
+        y=mesh_components[2], # y and z swapped
         z=mesh_components[1],
         i=triangle_indices[0],
         j=triangle_indices[1],
@@ -106,6 +107,7 @@ class Geometry:
         facecolor=self.plot_get_color(),
         flatshading=True,
         color='#FFB6C1',
+        hoverinfo="skip"
       )
     
 
@@ -114,6 +116,7 @@ class LevelGeometry:
   def __init__(self, level):
     self.level = level
     self.area_geometries = {}
+    self.debug_points = []
 
   def add_area(self, area_id, vertices, triangles, collision_type):
     if area_id not in self.area_geometries:
@@ -124,6 +127,9 @@ class LevelGeometry:
     geometry = Geometry(vertices, triangles, collision_type, len(self.area_geometries[area_id]))
     self.area_geometries[area_id].append(geometry)
   
+  def add_debug_marker(self, vec, obj, color=(0, 0, 0)):
+    self.debug_points.append(np.array([*vec, obj.behaviour_name, color]))
+
   def get_triangles(self, floor_type = None):
     faces = []
     for (area_id, areas) in self.area_geometries.items():
@@ -140,6 +146,23 @@ class LevelGeometry:
       for area in areas:
         traces.append(area.plot())
 
+    if len(self.debug_points):
+      debug_transposed = np.transpose(self.debug_points)
+      traces.append(
+        go.Scatter3d(
+          x=np.negative(debug_transposed[0].astype(float), dtype=float), # x neg
+          y=debug_transposed[2], # y and z swapped
+          z=debug_transposed[1],
+          text=debug_transposed[3],
+          mode="markers",
+          marker=dict(
+              sizemode='diameter',
+              size=15,
+              color=debug_transposed[4],
+              #line=dict(color='rgb(140, 140, 170)')
+          )
+        )
+      )
     
     if len(traces) > 0:
-      py.plot(traces, filename=f'{self.level.name}.html')
+      py.plot(traces, filename=f'dumps/level_plots/{self.level.name}.html', auto_open=False)

@@ -286,7 +286,7 @@ class LevelScriptParser:
       preset_id = preset_and_rot & 0x1FF # last 9 bit
       rot_y = preset_and_rot & 0xFE00 # first 7 bit
       
-      if preset_id == 0 or preset_id == 0x1E or preset_id not in preset_table:
+      if preset_id == 0 or preset_id == 0x1E:
         break
         
       if preset_id not in preset_table:
@@ -297,12 +297,11 @@ class LevelScriptParser:
       else:
         preset = preset_table[preset_id]
         position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
-
         objects_found.append(Object3D("MACRO_OBJ", preset.model_id, position, (None, rot_y, None), preset.behaviour_addr, mem_address = cursor))
       cursor += 10
 
-    self.objects = self.objects + objects_found
-   #print(f'Level {self.level.name} has {len(objects_found)} macro objects')
+    self.objects.extend(objects_found)
+    #print(f'Level {self.level.name} has {len(objects_found)} macro objects')
 
   def process_special_objects_level(self, start, end):
     cursor = start
