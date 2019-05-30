@@ -104,10 +104,11 @@ class Geometry:
         i=triangle_indices[0],
         j=triangle_indices[1],
         k=triangle_indices[2],
+        text=f'Collision Type: {hex(self.collision_type)}',
         facecolor=self.plot_get_color(),
-        flatshading=True,
+        #flatshading=True,
         color='#FFB6C1',
-        hoverinfo="skip"
+        #hoverinfo="skip"
       )
     
 
@@ -157,7 +158,7 @@ class LevelGeometry:
           mode="markers",
           marker=dict(
               sizemode='diameter',
-              size=15,
+              size=7,
               color=debug_transposed[4],
               #line=dict(color='rgb(140, 140, 170)')
           )

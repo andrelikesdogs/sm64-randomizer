@@ -99,9 +99,15 @@ def signed_tetra_volume(a, b, c, d):
   return np.sign(np.dot(np.cross(b-a, c-a), d-a)/6.0)
 
 def trace_geometry_intersections(level_geometry, ray, face_type = None):
+  # algorithm that was used for this:
+  # http://www.lighthouse3d.com/tutorials/maths/ray-triangle-intersection/
+  # or maybe this
+  # https://wiki2.org/en/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
   [q0, q1] = ray
   ray_origin = q0
   ray_vector = q1 - q0
+  #print("origin", ray_origin)
+  #print("dir", ray_vector)
 
   ray_is_vertical = ray_vector[0] == 0.0 and ray_vector[1] == 0.0
 
@@ -110,13 +116,15 @@ def trace_geometry_intersections(level_geometry, ray, face_type = None):
   intersection_count = 0
   intersection_positions = []
   for face in faces:
+    #print("next face", face.index)
     [p1, p2, p3] = face.vertices
     [xmin, xmax, ymin, ymax, zmin, zmax] = face.bounding_box
 
     # precheck bounds
     if ray_is_vertical:
       # for vertical rays we can quickly check if the coordinates are atleast in the bounding box of the tri
-      if ray_origin[0] < xmin or ray_origin[1] > xmax or ray_origin[1] < ymin or ray_origin[1] > ymax:
+      if ray_origin[0] < xmin or ray_origin[0] > xmax or ray_origin[1] < ymin or ray_origin[1] > ymax:
+        #print('oob precheck')
         continue
 
     edge_a = p2 - p1
@@ -126,6 +134,7 @@ def trace_geometry_intersections(level_geometry, ray, face_type = None):
     a = np.dot(edge_a, h)
 
     if abs(a) < 0e-10:
+      #print("parallel")
       continue
     
     f = 1.0/a
@@ -133,20 +142,25 @@ def trace_geometry_intersections(level_geometry, ray, face_type = None):
     u = f * (np.dot(s, h))
 
     if u < 0.0 or u > 1.0:
+      #print("u outside 0-1")
       continue
 
     q = np.cross(s, edge_a)
     v = f * (np.dot(ray_vector, q))
     
-    if v < 0.0 or v > 1.0:
+    if v < 0.0 or u + v > 1.0:
+      #print("v < 0 or u + v > 1")
       continue
     
     t = f * np.dot(edge_b, q)
     if t > 0e-10:
+      #print("hit")
       intersection_count += 1
       intersection_positions.append(
         ray_origin + ray_vector * t
       )
+      continue
+    #print("doesnt reach", t)
 
   return (intersection_count, intersection_positions)
 
