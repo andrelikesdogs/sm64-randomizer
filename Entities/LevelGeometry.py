@@ -7,16 +7,8 @@ if "DEBUG" in os.environ and os.environ["DEBUG"] == 'PLOT':
 
 import math
 
-WALKABLE_COLLISION_TYPES = [
-  0x00, # environment default
-  0x29, # default floor with noise
-  0x14, # slightly slippery
-  0x15, # anti slippery
-  0x0B, # close camera
-]
-
 class Face:
-  def __init__(self, vertices, triangle_index):
+  def __init__(self, vertices, triangle_index, collision_type):
     self.vertices = np.array(vertices)
     self.index = triangle_index
     self.vertices_transposed = np.transpose(self.vertices)
@@ -24,6 +16,7 @@ class Face:
     self.normal = np.array([0.0, 0.0, 0.0])
     self.center = np.array([0.0, 0.0, 0.0])
     self.type = None
+    self.collision_type = collision_type
     self.bounding_box = None
 
     self.calc_props()
@@ -75,7 +68,7 @@ class Geometry:
 
   def convert_to_faces(self):
     for face_index, vertices in enumerate(self.vertices[self.triangles]):
-      face = Face(vertices, face_index)
+      face = Face(vertices, face_index, self.collision_type)
       self.faces.append(face)
       self.faces_by_type[face.type].append(face)
 

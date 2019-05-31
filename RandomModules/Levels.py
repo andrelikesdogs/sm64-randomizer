@@ -18,7 +18,7 @@ WHITELIST_SHUFFLING = [
   (0x13002BB8, None), # King Whomp
   (0x130039D4, None), # Moneybag
   (None, 0x68), # Koopa (The Quick, Normal, etc)
-  (0x130005B4, None), # Rotating Platform WF
+  #(0x130005B4, None), # Rotating Platform WF
   (0x13002AA4, None), # Tree Behaviour
   (None, 0x65), # Scuttlebug
   (None, 0x19), # Tree (Snow)
@@ -78,7 +78,7 @@ WHITELIST_SHUFFLING = [
   (0x130027D0, 0x00), # Boo (x3)
   (0x13002794, 0x65), # Big Boo
   (0x130007F8, 0x7A), # Star
-  (0x13001B70, 0x00), # Checkerboard Elevator (Logic: DON'T TOUCH FOR VANISH CAP LEVEL)
+  #(0x13001B70, 0x00), # Checkerboard Elevator (Logic: DON'T TOUCH FOR VANISH CAP LEVEL)
   (0x13002F74, 0x00), # Mario Start 1
   (0x1300442C, None), # TTC: Pendulum
   (0x130054B8, None), # TTC: Pendulum
@@ -93,7 +93,22 @@ HEIGHT_OFFSETS = {
   (None, 0x89): 200,
   (0x130007F8, 0x7A): 200, 
   (0x13002250, None): 200,
+  (None, 0x75): 300,
 }
+
+WALKABLE_COLLISION_TYPES = [
+  0x00, # environment default
+  0x29, # default floor with noise
+  0x14, # slightly slippery
+  0x15, # anti slippery
+  0x0B, # close camera
+  0x30, # hard floor (always fall damage)
+
+  ## may be harder
+  #0x13, # slippery
+  #0x2A, # slippery with noise
+  0x0D, # water (stationary)
+]
 
 def signed_tetra_volume(a, b, c, d):
   return np.sign(np.dot(np.cross(b-a, c-a), d-a)/6.0)
@@ -115,6 +130,7 @@ def trace_geometry_intersections(level_geometry, ray, face_type = None):
 
   intersection_count = 0
   intersection_positions = []
+  intersection_faces = []
   for face in faces:
     #print("next face", face.index)
     [p1, p2, p3] = face.vertices
@@ -159,10 +175,11 @@ def trace_geometry_intersections(level_geometry, ray, face_type = None):
       intersection_positions.append(
         ray_origin + ray_vector * t
       )
+      intersection_faces.append(face)
       continue
     #print("doesnt reach", t)
 
-  return (intersection_count, intersection_positions)
+  return (intersection_count, intersection_positions, intersection_faces)
 
   """
   [q0, q1] = ray
@@ -230,7 +247,7 @@ class LevelRandomizer:
 
   def is_valid_position(self, level_geometry, object3d, position):
     # count floors under the position we want to test
-    (floors_underneath, _) = trace_geometry_intersections(
+    (floors_underneath, floor_positions, floor_faces) = trace_geometry_intersections(
       level_geometry,
       [
         position + np.array([0.0, 0.0, 1.0]),
@@ -244,15 +261,19 @@ class LevelRandomizer:
 
     if not is_valid_amount: return False
 
+    if floor_faces[0].collision_type not in WALKABLE_COLLISION_TYPES:
+      #print("invalid floor type", hex(floor_faces[0].collision_type))
+      return False
+
     # require minimum distance from point from ceilings
-    (_, ceiling_intersections) = trace_geometry_intersections(
+    (_, ceiling_positions, ceiling_faces) = trace_geometry_intersections(
       level_geometry,
       [
         position + np.array([0.0, 0.0, 1.0]),
         position + np.array([0.0, 0.0, +1.0e7])
       ]
     )
-    closest_ceiling = get_closest_intersection(ceiling_intersections, position)
+    closest_ceiling = get_closest_intersection(ceiling_positions, position)
 
     if closest_ceiling < 10.0: return False
 

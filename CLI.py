@@ -132,7 +132,7 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     if opt_args.shuffle_colors:
       color_randomizer.randomize_coin_colors()
     
-    if os.environ['DEBUG'] == 'PLOT':
+    if 'DEBUG' in os.environ and os.environ['DEBUG'] == 'PLOT':
       for (level_area, parsed) in rom.levelscripts.items():
         parsed.level_geometry.plot()
       #rom.levelscripts

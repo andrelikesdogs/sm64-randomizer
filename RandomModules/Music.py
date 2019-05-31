@@ -18,8 +18,8 @@ class MusicRandomizer:
         offset = 3 if cmd == 0x36 else 1
         sequence_id = data[offset]
         
-        # only consider music that are in range 0 to 0x22
-        valid = sequence_id < 0x22
+        # only consider music that are in range 1 to 0x22
+        valid = sequence_id > 0x0 and sequence_id <= 0x22
 
         #print(level.name + ' has song ' + (SONG_NAMES[sequence_id] if sequence_id < len(SONG_NAMES) else str(sequence_id)))
         if valid:
