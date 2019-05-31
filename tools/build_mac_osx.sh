@@ -11,7 +11,7 @@ bin/pyinstaller \
 --i "favicon.icns" \
 main.py
 
-mv -R dist/main.app dist/SM64\ Randomizer.app
+mv dist/main.app dist/SM64\ Randomizer.app
 mv dist/main dist/SM64\ Randomizer\ CLI
 
 # prepare release folder
