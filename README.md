@@ -1,8 +1,11 @@
 <p align="center"> 
   <img src="https://i.imgur.com/pf687MH.png" alt="SM64 Randomizer">
-  <p align="center">
-    <a href="https://discord.gg/NwNZ3qb">Join our Discord</a>
-  </p>
+  <a href="https://discordapp.com/invite/NwNZ3qb" target="_blank">
+    <p align="center">
+      <img src="https://i.imgur.com/0DkN9vW.png" alt="Join our Discord Server" height="64" /><br />
+      Join our Discord Server for development updates, discussion and support
+    </p>
+  </a>
 </p>
 
 
