@@ -101,6 +101,8 @@ HEIGHT_OFFSETS = {
 CANT_BE_IN_WATER = [
   (None, 0x89), # Star
   (0x13003700, None), # Ice Bully (Big) - otherwise you win instantly
+  (0x130031DC, 0xC3), # Bob-Omb Buddy (With Message)
+  (0x13003228, None) # Bob-Omb Buddy (Opening Canon)
 ]
 
 WALKABLE_COLLISION_TYPES = [
