@@ -15,7 +15,6 @@ This is a work in progress project to build an [https://www.ootrandomizer.com/](
 
 # Features
 
-- Auto Extends ROM to work with the randomizer. *Unfortunately this only works on Windows and Mac OSX right now. Please open a PR if you want this functionality on other OSes*
   - To extend your ROM manually, use either [sm64extender](https://www.smwcentral.net/?p=viewthread&t=77343) or [Super Mario 64 ROM Extender](http://qubedstudios.rustedlogic.net/Mario64Tools.htm).
 - Randomizes Level Entries - Every Level will be a different one
 - Randomizes Castle Paintings - To visually match the entrance of the level it now leads to. (*Levels without a castle painting will show as a brick wall.*)
@@ -25,6 +24,9 @@ This is a work in progress project to build an [https://www.ootrandomizer.com/](
 - Randomizes Coin Colors
 - Randomizes Objects in Level
 - ...many more to come
+
+Also auto extends ROM to work with the randomizer. *Unfortunately this only works on Windows and Mac OSX right now. Please open a PR if you want this functionality on other OSes*
+
 
 # GUI
 The randomizer includes a simple GUI for easy setup without any knowledge about the command line. Simply download the latest [release](/releases/latest) and open `SM64 Randomizer GUI`.
