@@ -1,6 +1,10 @@
 <p align="center"> 
   <img src="https://i.imgur.com/pf687MH.png" alt="SM64 Randomizer">
+  <p align="center">
+    <a href="https://discord.gg/NwNZ3qb">Join our Discord</a>
+  </p>
 </p>
+
 
 # Super Mario 64 ROM Randomizer
 
