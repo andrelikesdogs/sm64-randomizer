@@ -1,4 +1,5 @@
 from random import randint
+import colorsys
 import logging
 
 COIN_COLOR_MEM_POS = {
@@ -13,10 +14,19 @@ class ColorRandomizer:
 
   def randomize_coin_colors(self):
     logging.info("Randomizing Coin Colors")
+    hsl_offset = randint(0, 360)
+    hsl_dist = 120
+    hsl_index = 0
     for coin_type, mem_addresses in COIN_COLOR_MEM_POS.items():
-      (r, g, b) = randint(120, 255), randint(120, 255), randint(120, 255)
-      #print(f'Coin Type: {coin_type} color: rgb({r}, {g}, {b})')
+      # hue shift for coin colors, to ensure difference in color
+      hue = (hsl_offset + (hsl_dist * hsl_index))
+      hsl_index += 1
+      saturation = 50.0
+      luminence = 50.0
+      (r, g, b) = colorsys.hls_to_rgb(hue / 360.0, luminence / 100.0, saturation / 100.0) #randint(120, 255), randint(120, 255), randint(120, 255)
+      logging.info(f'Coin Type: {coin_type} color: rgb({r}, {g}, {b})')
       for mem_address in mem_addresses:
-        self.rom.write_integer(mem_address[0], r)
-        self.rom.write_integer(mem_address[1], g)
-        self.rom.write_integer(mem_address[2], b)
+        
+        self.rom.write_integer(mem_address[0], int(r * 255))
+        self.rom.write_integer(mem_address[1], int(g * 255))
+        self.rom.write_integer(mem_address[2], int(b * 255))
