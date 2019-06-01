@@ -15,7 +15,7 @@ This is a work in progress project to build an [https://www.ootrandomizer.com/](
 
 # Features
 
-  - To extend your ROM manually, use either [sm64extender](https://www.smwcentral.net/?p=viewthread&t=77343) or [Super Mario 64 ROM Extender](http://qubedstudios.rustedlogic.net/Mario64Tools.htm).
+- Works on all versions of the game, even **ROMHacks**.
 - Randomizes Level Entries - Every Level will be a different one
 - Randomizes Castle Paintings - To visually match the entrance of the level it now leads to. (*Levels without a castle painting will show as a brick wall.*)
 - Randomizes Dialog
@@ -26,7 +26,7 @@ This is a work in progress project to build an [https://www.ootrandomizer.com/](
 - ...many more to come
 
 Also auto extends ROM to work with the randomizer. *Unfortunately this only works on Windows and Mac OSX right now. Please open a PR if you want this functionality on other OSes*
-
+To extend your ROM manually, use either [sm64extender](https://www.smwcentral.net/?p=viewthread&t=77343) or [Super Mario 64 ROM Extender](http://qubedstudios.rustedlogic.net/Mario64Tools.htm).
 
 # GUI
 The randomizer includes a simple GUI for easy setup without any knowledge about the command line. Simply download the latest [release](/releases/latest) and open `SM64 Randomizer GUI`.
@@ -41,7 +41,7 @@ To use this package:
 ```
 python main.py ./Super_Mario_64_(U)_[!].z64 --shuffle-levels --shuffle-mario-color --shuffle-paintings match --seed 123
 ```
-_Note: Currently only supports North American version ("USA")_
+_Note: Works on all versions of the game, as well as **ROM Hacks**_
 
 Output will be a file with the same name, ending in `.out.z64`. Run this in your emulator.
 
