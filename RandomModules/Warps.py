@@ -1,4 +1,5 @@
-from Constants import LVL_CASTLE_COURTYARD, LVL_CASTLE_INSIDE, LVL_CASTLE_GROUNDS, LVL_THI, ALL_LEVELS, LEVEL_ID_MAPPING, LEVEL_SHORT_CODES
+from Constants import LVL_CASTLE_COURTYARD, LVL_CASTLE_INSIDE, LVL_CASTLE_GROUNDS, LVL_THI, ALL_LEVELS, LEVEL_ID_MAPPING, LEVEL_SHORT_CODES, LVL_BOWSER_1, LVL_BOWSER_1_BATTLE, LVL_BOWSER_2, LVL_BOWSER_2_BATTLE, LVL_BOWSER_3, LVL_BOWSER_3_BATTLE
+import Constants
 from Spoiler import SpoilerLog
 from RandomModules.Textures import TextureAtlas
 from random import shuffle, choice
@@ -17,7 +18,22 @@ WARP_BEHAVIOURS = {
   0x13002F84: ['RESTORE'], # Restore to Lobby
 }
 
+# The levels listed in this section have warps to different areas, that need to lead back to the same warp. This is only the case in THI in vanilla SM64
 MUST_MATCH_AREA_LEVELS = [LVL_THI]
+
+# These levels have sub-levels, that need to be exited/left through the same warp. This is only the case in bowser levels in vanilla SM64
+LEVEL_CONNECTED_WARPS = {
+  LVL_BOWSER_1: [LVL_BOWSER_1_BATTLE],
+  LVL_BOWSER_2: [LVL_BOWSER_2_BATTLE],
+  LVL_BOWSER_3: [LVL_BOWSER_3_BATTLE],
+}
+
+# This list enforces that certain levels come before other levels, in the order of which rooms are accessible. Obviously only works for SM64
+ENFORCE_ORDER = {
+  # Bowser 1 must be before SSL, DDD, BITFS
+  LVL_BOWSER_1: Constants.BASEMENT_LEVELS,
+  LVL_BOWSER_2: [*Constants.FIRST_FLOOR_LEVELS, *Constants.SECOND_FLOOR_LEVELS],
+}
 
 class WarpRandomizer:
   def __init__(self, rom : 'ROM'):
@@ -107,8 +123,28 @@ class WarpRandomizer:
         logging.debug(" " * 4 + repr([(hex(warp.to_warp_id), hex(warp.memory_address)) for warp in entry_anim_warps]))
       logging.debug('-' * 50)
 
+    valid_warps = False
     target_warp_levels = list(lvl_warps.keys())
-    shuffle(target_warp_levels)
+    #shuffle(target_warp_levels)
+
+    while not valid_warps:
+      print("check validity")
+      shuffle(target_warp_levels)
+
+      idx = 0
+      valid_warps = True
+      for ((original_level, original_area), (entries, anim_exits)) in ow_warps.items():
+        (target_level, target_area) = target_warp_levels[idx]
+
+        # ensure correct order
+        if target_level in ENFORCE_ORDER.keys():
+          logging.info(f'ensuring validity with level {target_level.name}')
+          # bowser in the fire sea for example can't be on the first floor, because that's the boss that gives you the key for the first floor
+          if original_level in ENFORCE_ORDER[target_level]:
+            logging.info(f'{target_level.name} cant be in {original_level}, because it cant be reached without it')
+            valid_warps = False
+            break
+        idx += 1
 
     idx = 0
     for (original_level_area, (entries, anim_exits)) in ow_warps.items():
