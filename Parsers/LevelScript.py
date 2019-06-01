@@ -37,6 +37,7 @@ class LevelScriptParser:
     self.layer = layer
     self.level = level
     self.current_area = None
+    self.water_boxes = []
 
     self.level_geometry = LevelGeometry(level)
     self.level_collisions = []
@@ -404,9 +405,34 @@ class LevelScriptParser:
       elif special_type == b'\x00\x44':
         """ Defines Water Boxes """
         amount = self.rom.read_integer(cursor + 2, 2)
+        cursor += 4
         #print(f"Wants to place {amount} water boxes. Not implemented")
-        # skip water boxes
-        cursor = cursor + 4 + amount * 12
+
+        for water_box_index in range(amount):
+          water_box_id = self.rom.read_integer(cursor, 2)
+          water_box_start_x = self.rom.read_integer(cursor + 2, 2)
+          water_box_start_z = self.rom.read_integer(cursor + 4, 2)
+
+          water_box_end_x = self.rom.read_integer(cursor + 6, 2)
+          water_box_end_z = self.rom.read_integer(cursor + 8, 2)
+          
+          water_box_y = self.rom.read_integer(cursor + 10, 2)
+          water_box_type = "NO_EFFECT"
+
+          if water_box_id < 0x32:
+            water_box_type = "WATER"
+          elif water_box_id == 0x32 or water_box_id == 0xF0:
+            water_box_type = "TOXIC"
+          
+          water_box = (
+            water_box_id,
+            water_box_start_x, water_box_start_z,
+            water_box_end_x, water_box_end_z,
+            water_box_y,
+            water_box_type
+          )
+          self.water_boxes.append(water_box)
+          cursor += 12
       elif special_type == b'\x00\x42' or special_type == b'\x00\x41':
         #print("Reached Terminate Type")
         break
