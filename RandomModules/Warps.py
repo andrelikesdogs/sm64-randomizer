@@ -128,12 +128,11 @@ class WarpRandomizer:
     #shuffle(target_warp_levels)
 
     while not valid_warps:
-      print("check validity")
       shuffle(target_warp_levels)
 
       idx = 0
       valid_warps = True
-      for ((original_level, original_area), (entries, anim_exits)) in ow_warps.items():
+      for ((original_level, original_area), ow_entry_exit_sets) in ow_warps.items():
         (target_level, target_area) = target_warp_levels[idx]
 
         # ensure correct order
