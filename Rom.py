@@ -19,6 +19,7 @@ class ROM:
     self.endianess = None
     self.file_stats = None
     self.rom_type = None
+    self.require_checksum_fix = False
 
     self.segments = {}
     self.levelscripts = {}
@@ -33,6 +34,22 @@ class ROM:
   def __exit__(self, exc_type, exc_value, traceback):
     self.file.close()
     self.target.close()
+
+    # apply checksum fix after saving, if necessary
+    if self.require_checksum_fix:
+      print("Applying checksum fix...")
+      try:
+        operating_sys = system()
+        if operating_sys == 'Darwin':
+          subprocess.check_call(['./3rdparty/n64cksum_mac_x64', str(self.out_path)])
+        elif operating_sys == 'Windows':
+          subprocess.check_call(['3rdparty/n64cksum_win_x86', str(self.out_path)])
+        else:
+          raise Exception(f"No n64checksum binary for this operating system: {operating_sys}")
+        print("Success!")
+      except Exception as err:
+        print("Unfortunately, the checksum fix failed. Please manually fix your ROMs checksum. Feel free to report this issue to github.com/andre-meyer/sm64-randomizer/issues")
+        raise err
 
   def verify_header(self):
     self.file.seek(0)
@@ -97,6 +114,9 @@ class ROM:
       raise Exception("Sorry, no sm64extend is available for your OS. Please raise an issue on our github, and we'll try to add it!")
     
     return ext_path
+
+  def mark_checksum_dirty(self):
+    self.require_checksum_fix = True
 
   def read_levels(self):
     for level in ALL_LEVELS:

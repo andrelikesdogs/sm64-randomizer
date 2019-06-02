@@ -21,6 +21,7 @@ from RandomModules.Levels import LevelRandomizer
 from RandomModules.Colors import ColorRandomizer
 from RandomModules.Warps import WarpRandomizer
 from RandomModules.Text import TextRandomizer
+from Functionality.Cutscenes import CutsceneFunctionality
 
 from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE
 
@@ -131,6 +132,10 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     color_randomizer = ColorRandomizer(rom)
     if opt_args.shuffle_colors:
       color_randomizer.randomize_coin_colors()
+
+    cutscene_func = CutsceneFunctionality(rom)
+    if opt_args.disable_cutscenes:
+      cutscene_func.disable_all_cutscenes()
     
     if 'DEBUG' in os.environ and os.environ['DEBUG'] == 'PLOT':
       for (level_area, parsed) in rom.levelscripts.items():
