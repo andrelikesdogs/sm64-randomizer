@@ -12,6 +12,9 @@ a:hover {
   text-shadow: #fff 0 0 4px;
   color: #fff; }
 
+a, a:visited {
+  color: #6773dd; }
+
 .clearfix {
   clear: both; }
 
@@ -47,7 +50,8 @@ section:last-of-type {
   display: block; }
 
 .button-row {
-  text-align: center; }
+  text-align: center;
+  height: auto; }
 
 .logo-scale {
   margin: auto;
@@ -96,6 +100,8 @@ section:last-of-type {
   border: none;
   border-radius: 4px;
   padding: 2em 4em;
+  margin: 10px 10px 0 10px;
+  display: inline-block;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.4); }
   .like-button.primary {
     color: #fff;
@@ -108,7 +114,10 @@ section:last-of-type {
   .like-button:not(:disabled):hover.secondary {
     background-color: #b4b4dd; }
   .like-button:disabled, .like-button.disabled {
-    opacity: 0.6; }
+    opacity: 0.6;
+    cursor: not-allowed; }
+  .like-button:hover {
+    cursor: pointer; }
 
 .icon {
   width: 24px;

@@ -86,5 +86,16 @@ configurableParams = [
       "WEB": true
     },
     "help": "Shuffle Dialog text, for signs, npc dialog, level dialog and prompts."
+  },
+  {
+    "name": "disable-cutscenes",
+    "label": "Disable Cutscenes/Intro",
+    "category": "gameplay",
+    "type": "checkbox",
+    "default": {
+      "CLI": false,
+      "WEB": true
+    },
+    "help": "Disables some of the games cutscenes. (Peach Intro, Lakitu Intro, Bowser-Text on Entry)"
   }
 ]

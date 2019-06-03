@@ -36,7 +36,7 @@
     <section class="content-section">
       <div class="inner">
         <h1>Generating a new ROM</h1>
-        <form name="generator" action="/" method="post">
+        <form name="generator" action="http://127.0.0.1:5000" method="post">
           <div class="category" id="category-general">
             <h1>General</h1>
             <div class="field field--type--file">
@@ -46,7 +46,7 @@
               </div>
             </div>
             <div class="hints">
-                <p><em>Please note that currently only the US Version is supported. Please also ensure that your ROM is a <code>.z64</code> file.</em></p>
+                <p><em>Please select the <strong>uncompressed</strong> ROM-File, you want to randomize. Works with any game version and with romhacks. (Extensions: <code>.z64</code>, <code>.n64</code>). <br />Please note certain functionality might not work with romhacks and will need some testing first.<br /><a href="https://discordapp.com/invite/fCKYdWK" target="_blank">Join our discord for support!</a></em></p>
             </div>
             <div class="clearfix"></div>
             <p class="message"></p>
@@ -61,7 +61,10 @@
           </div>
 
           <div class="summary">
-            <button class="like-button primary">Queue for generation</button>
+            <button id="queue-generation" class="like-button primary progress-button">
+              Queue for generation
+              <div class="progress"></div>
+            </button>
             <p>Special Thanks to Hannes for <abbr title="superskalar.org">superskalar</abbr> for generator hosting</p>
           </div>
         </form>

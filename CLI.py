@@ -71,11 +71,14 @@ def run_with_args(sys_args : List[str] = sys.argv[1:]):
   parsed_args = parser.parse_args(sys_args)
   return run_with_parsed_args(parsed_args)
 
+def generate_output_path(rom_in : Path):
+  return rom_in.with_suffix(f'.out{rom_in.suffix}')
+
 def run_with_parsed_args(opt_args : argparse.Namespace):
   seed(opt_args.seed)
 
   rom_path = Path(opt_args.rom)
-  out_path = opt_args.out or Path(rom_path.name[0:-4] + ".out.z64")
+  out_path = opt_args.out or generate_output_path(rom_path)
 
   if not rom_path.exists():
     raise Exception("invalid file, does not exist")

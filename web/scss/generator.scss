@@ -164,6 +164,7 @@ button.help:hover .tooltip-content {
     display: block;
     cursor: pointer;
     pointer-events: none;
+    width: 100%;
   }
 }
 
@@ -200,4 +201,21 @@ button.help:hover .tooltip-content {
 
 .message {
   margin: 1em 0;
+}
+
+.progress-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.progress {
+  position: absolute;
+  width: 0%;
+  background-color: rgb(255, 230, 230);
+  height: 2px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 1s ease width;
+  box-shadow: 0 0 4px white;
 }

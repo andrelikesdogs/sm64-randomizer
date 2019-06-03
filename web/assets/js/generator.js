@@ -1,4 +1,5 @@
 $(document).ready(() => {
+  const $fields = []
   $.each(configurableParams, (_, field) => {
     const fieldName = field.name
     const categoryName = field.category
@@ -13,6 +14,7 @@ $(document).ready(() => {
     $input = $('<input />')
     fieldId = `#form-${fieldName}`
     $input.attr('id', fieldId)
+    $input.attr('name', fieldName)
 
     $label = $('<label />')
     $label.text(field.label)
@@ -52,6 +54,7 @@ $(document).ready(() => {
       }
       case 'select': {
         $input = $('<select />')
+        $input.attr('name', fieldName)
 
         $.each(field.options, (_, {value, label}) => {
           $input.append($('<option />').attr('value', value).text(label))
@@ -74,9 +77,13 @@ $(document).ready(() => {
         break
       }
     }
+    $fields.push($input)
     $field.addClass(`field--type--${field.type}`)
     $targetCategory.append($field)
   })
+
+  let dataBlob
+  const $generatorForm = $('form[name="generator"]')
 
   // setup dropzone
   $targetInputField = $('input[type="file"]')
@@ -94,6 +101,42 @@ $(document).ready(() => {
   $fileInputStyled.text('Select your ROM-File')
   $fileInputStyled.insertAfter($targetInputField)
 
+  $queueGenerationButton = $('#queue-generation')
+
+  $generatorForm.on("submit", (e) => {
+    e.preventDefault()
+
+    if (!$realUpload.val()) {
+      return
+    }
+
+    const formDataBlob = new FormData(document.querySelector('form'))
+    formDataBlob.delete("fake-upload")
+    formDataBlob.set("input_rom", dataBlob, "input_rom.zip")
+
+    
+
+    $.ajax({
+      type: 'POST', 
+      url: $generatorForm.attr("action"),
+      processData: false,
+      contentType: false,
+      data: formDataBlob,
+      xhr: () => {
+        const xhr = new window.XMLHttpRequest();
+        xhr.upload.addEventListener("progress", (evt) => {
+          var percentComplete = evt.loaded / evt.total;
+          console.log(percentComplete)
+          $queueGenerationButton.children('.progress').css('width', (percentComplete * 100)+'%')
+        })
+
+        return xhr
+      }
+    })
+
+  })
+
+  let internalName
   const validateROM = (arrayBuffer) => {
     const header = arrayBuffer.slice(0, 0x40)
 
@@ -111,11 +154,11 @@ $(document).ready(() => {
       throw new Error('invalid endianess')
     }
 
-    let internalName = String.fromCharCode.apply(null, new Uint8Array(header.slice(0x18, 0x3B)))
+    internalName = String.fromCharCode.apply(null, new Uint8Array(header.slice(0x18, 0x3B)))
     internalName = internalName.replace(/[^A-Za-z0-9 ]+/g, '').trim()
     
     if (internalName != 'SUPER MARIO 64') {
-      throw new Error('invalid internal name - must be a SM64 ROM')
+      //throw new Error('invalid internal name - must be a SM64 ROM')
     }
 
     return arrayBuffer
@@ -138,6 +181,11 @@ $(document).ready(() => {
       throw new Error('Please only upload one file at a time')
     }
 
+    if (!files) {
+      console.warn("No file selected")
+      return
+    }
+
     binaryData = await (new Promise((resolve, reject) => {
       const fileReader = new FileReader()
       fileReader.onload = (e) => {
@@ -150,17 +198,13 @@ $(document).ready(() => {
       fileReader.readAsArrayBuffer(files[0])
     }))
 
-    await validateROM(binaryData)
+    return validateROM(binaryData)
   } 
 
   const updateInputStatus = (status, message) => {
     // clear everything
     $targetInputField.prop('disabled', false)
-<<<<<<< HEAD
     $message = $('.message').text('')
-=======
-    $message = $fieldContainer.closest('.message').text('')
->>>>>>> 4b060e46564f7771d95c8c5f8a3fa2f764ac6a08
     $message.addClass(status)
     $message.text(message)
 
@@ -169,31 +213,45 @@ $(document).ready(() => {
   }
 
   $targetInputField.on('change', async function() {
-<<<<<<< HEAD
-    $fileInputStyled.text('Select your ROM-File')
-=======
->>>>>>> 4b060e46564f7771d95c8c5f8a3fa2f764ac6a08
+    if (!this.files || !this.files[0]) {
+      return
+    }
+
+    dataBlob = null
     updateInputStatus('pending')
 
     let blob
     try {
-      validateInput(this.files)
+      await validateInput(this.files)
       blob = this.files[0]
     } catch (err) {
+      $fileInputStyled.text('Invalid Input')
+      console.error(err)
       return updateInputStatus('error', err.message)
     }
 
+    const might_be_romhack = internalName != 'SUPER MARIO 64'
+    
     let URL
+    let message = ""
     try {
       URL = window.webkitURL || window.mozURL || window.URL
       updateInputStatus('load', 'Compressing your ROM...')
       blob = await tryCompress(this.files[0])
-      $fileInputStyled.text('✓ Valid ROM')
-      updateInputStatus('success', 'Prepared your ROM for uploading!')  
+      dataBlob = blob
+      message = "Prepared your ROM for uploading!"
     } catch (err) {
       console.error(err)
+      dataBlob = blob
+      message = "File prepared, but could not compress the data. Sorry!"
+    }
+
+    if (might_be_romhack) {
+      updateInputStatus('success', message + " (Your ROM was detected as a ROMHack)")  
+      $fileInputStyled.text('✓ Valid ROM - Romhack')
+    } else {
+      updateInputStatus('success', message)
       $fileInputStyled.text('✓ Valid ROM')
-      updateInputStatus('success', 'File prepared, but could not compress the data. Sorry!')
     }
 
     $realUpload.val(URL.createObjectURL(blob))
