@@ -72,13 +72,13 @@ def run_with_args(sys_args : List[str] = sys.argv[1:]):
   return run_with_parsed_args(parsed_args)
 
 def generate_output_path(rom_in : Path):
-  return rom_in.with_suffix(f'.out{rom_in.suffix}')
+  return 
 
 def run_with_parsed_args(opt_args : argparse.Namespace):
   seed(opt_args.seed)
 
   rom_path = Path(opt_args.rom)
-  out_path = opt_args.out or generate_output_path(rom_path)
+  out_path = opt_args.out or rom_path.with_suffix(f'.out{rom_path.suffix}')
 
   if not rom_path.exists():
     raise Exception("invalid file, does not exist")
@@ -97,12 +97,13 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
 
       try:
         new_rom = rom.try_extend()
-      except:
+      except Exception as err:
         print("Unfortunately, the ROM could not be extended. Please see the log below to figure out why. The Randomizer will continue using the vanilla rom. Please note not all functionality is available in this mode.")
         print(err)
 
       new_args = {**vars(opt_args)}
       new_args['rom'] = new_rom
+      new_args['no_extend'] = True # don't extend twice
       run_with_parsed_args(argparse.Namespace(**new_args))
       return
 
@@ -146,6 +147,6 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       #rom.levelscripts
 
   SpoilerLog.output()
-  print(f'Completed! Your randomized ROM File can be found as "{os.path.relpath(out_path)}"')
+  print(f'Completed! Your randomized ROM File can be found as "{str(Path(out_path).absolute())}"')
 
 #run_with_args()

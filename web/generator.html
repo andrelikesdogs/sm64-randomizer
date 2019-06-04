@@ -36,7 +36,7 @@
     <section class="content-section">
       <div class="inner">
         <h1>Generating a new ROM</h1>
-        <form name="generator" action="http://127.0.0.1:5000" method="post">
+        <form name="generator" action="/" method="post">
           <div class="category" id="category-general">
             <h1>General</h1>
             <div class="field field--type--file">
@@ -62,9 +62,10 @@
 
           <div class="summary">
             <button id="queue-generation" class="like-button primary progress-button">
-              Queue for generation
+              <span>Queue for generation</span>
               <div class="progress"></div>
             </button>
+            <p id="queue-generation-message"></p>
             <p>Special Thanks to Hannes for <abbr title="superskalar.org">superskalar</abbr> for generator hosting</p>
           </div>
         </form>

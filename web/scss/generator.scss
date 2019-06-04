@@ -203,9 +203,36 @@ button.help:hover .tooltip-content {
   margin: 1em 0;
 }
 
+#queue-generation {
+  min-width: 500px;
+}
+
 .progress-button {
   position: relative;
   overflow: hidden;
+}
+
+@keyframes indefinite-animation {
+  0% {
+    left: 0%;
+    width: 0%
+  }
+  30% {
+    width: 30%;
+  }
+  70% {
+    width: 30%;
+  }
+  100% {
+    left: 100%;
+    width: 0%;
+  }
+}
+
+
+.progress-button.indefinite .progress {
+  width: 30%;
+  animation: ease-in-out infinite 2s indefinite-animation;
 }
 
 .progress {

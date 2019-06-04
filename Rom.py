@@ -93,19 +93,18 @@ class ROM:
 
   def try_extend(self):
     # make copy
-    in_path_parts = str(self.path).split('.')
-    ext_path_parts = [*in_path_parts[:-1], 'ext', in_path_parts[-1]]
-    ext_path = '.'.join(ext_path_parts)
-    print("Creating Extended ROM as ", ext_path)
-    shutil.copy(self.path, ext_path)
+    path = Path(self.path)
+    ext_path = path.with_suffix(f'.ext{path.suffix}')
+    print("Creating Extended ROM inplace")
+    shutil.copy(path, ext_path)
 
     # close initial file
-    #self.file.close()
+    self.file.close()
 
     operating_sys = system()
     #arch = architecture()
     #bits = arch[0]
-    args = ['-s', '24', str(self.path), ext_path]
+    args = ['-s', '24', str(path), ext_path]
     if operating_sys == 'Darwin':
       subprocess.check_call(['./3rdparty/sm64extend_mac_x64', *args])
     elif operating_sys == 'Windows':
@@ -113,7 +112,7 @@ class ROM:
     else:
       raise Exception("Sorry, no sm64extend is available for your OS. Please raise an issue on our github, and we'll try to add it!")
     
-    return ext_path
+    return str(ext_path)
 
   def mark_checksum_dirty(self):
     self.require_checksum_fix = True

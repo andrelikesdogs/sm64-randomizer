@@ -1,3 +1,5 @@
+const BASE_URL = 'http://127.0.0.1:5000'
+
 $(document).ready(() => {
   const $fields = []
   $.each(configurableParams, (_, field) => {
@@ -102,39 +104,15 @@ $(document).ready(() => {
   $fileInputStyled.insertAfter($targetInputField)
 
   $queueGenerationButton = $('#queue-generation')
-
-  $generatorForm.on("submit", (e) => {
-    e.preventDefault()
-
-    if (!$realUpload.val()) {
-      return
+  const changeEndianness = (string) => {
+    const result = [];
+    let len = string.length - 2;
+    while (len >= 0) {
+      result.push(string.substr(len, 2));
+      len -= 2;
     }
-
-    const formDataBlob = new FormData(document.querySelector('form'))
-    formDataBlob.delete("fake-upload")
-    formDataBlob.set("input_rom", dataBlob, "input_rom.zip")
-
-    
-
-    $.ajax({
-      type: 'POST', 
-      url: $generatorForm.attr("action"),
-      processData: false,
-      contentType: false,
-      data: formDataBlob,
-      xhr: () => {
-        const xhr = new window.XMLHttpRequest();
-        xhr.upload.addEventListener("progress", (evt) => {
-          var percentComplete = evt.loaded / evt.total;
-          console.log(percentComplete)
-          $queueGenerationButton.children('.progress').css('width', (percentComplete * 100)+'%')
-        })
-
-        return xhr
-      }
-    })
-
-  })
+    return result.join('');
+  }
 
   let internalName
   const validateROM = (arrayBuffer) => {
@@ -153,11 +131,18 @@ $(document).ready(() => {
       console.log(endian_bytes.toString())
       throw new Error('invalid endianess')
     }
-
+    console.log(header.slice(0x18, 0x3B))
+    
     internalName = String.fromCharCode.apply(null, new Uint8Array(header.slice(0x18, 0x3B)))
+
+    if (endianess == 'little') {
+      internalName = changeEndianness(internalName)
+    }
+
     internalName = internalName.replace(/[^A-Za-z0-9 ]+/g, '').trim()
     
     if (internalName != 'SUPER MARIO 64') {
+      console.log(internalName)
       //throw new Error('invalid internal name - must be a SM64 ROM')
     }
 
@@ -176,6 +161,7 @@ $(document).ready(() => {
     return zipBlob
   }
 
+  let fileNameSelected
   const validateInput = async (files) => {
     if (files.length > 1) {
       throw new Error('Please only upload one file at a time')
@@ -186,6 +172,8 @@ $(document).ready(() => {
       return
     }
 
+    fileNameSelected = files[0].name
+    
     binaryData = await (new Promise((resolve, reject) => {
       const fileReader = new FileReader()
       fileReader.onload = (e) => {
@@ -212,6 +200,66 @@ $(document).ready(() => {
     $targetInputField.prop('disabled', !canChange)
   }
 
+  let tracking_active = false
+  let tracking_interval = null
+  const activateTrackingMode = (upload_ticket) => {
+    if (!tracking_active) {
+      tracking_active = true
+      tracking_interval = setInterval(() => {
+        $.ajax({
+          type: 'GET',
+          url: BASE_URL + '/status/' + upload_ticket,
+          success: (data) => {
+            console.log(data)
+            if (data.status == 'SUCCESS') {
+              clearInterval(tracking_interval)
+              tracking_active = false
+
+              const link = document.createElement("a")
+              link.href = BASE_URL + '/download/' + upload_ticket
+              const fileNameParts = fileNameSelected.split('.')
+              const fileExt = fileNameParts[fileNameParts.length - 1]
+              link.download = 'Super Mario 64 Randomizer ROM' + fileExt
+              link.click()
+
+              // queue-generation-message
+              $queueGenerationButton.children("span").text("Queue for generation")
+              $queueGenerationButton.prop("disabled", false)
+              $queueGenerationButton.removeClass("indefinite")
+              return
+            } else if (data.status == 'ERROR') {
+              clearInterval(tracking_interval)
+              tracking_active = false
+
+              alert(data.message || "Sorry! An unknown error occured. Please try again later or ask for support on our Discord.")
+              $queueGenerationButton.children("span").text("Queue for generation")
+              $queueGenerationButton.prop("disabled", false)
+              $queueGenerationButton.removeClass("indefinite")
+              return
+            } else if (data.status == 'PROCESSING') {
+              $queueGenerationButton.children("span").text("Generating your ROM...")
+            } else if (data.status == 'PENDING') {
+              if (data.position == 0) {
+                $queueGenerationButton.children("span").text("You're next!")
+              } else {
+                $queueGenerationButton.children("span").text("Currently waiting on " + data.position + " others ahead in the queue.")
+              }
+            }
+          },
+          error: (xhr, error) => {
+            clearInterval(tracking_interval)
+            tracking_active = false
+
+            $queueGenerationButton.children("span").text("Queue for generation")
+            $queueGenerationButton.prop("disabled", false)
+            alert(error)
+            return
+          }
+        })
+      }, 5000)
+    }
+  }
+
   $targetInputField.on('change', async function() {
     if (!this.files || !this.files[0]) {
       return
@@ -230,7 +278,7 @@ $(document).ready(() => {
       return updateInputStatus('error', err.message)
     }
 
-    const might_be_romhack = internalName != 'SUPER MARIO 64'
+    const might_be_romhack = internalName != 'SUPER MARIO 64' && internalName != 'USEP RAMIR O46      N' // lol
     
     let URL
     let message = ""
@@ -257,4 +305,57 @@ $(document).ready(() => {
     $realUpload.val(URL.createObjectURL(blob))
   })
 
+  $generatorForm.on("submit", (e) => {
+    e.preventDefault()
+
+    if (!$realUpload.val()) {
+      return
+    }
+
+    const formDataBlob = new FormData(document.querySelector('form'))
+    formDataBlob.delete("fake-upload")
+    formDataBlob.set("input_rom", dataBlob, "input_rom.zip")
+
+    $queueGenerationButton.prop("disabled", true)
+    $queueGenerationButton.children('span').text("Uploading...")
+
+    $.ajax({
+      type: 'POST', 
+      url: BASE_URL,
+      processData: false,
+      contentType: false,
+      data: formDataBlob,
+      dataType: 'json',
+      success: (data) => {
+        console.log(data)
+        $queueGenerationButton.children("span").text("Waiting for queue...")
+        $queueGenerationButton.addClass("indefinite")
+
+        if (data.success) {
+          activateTrackingMode(data.upload_ticket)
+        } else {
+          console.error(data.message)
+          $queueGenerationButton.children("span").text("Sorry, an error occured. Please try again.")
+          $queueGenerationButton.prop("disabled", false)
+          $queueGenerationButton.removeClass("indefinite")
+        }
+
+      },
+      error: (data) => {
+        $queueGenerationButton.children("span").text("Sorry, an error occured. Please try again.")
+        $queueGenerationButton.prop("disabled", false)
+        $queueGenerationButton.removeClass("indefinite")
+      },
+      xhr: () => {
+        const xhr = new window.XMLHttpRequest();
+        xhr.upload.addEventListener("progress", (evt) => {
+          var percentComplete = evt.loaded / evt.total;
+          console.log(percentComplete)
+          $queueGenerationButton.children('.progress').css('width', (percentComplete * 100)+'%')
+        })
+
+        return xhr
+      }
+    })
+  })
 })
