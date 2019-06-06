@@ -253,6 +253,8 @@ section:last-of-type {
   position: relative;
 
   &:hover {
+    cursor: none;
+    
     &::after {
       content: '';
       position: absolute;

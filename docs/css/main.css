@@ -193,15 +193,17 @@ section:last-of-type {
 .pog {
   font-style: normal;
   position: relative; }
-  .pog:hover::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: 50%;
-    width: 17px;
-    height: 24px;
-    transform: translate(50%, -50%);
-    background-image: url("../img/pog.png");
-    background-size: contain;
-    pointer-events: none;
-    background-repeat: no-repeat; }
+  .pog:hover {
+    cursor: none; }
+    .pog:hover::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 50%;
+      width: 17px;
+      height: 24px;
+      transform: translate(50%, -50%);
+      background-image: url("../img/pog.png");
+      background-size: contain;
+      pointer-events: none;
+      background-repeat: no-repeat; }
