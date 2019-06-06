@@ -3,7 +3,8 @@
 .Python
 [Bb]in
 [Ii]nclude
-[Ll]ib
+[Ll]ib/*
+!js/lib/*
 [Ll]ib64
 [Ll]ocal
 [Ss]cripts
