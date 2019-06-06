@@ -44,6 +44,8 @@ class ROM:
           subprocess.check_call(['./3rdparty/n64cksum_mac_x64', str(self.out_path)])
         elif operating_sys == 'Windows':
           subprocess.check_call(['3rdparty/n64cksum_win_x86', str(self.out_path)])
+        elif operating_sys == 'Linux':
+          subprocess.check_call(['./3rdparty/n64cksum_ubuntu_x64', str(self.out_path)])
         else:
           raise Exception(f"No n64checksum binary for this operating system: {operating_sys}")
         print("Success!")
@@ -107,6 +109,8 @@ class ROM:
     args = ['-s', '24', str(path), ext_path]
     if operating_sys == 'Darwin':
       subprocess.check_call(['./3rdparty/sm64extend_mac_x64', *args])
+    elif operating_sys == 'Linux':
+      subprocess.check_call(['./3rdparty/sm64extend_ubuntu_x64', str(self.out_path)])
     elif operating_sys == 'Windows':
       subprocess.check_call(['3rdparty/sm64extend_win_x86.exe', *args])
     else:

@@ -1,6 +1,19 @@
-const BASE_URL = 'http://hannes.fun:5337'
+let BASE_URL = 'http://hannes.fun:5337'
+
+if (location.hostname == 'localhost' || location.hostname == '127.0.0.1') {
+  BASE_URL = 'http://localhost:5000'
+}
 
 $(document).ready(() => {
+  const tryGA = (action, opts) => {
+    console.log('Logging Event: ' + action)
+    console.log(opts)
+    try {
+      gtag('event', action, opts);
+    } catch (err) {
+      console.warn("Could not save GA Event - probably blocked")
+    }
+  }
   const $fields = []
   $.each(configurableParams, (_, field) => {
     const fieldName = field.name
@@ -243,10 +256,21 @@ $(document).ready(() => {
               $queueGenerationButton.children("span").text("Queue for generation")
               $queueGenerationButton.prop("disabled", false)
               $queueGenerationButton.removeClass("indefinite")
+
+              tryGA("rom_received", {
+                event_category: "ROM Received",
+                label: "User received a ROM"
+              })
+
               return
             } else if (data.status == 'ERROR') {
               clearInterval(tracking_interval)
               tracking_active = false
+
+              tryGA("rom_failure_resp", {
+                event_category: "ROM Received",
+                label: "ROM Receive failed: " + (data && data.message != null ? data.message : "(Unknown Error)")
+              })
 
               alert(data.message || "Sorry! An unknown error occured. Please try again later or ask for support on our Discord.")
               $queueGenerationButton.children("span").text("Queue for generation")
@@ -263,9 +287,14 @@ $(document).ready(() => {
               }
             }
           },
-          error: (xhr, error) => {
+          error: (xhr, errMessage) => {
             clearInterval(tracking_interval)
             tracking_active = false
+
+            tryGA("rom_failure_xhr", {
+              event_category: "ROM Received",
+              label: "ROM Receive failed: " + (errMessage != null ? errMessage : "(Unknown Error)")
+            })
 
             $queueGenerationButton.children("span").text("Queue for generation")
             $queueGenerationButton.prop("disabled", false)
@@ -330,6 +359,10 @@ $(document).ready(() => {
       return
     }
 
+    tryGA("upload_start", {
+      event_category: "ROM Upload",
+      label: "Started uploading a ROM"
+    })
     const formDataBlob = new FormData(document.querySelector('form'))
     formDataBlob.delete("fake-upload")
     formDataBlob.set("input_rom", dataBlob, "input_rom.zip")
@@ -349,8 +382,16 @@ $(document).ready(() => {
         $queueGenerationButton.addClass("indefinite")
 
         if (data.success) {
+          tryGA("upload_finish", {
+            event_category: "ROM Uploaded",
+            label: "Completed an upload, waiting for queue"
+          })
           activateTrackingMode(data.upload_ticket)
         } else {
+          tryGA("upload_failed_resp", {
+            event_category: "ROM Upload Failed",
+            label: "Failed Uploading: " + (data && data.message != null ? data.message : "(Unknown Error)")
+          })
           console.error(data.message)
           $queueGenerationButton.children("span").text("Sorry, an error occured. Please try again.")
           $queueGenerationButton.prop("disabled", false)
@@ -358,7 +399,11 @@ $(document).ready(() => {
         }
 
       },
-      error: (data) => {
+      error: (xhr, errMessage) => {
+        tryGA("upload_failed_xhr", {
+          event_category: "ROM Upload Failed",
+          label: "Failed Uploading: " + (errMessage != null ? errMessage : "(Unknown Error)")
+        })
         $queueGenerationButton.children("span").text("Sorry, an error occured. Please try again.")
         $queueGenerationButton.prop("disabled", false)
         $queueGenerationButton.removeClass("indefinite")

@@ -11,7 +11,7 @@
 
 # Super Mario 64 ROM Randomizer
 
-This is a work in progress project to build an [https://www.ootrandomizer.com/](OoT-Randomizer)-style randomizer for Super Mario 64, that is highly customizable and fast to use.
+This is a work in progress project to build an [OoT-Randomizer](https://www.ootrandomizer.com/)-style randomizer for Super Mario 64, that is highly configurable and easy to use.
 
 # Features
 
@@ -23,16 +23,25 @@ This is a work in progress project to build an [https://www.ootrandomizer.com/](
 - Randomizes Mario's Outfit
 - Randomizes Coin Colors
 - Randomizes Objects in Level
+- Disables Cutscenes
+- Disables Level Intros
+- Disable Out-of-Level Starwarp
 - ...many more to come
 
-Also auto extends ROM to work with the randomizer. *Unfortunately this only works on Windows and Mac OSX right now. Please open a PR if you want this functionality on other OSes*
-To extend your ROM manually, use either [sm64extender](https://www.smwcentral.net/?p=viewthread&t=77343) or [Super Mario 64 ROM Extender](http://qubedstudios.rustedlogic.net/Mario64Tools.htm).
+Also auto extends ROM to work with the randomizer. If this fails, extend your ROM manually and use either [sm64extender](https://www.smwcentral.net/?p=viewthread&t=77343) or [Super Mario 64 ROM Extender](http://qubedstudios.rustedlogic.net/Mario64Tools.htm).
 
-# GUI
+# Usage GUI
 The randomizer includes a simple GUI for easy setup without any knowledge about the command line. Simply download the latest [release](/releases/latest) and open `SM64 Randomizer GUI`.
 
 ![SM64 Randomizer GUI](https://i.imgur.com/erEk4Dh.png)
 
+1. Select an Input ROM
+2. Select an Output (will be automatically guessed to <rom>.out.<ending>)
+3. Select your settings
+- Choose a custom seed to share with friends who use the same tool
+- Copy the settings string to copy your current settings to share with friends. Does not include seed.
+4. Press "Generate"
+5. Run output file on your emulator/console. :tada:
 
 # Usage CLI
 To use this package:
@@ -41,15 +50,17 @@ To use this package:
 ```
 python main.py ./Super_Mario_64_(U)_[!].z64 --shuffle-levels --shuffle-mario-color --shuffle-paintings match --seed 123
 ```
-_Note: Works on all versions of the game, as well as **ROM Hacks**_
+_Note: Works on all versions of the game, as well as **ROM Hacks** (with some tweaking, contact us in Discord for help)_
 
-Output will be a file with the same name, ending in `.out.z64`. Run this in your emulator.
+Output will be a file with the same name, ending in `.out.z64`. Run this on your emulator/console.
 
 ```
 usage: main.py [-h] [--no-extend] [--out OUT] [--seed SEED] [--version]
                [--shuffle-paintings {vanilla,match,random}]
                [--shuffle-entries] [--shuffle-mario-outfit] [--shuffle-music]
                [--shuffle-objects] [--shuffle-colors] [--shuffle-text]
+               [--disable-cutscenes] [--disable-starwarp]
+               [--stardoor-requirements {vanilla,random,open}]
                rom
 
 positional arguments:
@@ -78,11 +89,23 @@ optional arguments:
   --shuffle-colors      Shuffle various colors in the game
   --shuffle-text        Shuffle Dialog text, for signs, npc dialog, level
                         dialog and prompts.
+  --disable-cutscenes   Disables some of the games cutscenes. (Peach Intro,
+                        Lakitu Intro, Bowser-Text on Entry)
+  --disable-starwarp    Disables automatically leaving the level when you
+                        collect a star. This way, all stars act like a
+                        100-Coin star or a Bowser 8-Reds Star
+  --stardoor-requirements {vanilla,random,open}
+                        Changes how the doors to levels require different
+                        amounts of stars to be collected beforehand. Random
+                        means all doors require stars, but the amount will be
+                        random. Open simply means all doors are open from the
+                        start.
 ```
 
 ## Special Thanks
-- wonderful SM64 hacking resources, clean, easy to use and great explanations: http://hack64.net/
-- simpleflips discord for help with SM64 weirdness (especially Felegg)
-- durkhaz for the logo
-- Beta Testers
-- https://www.smwcentral.net/
+- [hack64](http://hack64.net/)'s wonderful SM64 hacking resources, clean, easy to use and great in-depth details
+- [SimpleFlips](https://www.youtube.com/user/SimpleFlips) Discord-Server for help with SM64 hacking/weirdness (especially Felegg)
+- Durkhaz for the amazing logo
+- CJay for server hosting of the generator
+- Beta Testers and people from the [discord](https://discordapp.com/invite/NwNZ3qb)
+- [smwcentral](https://www.smwcentral.net/)'s community and forum
