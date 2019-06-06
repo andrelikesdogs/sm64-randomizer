@@ -296,10 +296,11 @@ $(document).ready(() => {
               label: "ROM Receive failed: " + (errMessage != null ? errMessage : "(Unknown Error)")
             })
 
+            alert("Unfortunately the server returned an invalid response. Please try again later")
+
             $queueGenerationButton.children("span").text("Queue for generation")
             $queueGenerationButton.prop("disabled", false)
             $queueGenerationButton.removeClass("indefinite")
-            alert(error)
             return
           }
         })
