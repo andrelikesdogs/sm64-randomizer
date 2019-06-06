@@ -4,6 +4,7 @@ from Constants import BEHAVIOUR_NAMES
 class Object3D(BaseMemoryRecord):
   source: str # SPECIAL_MACRO_OBJ, PLACE_OBJ, MACRO_OBJ, MARIO_SPAWN
   model_id: str
+  level: "Level" = None
   position: tuple = (0, 0, 0) # (X, Y, Z)
   rotation: tuple = (0, 0, 0) # (X, Y, Z)
   behaviour: int = None # addr
@@ -25,12 +26,20 @@ class Object3D(BaseMemoryRecord):
 
     return f'Unknown (Source: {self.source})'
 
-  def __init__(self, source, model_id, position, rotation = None, behaviour = None, bparams = [], mem_address = None):
+  def remove(self, rom):
+    if self.source == 'PLACE_OBJ':
+      rom.write_byte(self.mem_address + 1, bytes([0x00])) # Set Model-ID to 0
+    if self.source == 'MACRO_OBJ':
+      rom.levelscripts[self.level].remove_macro_object(self)
+
+
+  def __init__(self, source, model_id, position, level, rotation = None, behaviour = None, bparams = [], mem_address = None):
     super().__init__()
 
     self.source = source
     self.model_id = model_id
     self.position = position
+    self.level = level
     self.rotation = rotation
     self.behaviour = behaviour
     self.behaviour_name = self.generate_name()

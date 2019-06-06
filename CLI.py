@@ -21,6 +21,8 @@ from RandomModules.Levels import LevelRandomizer
 from RandomModules.Colors import ColorRandomizer
 from RandomModules.Warps import WarpRandomizer
 from RandomModules.Text import TextRandomizer
+from RandomModules.Stardoors import StardoorRandomizer
+from Enhancements.GameplayEnhancements import Gameplay
 
 from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE
 
@@ -70,11 +72,14 @@ def run_with_args(sys_args : List[str] = sys.argv[1:]):
   parsed_args = parser.parse_args(sys_args)
   return run_with_parsed_args(parsed_args)
 
+def generate_output_path(rom_in : Path):
+  return 
+
 def run_with_parsed_args(opt_args : argparse.Namespace):
   seed(opt_args.seed)
 
   rom_path = Path(opt_args.rom)
-  out_path = opt_args.out or Path(rom_path.name[0:-4] + ".out.z64")
+  out_path = opt_args.out or rom_path.with_suffix(f'.out{rom_path.suffix}')
 
   if not rom_path.exists():
     raise Exception("invalid file, does not exist")
@@ -93,12 +98,13 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
 
       try:
         new_rom = rom.try_extend()
-      except:
+      except Exception as err:
         print("Unfortunately, the ROM could not be extended. Please see the log below to figure out why. The Randomizer will continue using the vanilla rom. Please note not all functionality is available in this mode.")
         print(err)
 
       new_args = {**vars(opt_args)}
       new_args['rom'] = new_rom
+      new_args['no_extend'] = True # don't extend twice
       run_with_parsed_args(argparse.Namespace(**new_args))
       return
 
@@ -131,13 +137,28 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     color_randomizer = ColorRandomizer(rom)
     if opt_args.shuffle_colors:
       color_randomizer.randomize_coin_colors()
+
+    gameplay_stuff = Gameplay(rom)
+    if opt_args.disable_cutscenes:
+      gameplay_stuff.disable_all_cutscenes()
+    if opt_args.disable_starwarp:
+      gameplay_stuff.disable_starwarp()
     
+    stardoor_randomizer = StardoorRandomizer(rom)
+    if opt_args.stardoor_requirements is not "vanilla":
+      if opt_args.stardoor_requirements == "open":
+        stardoor_randomizer.open_level_stardoors()
+      elif opt_args.stardoor_requirements == "random":
+        stardoor_randomizer.shuffle_level_stardoors()
+
+      #stardoor_randomizer
+
     if 'DEBUG' in os.environ and os.environ['DEBUG'] == 'PLOT':
       for (level_area, parsed) in rom.levelscripts.items():
         parsed.level_geometry.plot()
       #rom.levelscripts
 
   SpoilerLog.output()
-  print(f'Completed! Your randomized ROM File can be found as "{os.path.relpath(out_path)}"')
+  print(f'Completed! Your randomized ROM File can be found as "{str(Path(out_path).absolute())}"')
 
 #run_with_args()

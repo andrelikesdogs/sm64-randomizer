@@ -1,4 +1,7 @@
+const BASE_URL = 'http://hannes.fun:5337'
+
 $(document).ready(() => {
+  const $fields = []
   $.each(configurableParams, (_, field) => {
     const fieldName = field.name
     const categoryName = field.category
@@ -9,10 +12,26 @@ $(document).ready(() => {
     
     $field = $('<div />')
     $field.addClass('field')
+    // console.log(field.disabled)
+
+    const isDisabled = field.disabled != null
+    if (isDisabled) {
+      console.log(field, 'disabled')
+      $field.addClass('disabled')
+
+      if (field.disabled !== true) {
+        $field.addClass(field.disabled) // reason
+      }
+    }
     
     $input = $('<input />')
+    $input.prop('disabled', isDisabled)
+
     fieldId = `#form-${fieldName}`
+    
     $input.attr('id', fieldId)
+    $input.attr('name', fieldName)
+    $input.prop('disabled', isDisabled)
 
     $label = $('<label />')
     $label.text(field.label)
@@ -21,12 +40,12 @@ $(document).ready(() => {
       $tooltipButton = $('<button />')
       $tooltipButton.attr('type', 'button')
       $tooltipButton.addClass('help')
-
+      
       $tooltipContent = $('<div />')
       $tooltipContent.text(field.help)
       $tooltipContent.addClass('tooltip-content')
       $tooltipContent.appendTo($tooltipButton)
-
+      
       $label.append(' ').append($tooltipButton)
     }
 
@@ -52,10 +71,13 @@ $(document).ready(() => {
       }
       case 'select': {
         $input = $('<select />')
+        $input.prop('disabled', isDisabled)
+        $input.attr('name', fieldName)
 
         $.each(field.options, (_, {value, label}) => {
           $input.append($('<option />').attr('value', value).text(label))
         })
+
         $input.val(fieldDefault || field.values[Object.keys(field.options)[0]])
         $field.append($label)
         $field.append($input)
@@ -74,9 +96,13 @@ $(document).ready(() => {
         break
       }
     }
+    $fields.push($input)
     $field.addClass(`field--type--${field.type}`)
     $targetCategory.append($field)
   })
+
+  let dataBlob
+  const $generatorForm = $('form[name="generator"]')
 
   // setup dropzone
   $targetInputField = $('input[type="file"]')
@@ -94,6 +120,18 @@ $(document).ready(() => {
   $fileInputStyled.text('Select your ROM-File')
   $fileInputStyled.insertAfter($targetInputField)
 
+  $queueGenerationButton = $('#queue-generation')
+  const changeEndianness = (string) => {
+    const result = [];
+    let len = string.length - 2;
+    while (len >= 0) {
+      result.push(string.substr(len, 2));
+      len -= 2;
+    }
+    return result.join('');
+  }
+
+  let internalName
   const validateROM = (arrayBuffer) => {
     const header = arrayBuffer.slice(0, 0x40)
 
@@ -110,12 +148,19 @@ $(document).ready(() => {
       console.log(endian_bytes.toString())
       throw new Error('invalid endianess')
     }
+    console.log(header.slice(0x18, 0x3B))
+    
+    internalName = String.fromCharCode.apply(null, new Uint8Array(header.slice(0x18, 0x3B)))
 
-    let internalName = String.fromCharCode.apply(null, new Uint8Array(header.slice(0x18, 0x3B)))
+    if (endianess == 'little') {
+      internalName = changeEndianness(internalName)
+    }
+
     internalName = internalName.replace(/[^A-Za-z0-9 ]+/g, '').trim()
     
     if (internalName != 'SUPER MARIO 64') {
-      throw new Error('invalid internal name - must be a SM64 ROM')
+      console.log(internalName)
+      //throw new Error('invalid internal name - must be a SM64 ROM')
     }
 
     return arrayBuffer
@@ -133,11 +178,19 @@ $(document).ready(() => {
     return zipBlob
   }
 
+  let fileNameSelected
   const validateInput = async (files) => {
     if (files.length > 1) {
       throw new Error('Please only upload one file at a time')
     }
 
+    if (!files) {
+      console.warn("No file selected")
+      return
+    }
+
+    fileNameSelected = files[0].name
+    
     binaryData = await (new Promise((resolve, reject) => {
       const fileReader = new FileReader()
       fileReader.onload = (e) => {
@@ -150,17 +203,13 @@ $(document).ready(() => {
       fileReader.readAsArrayBuffer(files[0])
     }))
 
-    await validateROM(binaryData)
+    return validateROM(binaryData)
   } 
 
   const updateInputStatus = (status, message) => {
     // clear everything
     $targetInputField.prop('disabled', false)
-<<<<<<< HEAD
     $message = $('.message').text('')
-=======
-    $message = $fieldContainer.closest('.message').text('')
->>>>>>> 4b060e46564f7771d95c8c5f8a3fa2f764ac6a08
     $message.addClass(status)
     $message.text(message)
 
@@ -168,35 +217,164 @@ $(document).ready(() => {
     $targetInputField.prop('disabled', !canChange)
   }
 
+  let tracking_active = false
+  let tracking_interval = null
+  const activateTrackingMode = (upload_ticket) => {
+    if (!tracking_active) {
+      tracking_active = true
+      tracking_interval = setInterval(() => {
+        $.ajax({
+          type: 'GET',
+          url: BASE_URL + '/status/' + upload_ticket,
+          success: (data) => {
+            console.log(data)
+            if (data.status == 'SUCCESS') {
+              clearInterval(tracking_interval)
+              tracking_active = false
+
+              const link = document.createElement("a")
+              link.href = BASE_URL + '/download/' + upload_ticket
+              const fileNameParts = fileNameSelected.split('.')
+              const fileExt = fileNameParts[fileNameParts.length - 1]
+              link.download = 'Super Mario 64 Randomizer ROM' + fileExt
+              link.click()
+
+              // queue-generation-message
+              $queueGenerationButton.children("span").text("Queue for generation")
+              $queueGenerationButton.prop("disabled", false)
+              $queueGenerationButton.removeClass("indefinite")
+              return
+            } else if (data.status == 'ERROR') {
+              clearInterval(tracking_interval)
+              tracking_active = false
+
+              alert(data.message || "Sorry! An unknown error occured. Please try again later or ask for support on our Discord.")
+              $queueGenerationButton.children("span").text("Queue for generation")
+              $queueGenerationButton.prop("disabled", false)
+              $queueGenerationButton.removeClass("indefinite")
+              return
+            } else if (data.status == 'PROCESSING') {
+              $queueGenerationButton.children("span").text("Generating your ROM...")
+            } else if (data.status == 'PENDING') {
+              if (data.position == 0) {
+                $queueGenerationButton.children("span").text("You're next!")
+              } else {
+                $queueGenerationButton.children("span").text("Currently waiting on " + data.position + " others ahead in the queue.")
+              }
+            }
+          },
+          error: (xhr, error) => {
+            clearInterval(tracking_interval)
+            tracking_active = false
+
+            $queueGenerationButton.children("span").text("Queue for generation")
+            $queueGenerationButton.prop("disabled", false)
+            $queueGenerationButton.removeClass("indefinite")
+            alert(error)
+            return
+          }
+        })
+      }, 5000)
+    }
+  }
+
   $targetInputField.on('change', async function() {
-<<<<<<< HEAD
-    $fileInputStyled.text('Select your ROM-File')
-=======
->>>>>>> 4b060e46564f7771d95c8c5f8a3fa2f764ac6a08
+    if (!this.files || !this.files[0]) {
+      return
+    }
+
+    dataBlob = null
     updateInputStatus('pending')
 
     let blob
     try {
-      validateInput(this.files)
+      await validateInput(this.files)
       blob = this.files[0]
     } catch (err) {
+      $fileInputStyled.text('Invalid Input')
+      console.error(err)
       return updateInputStatus('error', err.message)
     }
 
+    const might_be_romhack = internalName != 'SUPER MARIO 64' && internalName != 'USEP RAMIR O46      N' // lol
+    
     let URL
+    let message = ""
     try {
       URL = window.webkitURL || window.mozURL || window.URL
       updateInputStatus('load', 'Compressing your ROM...')
       blob = await tryCompress(this.files[0])
-      $fileInputStyled.text('✓ Valid ROM')
-      updateInputStatus('success', 'Prepared your ROM for uploading!')  
+      dataBlob = blob
+      message = "Prepared your ROM for uploading!"
     } catch (err) {
       console.error(err)
+      dataBlob = blob
+      message = "File prepared, but could not compress the data. Sorry!"
+    }
+
+    if (might_be_romhack) {
+      updateInputStatus('success', message + " (Your ROM was detected as a ROMHack)")  
+      $fileInputStyled.text('✓ Valid ROM - Romhack')
+    } else {
+      updateInputStatus('success', message)
       $fileInputStyled.text('✓ Valid ROM')
-      updateInputStatus('success', 'File prepared, but could not compress the data. Sorry!')
     }
 
     $realUpload.val(URL.createObjectURL(blob))
   })
 
+  $generatorForm.on("submit", (e) => {
+    e.preventDefault()
+
+    if (!$realUpload.val()) {
+      return
+    }
+
+    const formDataBlob = new FormData(document.querySelector('form'))
+    formDataBlob.delete("fake-upload")
+    formDataBlob.set("input_rom", dataBlob, "input_rom.zip")
+
+    $queueGenerationButton.prop("disabled", true)
+    $queueGenerationButton.children('span').text("Uploading...")
+
+    $.ajax({
+      type: 'POST', 
+      url: BASE_URL,
+      processData: false,
+      contentType: false,
+      data: formDataBlob,
+      dataType: 'json',
+      success: (data) => {
+        console.log(data)
+        $queueGenerationButton.children("span").text("Waiting for queue...")
+        $queueGenerationButton.addClass("indefinite")
+
+        if (data.success) {
+          activateTrackingMode(data.upload_ticket)
+        } else {
+          console.error(data.message)
+          $queueGenerationButton.children("span").text("Sorry, an error occured. Please try again.")
+          $queueGenerationButton.prop("disabled", false)
+          $queueGenerationButton.removeClass("indefinite")
+        }
+
+      },
+      error: (data) => {
+        $queueGenerationButton.children("span").text("Sorry, an error occured. Please try again.")
+        $queueGenerationButton.prop("disabled", false)
+        $queueGenerationButton.removeClass("indefinite")
+        $queueGenerationButton.children('.progress').css('width', '0%')
+      },
+      xhr: () => {
+        const xhr = new window.XMLHttpRequest();
+        xhr.upload.addEventListener("progress", (evt) => {
+          var percentComplete = evt.loaded / evt.total;
+          console.log(percentComplete)
+          $queueGenerationButton.children('.progress').css('width', (percentComplete * 100)+'%')
+        })
+
+        return xhr
+      }
+    })
+  })
 })

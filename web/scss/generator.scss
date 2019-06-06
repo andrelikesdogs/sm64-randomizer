@@ -26,9 +26,26 @@ section .dropzone .dz-preview .dz-image {
   margin: 1em 0;
 }
 
+.field.disabled {
+  input, select, label {
+    opacity: 0.6;
+  }
+  .tooltip-content {
+    opacity: 1.0;
+  }
+  &::after {
+    content: 'Currently not available, coming soon!';
+    line-height: 0;
+    top: 50%;
+    margin-left: 20px;
+  }
+}
+
 .field--type--text label, .field--type--select label, .field--type--file label {
-  width: 200px;
+  min-width: 200px;
   display: inline-block;
+  white-space: nowrap;
+  margin-right: 12px;
 }
 input[type=checkbox]{
 	height: 0;
@@ -112,6 +129,7 @@ button.help:hover .tooltip-content {
   padding: 1em 2em;
   transform: translate(-50%, -100%);
   outline: none;
+  white-space: normal;
 }
 
 .tooltip-content:active {
@@ -164,6 +182,7 @@ button.help:hover .tooltip-content {
     display: block;
     cursor: pointer;
     pointer-events: none;
+    width: 100%;
   }
 }
 
@@ -200,4 +219,48 @@ button.help:hover .tooltip-content {
 
 .message {
   margin: 1em 0;
+}
+
+#queue-generation {
+  min-width: 500px;
+}
+
+.progress-button {
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes indefinite-animation {
+  0% {
+    left: 0%;
+    width: 0%
+  }
+  30% {
+    width: 30%;
+  }
+  70% {
+    width: 30%;
+  }
+  100% {
+    left: 100%;
+    width: 0%;
+  }
+}
+
+
+.progress-button.indefinite .progress {
+  width: 30%;
+  animation: ease-in-out infinite 2s indefinite-animation;
+}
+
+.progress {
+  position: absolute;
+  width: 0%;
+  background-color: rgb(255, 230, 230);
+  height: 2px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 1s ease width;
+  box-shadow: 0 0 4px white;
 }

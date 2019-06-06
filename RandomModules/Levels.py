@@ -4,6 +4,7 @@ import random
 import sys
 import numpy as np
 from Entities.Object3D import Object3D
+import logging
 #from Parsers.LevelScript import LevelScriptParser
 
 from random import shuffle
@@ -78,6 +79,7 @@ WHITELIST_SHUFFLING = [
   (0x130027D0, 0x00), # Boo (x3)
   (0x13002794, 0x65), # Big Boo
   (0x130007F8, 0x7A), # Star
+  (0x13003E3C, 0x7A), # Star
   #(0x13001B70, 0x00), # Checkerboard Elevator (Logic: DON'T TOUCH FOR VANISH CAP LEVEL)
   (0x13002F74, 0x00), # Mario Start 1
   (0x1300442C, None), # TTC: Pendulum
@@ -95,6 +97,13 @@ HEIGHT_OFFSETS = {
   (0x13002250, None): 200,
   (None, 0x75): 300,
 }
+
+CANT_BE_IN_WATER = [
+  (None, 0x89), # Star
+  (0x13003700, None), # Ice Bully (Big) - otherwise you win instantly
+  (0x130031DC, 0xC3), # Bob-Omb Buddy (With Message)
+  (0x13003228, None) # Bob-Omb Buddy (Opening Canon)
+]
 
 WALKABLE_COLLISION_TYPES = [
   0x00, # environment default
@@ -244,11 +253,51 @@ class LevelRandomizer:
 
     return 1 # fallback to ensure it doesn't fail oob check or falls out of level
 
+  def can_be_in_water(self, obj : Object3D):
+    for (target_bscript_address, target_model_id) in CANT_BE_IN_WATER:
+      if (target_model_id is None or target_model_id == obj.model_id) and (target_bscript_address is None or target_bscript_address == obj.behaviour):
+        return False
+    return True
 
-  def is_valid_position(self, level_geometry, object3d, position):
+  def is_in_water_box(self, water_box, position):
+    (
+      water_box_id,
+      water_box_start_x, water_box_start_z,
+      water_box_end_x, water_box_end_z,
+      water_box_y,
+      water_box_type
+    ) = water_box
+
+    if water_box_type != "WATER":
+      #print("waterbox is not water, all good")
+      return False
+
+    if position[0] < water_box_start_x or position[0] > water_box_end_x:
+      #print("x is outside waterbox x, all good")
+      return False
+    if position[2] < water_box_start_z or position[2] > water_box_end_z:
+      #print("y is outside waterbox y, all good")
+      return False
+    if position[1] > water_box_y:
+      #print("item is higher than waterbox")
+      return False
+
+    return True
+    
+  def is_valid_position(self, level_script, object3d, position):
+    if not self.can_be_in_water(object3d):
+      #print(object3d, 'cant be in water')
+      #print("found an object that cannot be in water", len(level_script.water_boxes))
+      for water_box in level_script.water_boxes:
+        #print(water_box)
+        if self.is_in_water_box(water_box, position):
+          logging.info("invalid position for object, in water box")
+          #print(position, object3d)
+          return False
+    
     # count floors under the position we want to test
     (floors_underneath, floor_positions, floor_faces) = trace_geometry_intersections(
-      level_geometry,
+      level_script.level_geometry,
       [
         position + np.array([0.0, 0.0, 1.0]),
         position + np.array([0.0, 0.0, -1.0e7])
@@ -267,7 +316,7 @@ class LevelRandomizer:
 
     # require minimum distance from point from ceilings
     (_, ceiling_positions, ceiling_faces) = trace_geometry_intersections(
-      level_geometry,
+      level_script.level_geometry,
       [
         position + np.array([0.0, 0.0, 1.0]),
         position + np.array([0.0, 0.0, +1.0e7])
@@ -311,7 +360,7 @@ class LevelRandomizer:
         height_offset = self.get_height_offset(obj)
         point[2] += height_offset
 
-        if not self.is_valid_position(parsed.level_geometry, obj, point):
+        if not self.is_valid_position(parsed, obj, point):
           #print('invalid position')
           shufflable_objects.append(obj)
         else:

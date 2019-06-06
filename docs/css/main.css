@@ -12,6 +12,9 @@ a:hover {
   text-shadow: #fff 0 0 4px;
   color: #fff; }
 
+a, a:visited {
+  color: #6773dd; }
+
 .clearfix {
   clear: both; }
 
@@ -47,7 +50,8 @@ section:last-of-type {
   display: block; }
 
 .button-row {
-  text-align: center; }
+  text-align: center;
+  height: auto; }
 
 .logo-scale {
   margin: auto;
@@ -74,21 +78,22 @@ section:last-of-type {
 .links {
   text-align: center; }
 
-.links a {
+.links a, a:visited {
   border: none;
   outline: none;
   text-decoration: none;
   line-height: 24px;
-  color: #fff;
-  margin-right: 24px; }
+  color: #c8c8c8; }
+  .links a:not(.no-space), a:visited:not(.no-space) {
+    margin-right: 24px; }
 
-.links a:visited, .links a:focus, .links a:active {
+.links a:focus, .links a:active {
   color: #fff; }
 
 .links a:hover {
   color: #fff; }
 
-.footnote {
+.small, .footnote {
   font-size: 80%; }
 
 .like-button {
@@ -96,6 +101,8 @@ section:last-of-type {
   border: none;
   border-radius: 4px;
   padding: 2em 4em;
+  margin: 10px 10px 0 10px;
+  display: inline-block;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.4); }
   .like-button.primary {
     color: #fff;
@@ -108,7 +115,10 @@ section:last-of-type {
   .like-button:not(:disabled):hover.secondary {
     background-color: #b4b4dd; }
   .like-button:disabled, .like-button.disabled {
-    opacity: 0.6; }
+    opacity: 0.6;
+    cursor: not-allowed; }
+  .like-button:hover {
+    cursor: pointer; }
 
 .icon {
   width: 24px;
@@ -119,6 +129,9 @@ section:last-of-type {
   position: relative;
   top: 5px;
   background-size: contain; }
+
+.icon-discord {
+  background-image: url("../img/icons/discord_small.png"); }
 
 .icon-twitter {
   background-image: url("../img/icons/twitter_small.png"); }
@@ -176,3 +189,19 @@ section:last-of-type {
   background-image: url("../img/bg/cloud4.png");
   top: 82%;
   animation: 28s linear 2s infinite right-to-left; }
+
+.pog {
+  font-style: normal;
+  position: relative; }
+  .pog:hover::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 50%;
+    width: 17px;
+    height: 24px;
+    transform: translate(50%, -50%);
+    background-image: url("../img/pog.png");
+    background-size: contain;
+    pointer-events: none;
+    background-repeat: no-repeat; }
