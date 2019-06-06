@@ -146,7 +146,7 @@ $(document).ready(() => {
       endianess = 'little'
     } else {
       console.log(endian_bytes.toString())
-      throw new Error('invalid endianess')
+      throw new Error('Sorry, that doesn\'t seem like a ROM (Invalid byte-order bytes)')
     }
     console.log(header.slice(0x18, 0x3B))
     
@@ -345,7 +345,6 @@ $(document).ready(() => {
       data: formDataBlob,
       dataType: 'json',
       success: (data) => {
-        console.log(data)
         $queueGenerationButton.children("span").text("Waiting for queue...")
         $queueGenerationButton.addClass("indefinite")
 

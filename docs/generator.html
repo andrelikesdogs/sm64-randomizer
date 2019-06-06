@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Super Mario 64 Randomizer - Re-experience the classic game in new challenging ways">
     <meta name="keywords" content="Super Mario 64, SM64, SM64 Randomizer, Modding, Hacking, SM64 Rando, Super Mario 64 Randomizer">
-    
+    <base href="sm64-randomizer" />
     <title>Super Mario 64 Randomizer</title>
 
     <link href="css/normalize.css" rel="stylesheet">
@@ -19,7 +19,8 @@
     <script src="js/dropzone.js"></script>
     <script src="js/zip.js"></script>
     <script>
-      zip.workerScriptsPath = "js/lib/";
+      const base = location.pathname.split('/').slice(0, -1).join('/')
+      zip.workerScriptsPath = base + "/js/lib/";
       Dropzone.autoDiscover = false;
     </script>
     <script src="js/generator.js"></script>
