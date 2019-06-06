@@ -4,6 +4,7 @@ from Entities.Object3D import Object3D
 from Entities.Warp import Warp
 from Entities.LevelGeometry import LevelGeometry
 from Constants import LVL_MAIN
+import sys
 
 from randoutils import format_binary
 
@@ -42,7 +43,8 @@ class LevelScriptParser:
     self.macro_tables = {}
     self.macro_object_tables = {}
     
-    self.special_macro_entries = []
+    self.special_macro_tables = {}
+    self.special_macro_object_tables = {}
 
     self.level_geometry = LevelGeometry(level)
     self.level_collisions = []
@@ -306,6 +308,35 @@ class LevelScriptParser:
     
     # end with 0x1E preset
     self.rom.write_byte(cursor, bytes([0x00, 0x1E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]))
+  
+  def add_macro_object(self, start, preset_id, rot_y, x, y, z, bparam1, bparam2):
+    if start not in self.macro_tables:
+      raise Exception(f"{hex(start)} was not found in macro table entries")
+    macro_table = self.macro_tables[start]
+
+    preset_table = CollisionPresetParser.get_instance(self.rom).entries
+    preset_data = preset_table[preset_id]
+
+    object3d = Object3D("MACRO_OBJ", preset_data.model_id, (x, y, z), self.level, (0, rot_y, 0))
+    x_bytes = x.to_bytes(2, self.rom.endianess, signed=True)
+    y_bytes = y.to_bytes(2, self.rom.endianess, signed=True)
+    z_bytes = z.to_bytes(2, self.rom.endianess, signed=True)
+
+    rot_clamped = (rot_y << 9) & 0xFE00
+    preset_id_clamped = preset_id & 0x1FF
+    preset_and_rot = rot_clamped | preset_id_clamped
+    preset_and_rot_bytes = preset_and_rot.to_bytes(2, self.rom.endianess)
+
+    macro_row = preset_and_rot_bytes + x_bytes + y_bytes + z_bytes + bytes([bparam1]) + bytes([bparam2])
+    print("new entry for macros")
+    print(macro_row)
+    macro_table["entries"].append(
+      dict(
+        object3d=object3d,
+        bytes=macro_row
+      )
+    )
+    self.update_macro_objects(start)
 
   def process_macro_objects(self, start, end):
     if not start:
@@ -319,7 +350,8 @@ class LevelScriptParser:
       start=start,
       entries=[]
     )
-
+    #print(self.level.name)
+    #print("reading macro objects", start)
     preset_table = CollisionPresetParser.get_instance(self.rom).entries
     entry_pos = 0
     while cursor < end:
@@ -346,7 +378,6 @@ class LevelScriptParser:
         object3d = Object3D("MACRO_OBJ", preset.model_id, position, self.level, (None, rot_y, None), preset.behaviour_addr, mem_address = cursor, bparams=[bparam1, bparam2])
         objects_found.append(object3d)
         macro_table["entries"].append(dict(
-          position=cursor,
           object3d=object3d,
           bytes=macro_row
         ))
@@ -357,6 +388,134 @@ class LevelScriptParser:
     self.macro_tables[start] = macro_table
     self.objects.extend(objects_found)
     #print(f'Level {self.level.name} has {len(objects_found)} macro objects')
+
+  def remove_special_macro_object(self, object3d):
+    if object3d not in self.special_macro_object_tables:
+      raise Exception(f"Object has no entry in special macro table list: {str(object3d)}")
+    
+    start = self.special_macro_object_tables[object3d]
+    special_macro_table = self.special_macro_tables[start]
+
+    index_to_remove = None
+    idx = 0
+    for entry in special_macro_table["entries"]:
+      if entry["object3d"] == object3d:
+        index_to_remove = idx
+        break
+      idx += 1
+    
+    print(special_macro_table["entries"][index_to_remove]["object3d"].behaviour_name, "deleted")
+    del special_macro_table["entries"][index_to_remove]
+
+    self.update_special_objects_table(start)
+
+  def update_special_objects_table(self, start):
+    if start not in self.special_macro_tables:
+      raise Exception(f'{hex(start)} was not found in special object macro table entries')
+
+    special_macro_table = self.special_macro_tables[start]
+
+    cursor = start
+
+    # write start bytes
+    self.rom.write_byte(cursor, b'\x00\x40')
+    cursor += 2
+
+    # write vertice count
+    self.rom.write_integer(cursor, len(special_macro_table["vertices"]), 2)
+    cursor += 2
+
+    #print("start vertices", hex(cursor - start))
+    # write vertices
+    for (x, y, z) in special_macro_table["vertices"]:
+      self.rom.write_integer(cursor, x, 2, True)
+      self.rom.write_integer(cursor + 2, y, 2, True)
+      self.rom.write_integer(cursor + 4, z, 2, True)
+      cursor += 6
+
+    #print("start collision", hex(cursor - start))
+    # write collision data entries
+    for collision_entry in special_macro_table["collision_entries"]:
+      # write type
+      self.rom.write_byte(cursor, collision_entry["collision_type"])
+      cursor += 2
+
+      # write amount
+      self.rom.write_integer(cursor, len(collision_entry["triangle_bytes"]), 2)
+      cursor += 2
+
+      entry_length = collision_entry["entry_length"]
+
+      for triangle_bytes in collision_entry["triangle_bytes"]:
+        self.rom.write_byte(cursor, triangle_bytes)
+        cursor += entry_length
+
+    # write random stop byte ???
+    self.rom.write_byte(cursor, b'\x00\x41')
+    cursor += 2
+
+    #print("start objects", hex(cursor - start))
+    #print(special_macro_table["entries"])
+
+    object_entries = special_macro_table["entries"]
+    if not len(object_entries):
+      # place the weird default obj
+      object_entries = [dict(
+        length=10,
+        object3d=None,
+        bytes=b'\x00\x00\xe8\x01\x16f\xe8\x01\x00\x00\x00B'
+      )]
+
+    # write objects start byte
+    self.rom.write_byte(cursor, b'\x00\x43')
+    cursor += 2
+
+    # write object count
+    self.rom.write_integer(cursor, len(object_entries), 2)
+    cursor += 2
+
+    for entry in object_entries:
+      #print("writing", entry["object3d"])
+      self.rom.write_byte(cursor, entry["bytes"])
+      cursor += entry["length"]
+  
+    #print("start water boxes", hex(cursor - start))
+    if len(special_macro_table["waterboxes"]):
+      # write water box start bytes
+      self.rom.write_byte(cursor, b'\x00\x44')
+      cursor += 2
+
+      # write water box count
+      self.rom.write_integer(cursor, len(special_macro_table["waterboxes"]), 2)
+      cursor += 2
+
+      for waterbox in special_macro_table["waterboxes"]:
+        self.rom.write_byte(cursor, waterbox["bytes"])
+        cursor += 12
+
+    # write end bytes
+    self.rom.write_byte(cursor, b'\x00\x42')
+
+    # pad end
+    #while cursor < special_macro_table["end"]:
+    #self.rom.write_byte(cursor, b'\x00')
+    #cursor += 1
+
+    
+    # dump changes on special_macro_list update in .bin format
+    # old reads from input
+    old = self.rom.read_bytes(special_macro_table["start"], special_macro_table["end"] - special_macro_table["start"])
+
+    # new reads manually from output
+    self.rom.target.seek(special_macro_table["start"]) #, special_macro_table["end"])
+    new = self.rom.target.read(special_macro_table["end"] - special_macro_table["start"])
+
+    with open("old_dump.bin", "wb+") as old_file:
+      old_file.write(old)
+    with open("new_dump.bin", "wb+") as new_file:
+      new_file.write(new)
+    #sys.exit(0)
+  
 
   def process_special_objects_level(self, start, end):
     cursor = start
@@ -369,7 +528,15 @@ class LevelScriptParser:
     
     vertice_count = self.rom.read_integer(cursor + 2, 2)
     vertices = []
-    collision_tris = []
+
+    special_macro_table = dict(
+      start=start,
+      vertice_count=vertice_count,
+      vertices=[],
+      collision_entries=[],
+      entries=[],
+      waterboxes=[]
+    )
 
     # checksum read + vertice read
     cursor += 4
@@ -382,7 +549,7 @@ class LevelScriptParser:
         self.rom.read_integer(cursor + 4, 2, True)
       ))
       cursor += 6
-      
+
     # read collision data
     while cursor < end:
       cd_type = self.rom.read_bytes(cursor, 2)
@@ -394,7 +561,16 @@ class LevelScriptParser:
       amount = self.rom.read_integer(cursor, 2)
       cursor += 2
 
+      entry_length = 8 if cd_type_int in SPECIAL_CD_WITH_PARAMS else 6
+      
+      collision_entry = dict(
+        collision_type=cd_type,
+        entry_length=entry_length,
+        triangle_bytes=[]
+      )
+
       triangles = []
+      triangle_bytes = []
 
       for _ in range(amount):
         indices = (
@@ -402,12 +578,16 @@ class LevelScriptParser:
           self.rom.read_integer(cursor + 2, 2),
           self.rom.read_integer(cursor + 4, 2)
         )
-
-        cursor += 8 if cd_type_int in SPECIAL_CD_WITH_PARAMS else 6
+        triangle_bytes.append(self.rom.read_bytes(cursor, entry_length))
+        cursor += entry_length
 
         triangles.append(indices)
       #print(f'{len(triangles)} {hex(cd_type_int)} ({format_binary(cd_type)})')
       self.level_geometry.add_area(self.current_area, vertices, triangles, cd_type_int)
+      collision_entry["triangle_bytes"] = triangle_bytes
+      special_macro_table["collision_entries"].append(collision_entry)
+    
+    special_macro_table["vertices"] = vertices
 
     # read object definitions
     while cursor < end:
@@ -430,9 +610,13 @@ class LevelScriptParser:
             print("preset not found")
 
           length = 8
+          entry_bytes = None
+          model_id = None
+          position = None
+          entry = None
           if preset:
             length = preset.length
-            entry = None
+            entry_bytes = self.rom.read_bytes(cursor, length + 2)
             if length == 8:
               model_id = preset.model_id
               position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
@@ -451,8 +635,17 @@ class LevelScriptParser:
             else:
               raise Exception("Invalid Preset Length")
 
+            self.special_macro_object_tables[entry] = start
             objects_found.append(entry)
             count += 1
+
+          special_macro_table["entries"].append(dict(
+            length=length,
+            model_id=model_id,
+            object3d=entry,
+            position=position,
+            bytes=entry_bytes
+          ))
 
           #print(format_binary(self.rom.read_bytes(cursor, length)))
           cursor += length
@@ -464,6 +657,7 @@ class LevelScriptParser:
 
         for water_box_index in range(amount):
           water_box_id = self.rom.read_integer(cursor, 2)
+          water_box_bytes = self.rom.read_bytes(cursor, 12)
           water_box_start_x = self.rom.read_integer(cursor + 2, 2)
           water_box_start_z = self.rom.read_integer(cursor + 4, 2)
 
@@ -486,6 +680,9 @@ class LevelScriptParser:
             water_box_type
           )
           self.water_boxes.append(water_box)
+          special_macro_table["waterboxes"].append(dict(
+            bytes=water_box_bytes
+          ))
           cursor += 12
       elif special_type == b'\x00\x42' or special_type == b'\x00\x41':
         #print("Reached Terminate Type")
@@ -494,6 +691,8 @@ class LevelScriptParser:
         #print(format_binary(self.rom.read_bytes(cursor - 4, 20)))
         raise Exception("CD Data CMD")
       
+    special_macro_table["end"] = cursor
+    self.special_macro_tables[start] = special_macro_table
     self.objects = self.objects + objects_found
     #print(f"Done parsing special level objects: {len(objects_found)}")
 

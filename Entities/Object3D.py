@@ -31,6 +31,8 @@ class Object3D(BaseMemoryRecord):
       rom.write_byte(self.mem_address + 1, bytes([0x00])) # Set Model-ID to 0
     if self.source == 'MACRO_OBJ':
       rom.levelscripts[self.level].remove_macro_object(self)
+    if self.source == 'SPECIAL_MACRO_OBJ':
+      rom.levelscripts[self.level].remove_special_macro_object(self)
 
 
   def __init__(self, source, model_id, position, level, rotation = None, behaviour = None, bparams = [], mem_address = None):

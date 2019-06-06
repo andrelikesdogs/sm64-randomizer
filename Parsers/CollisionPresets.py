@@ -10,6 +10,22 @@ class PresetEntry(NamedTuple):
   model_id: int
   behaviour_addr: int
 
+SPECIAL_PRESET_LOCATION_REGIONS = {
+  "NORTH_AMERICA": 0xED350,
+  "EUROPE": 0xBE100,
+  "JAPAN": 0xEC240,
+  "JAPAN_SHINDOU": 0xC98D0,
+  "CHINESE": 0xCBD90
+}
+
+PRESET_LOCATION_REGIONS = {
+  "NORTH_AMERICA": 0xEC7E0,
+  "EUROPE": 0xBD590,
+  "JAPAN": 0xEB6D0,
+  "JAPAN_SHINDOU": 0xC8D60,
+  "CHINESE": 0xCB220
+}
+
 class CollisionPresetParser:
   instance = None
 
@@ -18,8 +34,9 @@ class CollisionPresetParser:
     self.entries = {}
     self.special_entries = {}
     
-    self.preset_id_offset = 0xEC7E0
-    self.special_preset_id_offset = 0xED350 # TODO: Only NA Version
+    self.preset_id_offset = PRESET_LOCATION_REGIONS[rom.region]
+    self.special_preset_id_offset = SPECIAL_PRESET_LOCATION_REGIONS[rom.region]
+
     self.read_entries()
     self.read_special_entries()
 
@@ -46,6 +63,21 @@ class CollisionPresetParser:
     if idx == 0xCD: return 12
     if idx == 0x00: return 10
     return 8
+
+  def overwrite_macro_entry(self, preset_id, model_id, behaviour, default_b1, default_b2):
+    self.entries[preset_id] = PresetEntry(preset_id, 8, default_b1, default_b2, model_id, behaviour)
+
+    if preset_id < 31 or preset_id > 366:
+      raise ValueError(f"Preset-ID is out of range for macro objects ({hex(preset_id)})")
+
+    preset_position = self.preset_id_offset + (preset_id - 31) * 8
+    print(preset_position)
+    self.rom.write_integer(preset_position, behaviour, 4)
+    self.rom.write_integer(preset_position + 4, model_id, 2)
+    self.rom.write_integer(preset_position + 6, default_b1)
+    self.rom.write_integer(preset_position + 6, default_b2)
+    self.rom.mark_checksum_dirty()
+
 
   def read_entries(self):
     cursor = self.preset_id_offset
