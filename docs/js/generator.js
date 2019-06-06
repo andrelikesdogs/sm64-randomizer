@@ -1,4 +1,4 @@
-let BASE_URL = 'https://mayro.hannes.fun/'
+let BASE_URL = 'https://mayro.hannes.fun'
 
 if (location.hostname == 'localhost' || location.hostname == '127.0.0.1') {
   BASE_URL = 'http://localhost:5000'
