@@ -16,6 +16,10 @@ $(document).ready(() => {
   }
   const $fields = []
   $.each(configurableParams, (_, field) => {
+    if (field.name == 'seed') {
+      field.default =  Math.round(Math.random() * 1e10).toString()
+    }
+    
     const fieldName = field.name
     const categoryName = field.category
     $targetCategory = $(`#category-${categoryName}`)

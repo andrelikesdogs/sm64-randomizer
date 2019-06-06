@@ -17,6 +17,7 @@ from threading import Timer
 from shlex import quote
 from random import randint
 from CLI import run_with_args
+from Constants import application_path
 import webbrowser
 
 MAIN_TITLE = f"SM64 Randomizer by @andremeyer93 - v{__version__}"
@@ -323,7 +324,7 @@ class GuiApplication:
     optionFrame.pack(side=TOP, padx=5, pady=(5,1), fill=X)
 
   def add_settings_from_file(self):
-    with open(os.path.join('Data', 'configurableParams.json')) as json_file:
+    with open(os.path.join(application_path, 'Data', 'configurableParams.json'), 'r') as json_file:
       fields = json.loads(json_file.read())
 
       for field in fields:

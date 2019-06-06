@@ -1,6 +1,14 @@
 from Parsers.Level import Level
+from pathlib import Path
 import os
 import json
+import sys
+
+application_path = None
+if getattr(sys, 'frozen', False):
+    application_path = os.path.abspath(os.path.join(sys.executable, os.pardir))
+else:
+    application_path = os.path.dirname(os.path.abspath(__file__))
 
 LVL_MAIN=Level(0x108A10,	0x108A40, None, "Main Entry")
 LVL_GAME_OVER=Level(0x269EA0, 0x26A3A0, None, "Game Over")
@@ -249,7 +257,9 @@ WARP_ID_RECOVER=0xf3
 SPECIAL_WARP_IDS = [WARP_ID_WIN, WARP_ID_LOSE, WARP_ID_RECOVER]
 
 BEHAVIOUR_NAMES = {}
-with open(os.path.join("Data", "behaviorNames.json"), "r") as behavior_file:
+
+application_path
+with open(os.path.join(application_path, "Data", "behaviorNames.json"), "r") as behavior_file:
   BEHAVIOUR_NAMES = json.loads(behavior_file.read())
 
   BEHAVIOUR_NAMES = dict({ hex(int(key, 16)): name for (key, name) in BEHAVIOUR_NAMES.items()})

@@ -31,6 +31,14 @@ section .dropzone .dz-preview .dz-image {
   top: 50%;
   margin-left: 20px; }
 
+.field--type--text input {
+  background: none;
+  border: none;
+  font-size: large;
+  border-bottom: 2px solid white;
+  color: white;
+  text-align: right; }
+
 .field--type--text label, .field--type--select label, .field--type--file label {
   min-width: 200px;
   display: inline-block;

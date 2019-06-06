@@ -15,6 +15,15 @@ $(document).ready(() => {
     }
   }
   const $fields = []
+  configurableParams.unshift({
+    name: 'seed',
+    label: "Enter a Seed",
+    help: "Enter the same seed as your friend, so you two will receive the same version!",
+    default: Math.round(Math.random() * 1e10).toString(),
+    category: 'gameplay',
+    type: 'text'
+  })
+
   $.each(configurableParams, (_, field) => {
     const fieldName = field.name
     const categoryName = field.category
