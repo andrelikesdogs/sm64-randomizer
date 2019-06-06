@@ -245,12 +245,19 @@ $(document).ready(() => {
               clearInterval(tracking_interval)
               tracking_active = false
 
-              const link = document.createElement("a")
-              link.href = BASE_URL + '/download/' + upload_ticket
+              $downloadLink = $("<a />")
+              $downloadLink.addClass("download-rom")
+              $downloadLink.attr("href", BASE_URL + '/download/' + upload_ticket)
               const fileNameParts = fileNameSelected.split('.')
               const fileExt = fileNameParts[fileNameParts.length - 1]
-              link.download = 'Super Mario 64 Randomizer ROM' + fileExt
-              link.click()
+              $downloadLink.attr("download", 'Super Mario 64 Randomizer ROM' + fileExt)
+              $downloadLink.text("Download your ROM!")
+
+              if ($queueGenerationButton.next().hasClass("download-rom")) {
+                $queueGenerationButton.next().remove()
+              }
+              $($queueGenerationButton).after($downloadLink)
+              $downloadLink.get(0).click()
 
               // queue-generation-message
               $queueGenerationButton.children("span").text("Queue for generation")
@@ -357,6 +364,7 @@ $(document).ready(() => {
     e.preventDefault()
 
     if (!$realUpload.val()) {
+      alert("Please select a ROM that you want to randomize first!")
       return
     }
 
@@ -367,6 +375,10 @@ $(document).ready(() => {
     const formDataBlob = new FormData(document.querySelector('form'))
     formDataBlob.delete("fake-upload")
     formDataBlob.set("input_rom", dataBlob, "input_rom.zip")
+
+    if ($queueGenerationButton.next().hasClass("download-rom")) {
+      $queueGenerationButton.next().remove()
+    }
 
     $queueGenerationButton.prop("disabled", true)
     $queueGenerationButton.children('span').text("Uploading...")
