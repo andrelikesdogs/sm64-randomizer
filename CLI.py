@@ -21,7 +21,8 @@ from RandomModules.Levels import LevelRandomizer
 from RandomModules.Colors import ColorRandomizer
 from RandomModules.Warps import WarpRandomizer
 from RandomModules.Text import TextRandomizer
-from Functionality.Cutscenes import CutsceneFunctionality
+from RandomModules.Stardoors import StardoorRandomizer
+from Enhancements.GameplayEnhancements import Gameplay
 
 from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE
 
@@ -137,10 +138,21 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     if opt_args.shuffle_colors:
       color_randomizer.randomize_coin_colors()
 
-    cutscene_func = CutsceneFunctionality(rom)
+    gameplay_stuff = Gameplay(rom)
     if opt_args.disable_cutscenes:
-      cutscene_func.disable_all_cutscenes()
+      gameplay_stuff.disable_all_cutscenes()
+    if opt_args.disable_starwarp:
+      gameplay_stuff.disable_starwarp()
     
+    stardoor_randomizer = StardoorRandomizer(rom)
+    if opt_args.stardoor_requirements is not "vanilla":
+      if opt_args.stardoor_requirements == "open":
+        stardoor_randomizer.open_level_stardoors()
+      elif opt_args.stardoor_requirements == "random":
+        stardoor_randomizer.shuffle_level_stardoors()
+
+      #stardoor_randomizer
+
     if 'DEBUG' in os.environ and os.environ['DEBUG'] == 'PLOT':
       for (level_area, parsed) in rom.levelscripts.items():
         parsed.level_geometry.plot()

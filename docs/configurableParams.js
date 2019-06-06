@@ -97,5 +97,39 @@ configurableParams = [
       "WEB": true
     },
     "help": "Disables some of the games cutscenes. (Peach Intro, Lakitu Intro, Bowser-Text on Entry)"
+  },
+  {
+    "name": "disable-starwarp",
+    "label": "Disable Star-Warp",
+    "category": "gameplay",
+    "type": "checkbox",
+    "default": {
+      "CLI": false,
+      "WEB": false
+    },
+    "help": "Disables automatically leaving the level when you collect a star. This way, all stars act like a 100-Coin star or a Bowser 8-Reds Star"
+  },
+  {
+    "name": "stardoor-requirements",
+    "label": "Stardoor Requirements",
+    "category": "gameplay",
+    "disabled": "work-in-progress",
+    "type": "select",
+    "options": [
+      {
+        "value": "vanilla",
+        "label": "Vanilla"
+      },
+      {
+        "value": "random",
+        "label": "Random"
+      },
+      {
+        "value": "open",
+        "label": "All Open"
+      }
+    ],
+    "default": "vanilla",
+    "help": "Changes how the doors to levels require different amounts of stars to be collected beforehand. Random means all doors require stars, but the amount will be random. Open simply means all doors are open from the start."
   }
 ]

@@ -26,9 +26,26 @@ section .dropzone .dz-preview .dz-image {
   margin: 1em 0;
 }
 
+.field.disabled {
+  input, select, label {
+    opacity: 0.6;
+  }
+  .tooltip-content {
+    opacity: 1.0;
+  }
+  &::after {
+    content: 'Currently not available, coming soon!';
+    line-height: 0;
+    top: 50%;
+    margin-left: 20px;
+  }
+}
+
 .field--type--text label, .field--type--select label, .field--type--file label {
-  width: 200px;
+  min-width: 200px;
   display: inline-block;
+  white-space: nowrap;
+  margin-right: 12px;
 }
 input[type=checkbox]{
 	height: 0;
@@ -112,6 +129,7 @@ button.help:hover .tooltip-content {
   padding: 1em 2em;
   transform: translate(-50%, -100%);
   outline: none;
+  white-space: normal;
 }
 
 .tooltip-content:active {

@@ -39,6 +39,11 @@ class LevelScriptParser:
     self.current_area = None
     self.water_boxes = []
 
+    self.macro_tables = {}
+    self.macro_object_tables = {}
+    
+    self.special_macro_entries = []
+
     self.level_geometry = LevelGeometry(level)
     self.level_collisions = []
 
@@ -198,7 +203,7 @@ class LevelScriptParser:
           (b1, b2, b3, b4) = tuple([self.rom.read_integer(cursor + 16 + n) for n in range(4)])
           b_script = self.rom.read_integer(cursor + 20, 4)
 
-          self.objects.append(Object3D("PLACE_OBJ", model_id, position, rotation, b_script, [b1, b2, b3, b4], cursor + 2))
+          self.objects.append(Object3D("PLACE_OBJ", model_id, position, self.level, rotation, b_script, [b1, b2, b3, b4], cursor + 2))
         elif command.identifier == 0x39:
           if self.rom.rom_type == 'EXTENDED':
             """ 0x39 PLACE_MACRO_OBJECTS """
@@ -246,7 +251,7 @@ class LevelScriptParser:
           spawn_area_id = self.rom.read_integer(cursor + 2)
           rotation_y = self.rom.read_integer(cursor + 4, 2, True)
           position = (self.rom.read_integer(cursor + 6, 2, True), self.rom.read_integer(cursor + 8, 2, True), self.rom.read_integer(cursor + 10, 2, True))
-          self.objects.append(Object3D("MARIO_SPAWN", None, position, (None, rotation_y, None), mem_address = cursor + 2))
+          self.objects.append(Object3D("MARIO_SPAWN", None, position, self.level, (None, rotation_y, None), mem_address = cursor + 2))
           #print(self.level.name, spawn_area_id, rotation_y, position)
         elif command.identifier == 0x20:
           """ 0x20 END_AREA """
@@ -270,6 +275,37 @@ class LevelScriptParser:
   def load_area(self, data):
     #print("Trying to load area", hex(data))
     pass
+  
+  def remove_macro_object(self, object3d : Object3D):
+    if object3d not in self.macro_object_tables:
+      raise Exception(f"Object has no entry in macro table list: {str(object3d)}")
+    
+    start = self.macro_object_tables[object3d]
+    macro_table = self.macro_tables[start]
+
+    index_to_remove = None
+    idx = 0
+    for entry in macro_table["entries"]:
+      if entry["object3d"] == object3d:
+        index_to_remove = idx
+        break
+      idx += 1
+    
+    del macro_table["entries"][index_to_remove]
+    self.update_macro_objects(start)
+
+  def update_macro_objects(self, start):
+    if start not in self.macro_tables:
+      raise Exception(f"{hex(start)} was not found in macro table entries")
+    macro_table = self.macro_tables[start]
+
+    cursor = start
+    for entry in macro_table["entries"]:
+      self.rom.write_byte(cursor, entry["bytes"])
+      cursor += 10
+    
+    # end with 0x1E preset
+    self.rom.write_byte(cursor, bytes([0x00, 0x1E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]))
 
   def process_macro_objects(self, start, end):
     if not start:
@@ -279,8 +315,15 @@ class LevelScriptParser:
     objects_found = []
     cursor = start
 
+    macro_table = dict(
+      start=start,
+      entries=[]
+    )
+
     preset_table = CollisionPresetParser.get_instance(self.rom).entries
+    entry_pos = 0
     while cursor < end:
+      macro_row = self.rom.read_bytes(cursor, 10)
       preset_and_rot = self.rom.read_integer(cursor, 2)
       #print("Macro", hex(start), hex(cursor), format_binary(self.rom.read_bytes(cursor, 10)))
 
@@ -289,7 +332,8 @@ class LevelScriptParser:
       
       if preset_id == 0 or preset_id == 0x1E:
         break
-        
+      
+      object3d = None
       if preset_id not in preset_table:
         #print(preset_id)
         #print(hex(preset_and_rot))
@@ -298,9 +342,19 @@ class LevelScriptParser:
       else:
         preset = preset_table[preset_id]
         position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
-        objects_found.append(Object3D("MACRO_OBJ", preset.model_id, position, (None, rot_y, None), preset.behaviour_addr, mem_address = cursor))
-      cursor += 10
+        (bparam1, bparam2) = (self.rom.read_integer(None, 1), self.rom.read_integer(None, 1))
+        object3d = Object3D("MACRO_OBJ", preset.model_id, position, self.level, (None, rot_y, None), preset.behaviour_addr, mem_address = cursor, bparams=[bparam1, bparam2])
+        objects_found.append(object3d)
+        macro_table["entries"].append(dict(
+          position=cursor,
+          object3d=object3d,
+          bytes=macro_row
+        ))
+        self.macro_object_tables[object3d] = start
+        entry_pos += 1
 
+      cursor += 10
+    self.macro_tables[start] = macro_table
     self.objects.extend(objects_found)
     #print(f'Level {self.level.name} has {len(objects_found)} macro objects')
 
@@ -382,18 +436,18 @@ class LevelScriptParser:
             if length == 8:
               model_id = preset.model_id
               position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
-              entry = Object3D("SPECIAL_MACRO_OBJ", model_id, position, None, preset.behaviour_addr, mem_address = cursor)
+              entry = Object3D("SPECIAL_MACRO_OBJ", model_id, position, self.level, None, preset.behaviour_addr, mem_address = cursor)
             elif length == 10:
               model_id = preset.model_id
               position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
               rotation = (None, self.rom.read_integer(None, 2, True), None)
-              entry = Object3D("SPECIAL_MACRO_OBJ", model_id, position, rotation, preset.behaviour_addr, mem_address = cursor)
+              entry = Object3D("SPECIAL_MACRO_OBJ", model_id, position, self.level, rotation, preset.behaviour_addr, mem_address = cursor)
             elif length == 12:
               model_id = preset.model_id
               position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
               rotation = (None, self.rom.read_integer(None, 2, True), None)
               (b1, b2) = (self.rom.read_integer(), self.rom.read_integer())
-              entry = Object3D("SPECIAL_MACRO_OBJ", model_id, position, rotation, preset.behaviour_addr, [b1, b2], mem_address = cursor)
+              entry = Object3D("SPECIAL_MACRO_OBJ", model_id, position, self.level, rotation, preset.behaviour_addr, [b1, b2], mem_address = cursor)
             else:
               raise Exception("Invalid Preset Length")
 

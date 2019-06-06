@@ -17,8 +17,11 @@ const scssWatch = () => {
 };
 
 const copy = () => {
-  return src(['./*.html', './assets/**/*', './*.ico'])
-    .pipe(dest('../docs'))
+  return parallel([
+    copyConfig(),
+    src(['./*.html', './assets/**/*', './*.ico'])
+      .pipe(dest('../docs'))
+  ])
 }
 
 const copyConfig = () => {
@@ -35,8 +38,12 @@ const copyConfig = () => {
     .pipe(dest('../docs'))
 }
 
+const copyAll = () => {
+  return parallel(copy, copyConfig)
+}
+
 const copyWatch = () => {
-  watch(['./**/*.js', './**/*.html'], copy)
+  watch(['./**/*.js', './**/*.html', '../Data/*.json'], copyAll)
 }
 
 exports.default = parallel(scssBuild, copy, copyConfig)

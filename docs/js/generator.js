@@ -1,4 +1,4 @@
-const BASE_URL = 'http://127.0.0.1:5000'
+const BASE_URL = 'http://hannes.fun:5337'
 
 $(document).ready(() => {
   const $fields = []
@@ -12,11 +12,26 @@ $(document).ready(() => {
     
     $field = $('<div />')
     $field.addClass('field')
+    // console.log(field.disabled)
+
+    const isDisabled = field.disabled != null
+    if (isDisabled) {
+      console.log(field, 'disabled')
+      $field.addClass('disabled')
+
+      if (field.disabled !== true) {
+        $field.addClass(field.disabled) // reason
+      }
+    }
     
     $input = $('<input />')
+    $input.prop('disabled', isDisabled)
+
     fieldId = `#form-${fieldName}`
+    
     $input.attr('id', fieldId)
     $input.attr('name', fieldName)
+    $input.prop('disabled', isDisabled)
 
     $label = $('<label />')
     $label.text(field.label)
@@ -25,12 +40,12 @@ $(document).ready(() => {
       $tooltipButton = $('<button />')
       $tooltipButton.attr('type', 'button')
       $tooltipButton.addClass('help')
-
+      
       $tooltipContent = $('<div />')
       $tooltipContent.text(field.help)
       $tooltipContent.addClass('tooltip-content')
       $tooltipContent.appendTo($tooltipButton)
-
+      
       $label.append(' ').append($tooltipButton)
     }
 
@@ -56,11 +71,13 @@ $(document).ready(() => {
       }
       case 'select': {
         $input = $('<select />')
+        $input.prop('disabled', isDisabled)
         $input.attr('name', fieldName)
 
         $.each(field.options, (_, {value, label}) => {
           $input.append($('<option />').attr('value', value).text(label))
         })
+
         $input.val(fieldDefault || field.values[Object.keys(field.options)[0]])
         $field.append($label)
         $field.append($input)
@@ -252,6 +269,7 @@ $(document).ready(() => {
 
             $queueGenerationButton.children("span").text("Queue for generation")
             $queueGenerationButton.prop("disabled", false)
+            $queueGenerationButton.removeClass("indefinite")
             alert(error)
             return
           }
@@ -345,6 +363,7 @@ $(document).ready(() => {
         $queueGenerationButton.children("span").text("Sorry, an error occured. Please try again.")
         $queueGenerationButton.prop("disabled", false)
         $queueGenerationButton.removeClass("indefinite")
+        $queueGenerationButton.children('.progress').css('width', '0%')
       },
       xhr: () => {
         const xhr = new window.XMLHttpRequest();

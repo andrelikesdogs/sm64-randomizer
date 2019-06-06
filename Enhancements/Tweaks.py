@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-class TweaksFunctionality:
+class Tweaking:
   def __init__(self, rom):
     self.rom = rom
   

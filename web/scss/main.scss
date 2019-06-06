@@ -101,16 +101,19 @@ section:last-of-type {
   text-align: center;
 }
 
-.links a {
+.links a, a:visited {
   border: none;
   outline: none;
   text-decoration: none;
   line-height: 24px;
-  color: #fff;
-  margin-right: 24px;
+  color: rgb(200, 200, 200);
+
+  &:not(.no-space) {
+    margin-right: 24px;
+  }
 }
 
-.links a:visited, .links a:focus, .links a:active {
+.links a:focus, .links a:active {
   color: #fff;
 }
 
@@ -118,7 +121,7 @@ section:last-of-type {
   color: #fff;
 }
 
-.footnote {
+.small, .footnote {
   font-size: 80%;
 }
 
@@ -167,6 +170,10 @@ section:last-of-type {
   position: relative;
   top: 5px;
   background-size: contain;
+}
+
+.icon-discord {
+  background-image: url('../img/icons/discord_small.png')
 }
 
 .icon-twitter {
@@ -239,4 +246,25 @@ section:last-of-type {
   background-image: url('../img/bg/cloud4.png');
   top: 82%;
   animation: 28s linear 2s infinite right-to-left;
+}
+
+.pog {
+  font-style: normal;
+  position: relative;
+
+  &:hover {
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 50%;
+      width: 17px;
+      height: 24px;
+      transform: translate(50%, -50%);
+      background-image: url('../img/pog.png');
+      background-size: contain;
+      pointer-events: none;
+      background-repeat: no-repeat;
+    }
+  }
 }
