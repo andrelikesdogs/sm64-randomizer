@@ -1,8 +1,2 @@
-altgraph==0.16.1
-future==0.17.1
-macholib==1.11
 numpy==1.16.3
-pefile==2019.4.18
-PyInstaller==3.4
 pyperclip==1.7.0
-wheel==0.33.4

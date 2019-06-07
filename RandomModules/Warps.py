@@ -166,9 +166,18 @@ class WarpRandomizer:
           warp.set(self.rom, "to_course_id", target_warp.to_course_id)
           warp.set(self.rom, "to_warp_id", target_warp.to_warp_id)
           warp.set(self.rom, "to_area_id", target_warp.to_area_id)
-      
-      # set painting
-      if painting_mode == 'match':
+      idx += 1
+
+
+    if painting_mode == 'random':
+      shuffle(target_warp_levels)
+
+    # set paintings
+    idx = 0
+    for (original_level_area, (entries, anim_exits)) in ow_warps.items():
+      if painting_mode != 'vanilla':
+        level_area_target = target_warp_levels[idx]
+
         if original_level_area[0] in LEVEL_SHORT_CODES and level_area_target[0] in LEVEL_SHORT_CODES:
           from_code = f'painting_{LEVEL_SHORT_CODES[original_level_area[0]].lower()}'
           to_code = f'painting_{LEVEL_SHORT_CODES[level_area_target[0]].lower()}'
