@@ -40,7 +40,14 @@ section .dropzone .dz-preview .dz-image {
     margin-left: 20px;
   }
 }
-
+.field--type--text input {
+  background: none;
+  border: none;
+  font-size: large;
+  border-bottom: 2px solid white;
+  color: white;
+  text-align: right;
+}
 .field--type--text label, .field--type--select label, .field--type--file label {
   min-width: 200px;
   display: inline-block;
@@ -263,4 +270,12 @@ button.help:hover .tooltip-content {
   bottom: 0;
   transition: 1s ease width;
   box-shadow: 0 0 4px white;
+}
+
+.download-rom {
+  display: block;
+  margin: 20px;
+  color: white;
+  font-size: larger;
+  text-shadow: 0 0 2px white;
 }

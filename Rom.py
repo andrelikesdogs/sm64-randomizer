@@ -110,7 +110,7 @@ class ROM:
     if operating_sys == 'Darwin':
       subprocess.check_call(['./3rdparty/sm64extend_mac_x64', *args])
     elif operating_sys == 'Linux':
-      subprocess.check_call(['./3rdparty/sm64extend_ubuntu_x64', str(self.out_path)])
+      subprocess.check_call(['./3rdparty/sm64extend_ubuntu_x64', *args])
     elif operating_sys == 'Windows':
       subprocess.check_call(['3rdparty/sm64extend_win_x86.exe', *args])
     else:

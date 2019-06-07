@@ -1,5 +1,12 @@
 [
   {
+    "name": "seed",
+    "label": "Random Seed",
+    "category": "gameplay",
+    "type": "text",
+    "help": "Allows you to play the same version as a friend, simply enter the same seed as them and you will be playing the exact same ROM."
+  },
+  {
     "name": "shuffle-paintings",
     "label": "Painting (Art) randomization",
     "category": "aesthetics",

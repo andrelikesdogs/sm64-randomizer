@@ -1,4 +1,4 @@
-let BASE_URL = 'http://hannes.fun:5337'
+let BASE_URL = 'https://mayro.hannes.fun'
 
 if (location.hostname == 'localhost' || location.hostname == '127.0.0.1') {
   BASE_URL = 'http://localhost:5000'
@@ -15,6 +15,15 @@ $(document).ready(() => {
     }
   }
   const $fields = []
+  configurableParams.unshift({
+    name: 'seed',
+    label: "Enter a Seed",
+    help: "Enter the same seed as your friend, so you two will receive the same version!",
+    default: Math.round(Math.random() * 1e10).toString(),
+    category: 'gameplay',
+    type: 'text'
+  })
+
   $.each(configurableParams, (_, field) => {
     const fieldName = field.name
     const categoryName = field.category
@@ -245,12 +254,19 @@ $(document).ready(() => {
               clearInterval(tracking_interval)
               tracking_active = false
 
-              const link = document.createElement("a")
-              link.href = BASE_URL + '/download/' + upload_ticket
+              $downloadLink = $("<a />")
+              $downloadLink.addClass("download-rom")
+              $downloadLink.attr("href", BASE_URL + '/download/' + upload_ticket)
               const fileNameParts = fileNameSelected.split('.')
               const fileExt = fileNameParts[fileNameParts.length - 1]
-              link.download = 'Super Mario 64 Randomizer ROM' + fileExt
-              link.click()
+              $downloadLink.attr("download", 'Super Mario 64 Randomizer ROM' + fileExt)
+              $downloadLink.text("Download your ROM!")
+
+              if ($queueGenerationButton.next().hasClass("download-rom")) {
+                $queueGenerationButton.next().remove()
+              }
+              $($queueGenerationButton).after($downloadLink)
+              $downloadLink.get(0).click()
 
               // queue-generation-message
               $queueGenerationButton.children("span").text("Queue for generation")
@@ -296,10 +312,11 @@ $(document).ready(() => {
               label: "ROM Receive failed: " + (errMessage != null ? errMessage : "(Unknown Error)")
             })
 
+            alert("Unfortunately the server returned an invalid response. Please try again later")
+
             $queueGenerationButton.children("span").text("Queue for generation")
             $queueGenerationButton.prop("disabled", false)
             $queueGenerationButton.removeClass("indefinite")
-            alert(error)
             return
           }
         })
@@ -356,6 +373,7 @@ $(document).ready(() => {
     e.preventDefault()
 
     if (!$realUpload.val()) {
+      alert("Please select a ROM that you want to randomize first!")
       return
     }
 
@@ -366,6 +384,10 @@ $(document).ready(() => {
     const formDataBlob = new FormData(document.querySelector('form'))
     formDataBlob.delete("fake-upload")
     formDataBlob.set("input_rom", dataBlob, "input_rom.zip")
+
+    if ($queueGenerationButton.next().hasClass("download-rom")) {
+      $queueGenerationButton.next().remove()
+    }
 
     $queueGenerationButton.prop("disabled", true)
     $queueGenerationButton.children('span').text("Uploading...")
