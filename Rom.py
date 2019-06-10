@@ -149,9 +149,8 @@ class ROM:
           mtl_debug.write(generate_debug_materials())
           
         with open(os.path.join("dumps", "level_geometry", f"{level.name}.obj"), "w+") as obj_output:
-          pass
-          #data = generate_obj_for_level_geometry(self.levelscripts[level].level_geometry)
-          #obj_output.write(data)
+          data = generate_obj_for_level_geometry(self.levelscripts[level].level_geometry)
+          obj_output.write(data)
         
       else:
         self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)

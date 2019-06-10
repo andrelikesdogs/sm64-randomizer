@@ -37,7 +37,7 @@ class LevelScriptParser:
     self.mario_spawn = None
     self.layer = layer
     self.level = level
-    self.current_area = None
+    self.current_area = 0x0
     self.water_boxes = []
 
     self.macro_tables = {}
@@ -205,7 +205,7 @@ class LevelScriptParser:
           (b1, b2, b3, b4) = tuple([self.rom.read_integer(cursor + 16 + n) for n in range(4)])
           b_script = self.rom.read_integer(cursor + 20, 4)
 
-          self.objects.append(Object3D("PLACE_OBJ", model_id, position, self.level, rotation, b_script, [b1, b2, b3, b4], cursor + 2))
+          self.objects.append(Object3D("PLACE_OBJ", self.current_area, model_id, position, self.level, rotation, b_script, [b1, b2, b3, b4], cursor + 2))
         elif command.identifier == 0x39:
           if self.rom.rom_type == 'EXTENDED':
             """ 0x39 PLACE_MACRO_OBJECTS """
@@ -253,7 +253,7 @@ class LevelScriptParser:
           spawn_area_id = self.rom.read_integer(cursor + 2)
           rotation_y = self.rom.read_integer(cursor + 4, 2, True)
           position = (self.rom.read_integer(cursor + 6, 2, True), self.rom.read_integer(cursor + 8, 2, True), self.rom.read_integer(cursor + 10, 2, True))
-          self.objects.append(Object3D("MARIO_SPAWN", None, position, self.level, (None, rotation_y, None), mem_address = cursor + 2))
+          self.objects.append(Object3D("MARIO_SPAWN", spawn_area_id, None, position, self.level, (None, rotation_y, None), mem_address = cursor + 2))
           #print(self.level.name, spawn_area_id, rotation_y, position)
         elif command.identifier == 0x20:
           """ 0x20 END_AREA """
@@ -375,7 +375,7 @@ class LevelScriptParser:
         preset = preset_table[preset_id]
         position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
         (bparam1, bparam2) = (self.rom.read_integer(None, 1), self.rom.read_integer(None, 1))
-        object3d = Object3D("MACRO_OBJ", preset.model_id, position, self.level, (None, rot_y, None), preset.behaviour_addr, mem_address = cursor, bparams=[bparam1, bparam2])
+        object3d = Object3D("MACRO_OBJ", self.current_area, preset.model_id, position, self.level, (None, rot_y, None), preset.behaviour_addr, mem_address = cursor, bparams=[bparam1, bparam2])
         objects_found.append(object3d)
         macro_table["entries"].append(dict(
           object3d=object3d,
@@ -582,6 +582,7 @@ class LevelScriptParser:
         cursor += entry_length
 
         triangles.append(indices)
+      #print(self.level.name)
       #print(f'{len(triangles)} {hex(cd_type_int)} ({format_binary(cd_type)})')
       self.level_geometry.add_area(self.current_area, vertices, triangles, cd_type_int)
       collision_entry["triangle_bytes"] = triangle_bytes
@@ -620,18 +621,18 @@ class LevelScriptParser:
             if length == 8:
               model_id = preset.model_id
               position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
-              entry = Object3D("SPECIAL_MACRO_OBJ", model_id, position, self.level, None, preset.behaviour_addr, mem_address = cursor)
+              entry = Object3D("SPECIAL_MACRO_OBJ", self.current_area, model_id, position, self.level, None, preset.behaviour_addr, mem_address = cursor)
             elif length == 10:
               model_id = preset.model_id
               position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
               rotation = (None, self.rom.read_integer(None, 2, True), None)
-              entry = Object3D("SPECIAL_MACRO_OBJ", model_id, position, self.level, rotation, preset.behaviour_addr, mem_address = cursor)
+              entry = Object3D("SPECIAL_MACRO_OBJ", self.current_area, model_id, position, self.level, rotation, preset.behaviour_addr, mem_address = cursor)
             elif length == 12:
               model_id = preset.model_id
               position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
               rotation = (None, self.rom.read_integer(None, 2, True), None)
               (b1, b2) = (self.rom.read_integer(), self.rom.read_integer())
-              entry = Object3D("SPECIAL_MACRO_OBJ", model_id, position, self.level, rotation, preset.behaviour_addr, [b1, b2], mem_address = cursor)
+              entry = Object3D("SPECIAL_MACRO_OBJ", self.current_area, model_id, position, self.level, rotation, preset.behaviour_addr, [b1, b2], mem_address = cursor)
             else:
               raise Exception("Invalid Preset Length")
 
@@ -672,12 +673,12 @@ class LevelScriptParser:
           elif water_box_id == 0x32 or water_box_id == 0xF0:
             water_box_type = "TOXIC"
           
-          water_box = (
-            water_box_id,
-            water_box_start_x, water_box_start_z,
-            water_box_end_x, water_box_end_z,
-            water_box_y,
-            water_box_type
+          water_box = dict(
+            box_id=water_box_id,
+            start=(water_box_start_x, water_box_y, water_box_start_z),
+            end=(water_box_end_x, -8192.0, water_box_end_z),
+            type=water_box_type,
+            area_id=self.current_area
           )
           self.water_boxes.append(water_box)
           special_macro_table["waterboxes"].append(dict(

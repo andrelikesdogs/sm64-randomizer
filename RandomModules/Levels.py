@@ -1,5 +1,6 @@
-from Constants import ALL_LEVELS, CAP_LEVELS, MISSION_LEVELS, BOWSER_STAGES, LVL_BOB, SPECIAL_LEVELS, LVL_MAIN_SCR, LVL_CASTLE_GROUNDS, BEHAVIOUR_NAMES
-from randoutils import format_binary
+from Constants import ALL_LEVELS, CAP_LEVELS, MISSION_LEVELS, BOWSER_STAGES, SPECIAL_LEVELS, BEHAVIOUR_NAMES
+import Constants
+from randoutils import format_binary, print_progress_bar
 import random
 import sys
 import numpy as np
@@ -9,6 +10,8 @@ import logging
 
 from random import shuffle
 
+# List of items that can be shuffled within the game
+# This list consists of a model-id and behaviour address. If one of them is None, any will match
 WHITELIST_SHUFFLING = [
   (None, 0xBC), # Bob-Omb
   (0x13003174, None), # Bob-Omb
@@ -89,15 +92,15 @@ WHITELIST_SHUFFLING = [
   (0x1300506C, None), # BBH: Bookend
 ]
 
-BSCRIPT_START = 0x10209C
-
-HEIGHT_OFFSETS = {
-  (None, 0x89): 200,
-  (0x130007F8, 0x7A): 200, 
-  (0x13002250, None): 200,
-  (None, 0x75): 300,
+# Allowed variance in object height, for example to have a star be slightly above ground
+ITEM_HEIGHT_VARIANCE = {
+  (None, 0x89): [10, 200], # Star
+  (None, 0x7A): [10, 200], # Star
+  (0x13002250, None): [100, 300], # Item Block
+  (0x13004348, None): [10, 200], # Red Coin
 }
 
+# Items that can not be placed in water, or they won't work anymore. i.e. Item-Boxes underwater are not breakable
 CANT_BE_IN_WATER = [
   (None, 0x89), # Star
   (0x13003700, None), # Ice Bully (Big) - otherwise you win instantly
@@ -105,136 +108,57 @@ CANT_BE_IN_WATER = [
   (0x13003228, None) # Bob-Omb Buddy (Opening Canon)
 ]
 
+# Walkable collision types on which to place objects
 WALKABLE_COLLISION_TYPES = [
   0x00, # environment default
   0x29, # default floor with noise
+  0x2A, # slippery floor with noise
   0x14, # slightly slippery
   0x15, # anti slippery
   0x0B, # close camera
   0x30, # hard floor (always fall damage)
-
+  0x1A, # varied noise
+  0x21, # sand
+  0x35, # hard and slippery
+  0x37, # non slippery in ice level
+  0x65, # wide cam
+  0x70, # BOB: camera thing
+  0x75, # CCM: camera thing
+  0x76, # surface with flags
+  
   ## may be harder
   #0x13, # slippery
   #0x2A, # slippery with noise
   0x0D, # water (stationary)
 ]
 
-def signed_tetra_volume(a, b, c, d):
-  return np.sign(np.dot(np.cross(b-a, c-a), d-a)/6.0)
+WALL_CHECK_DIRECTIONS = [
+  [1000.0, 0.0, 0.0],
+  [0.0, 0.0, 1000.0],
+  [-1000.0, 0.0, 0.0],
+  [0.0, 0.0, -1000.0]
+]
 
-def trace_geometry_intersections(level_geometry, ray, face_type = None):
-  # algorithm that was used for this:
-  # http://www.lighthouse3d.com/tutorials/maths/ray-triangle-intersection/
-  # or maybe this
-  # https://wiki2.org/en/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-  [q0, q1] = ray
-  ray_origin = q0
-  ray_vector = q1 - q0
-  #print("origin", ray_origin)
-  #print("dir", ray_vector)
+WALL_CHECK_DIRECTIONS_NORM = [
+  [1.0, 0.0, 0.0],
+  [0.0, 0.0, 1.0],
+  [-1.0, 0.0, 0.0],
+  [0.0, 0.0, -1.0],
+]
 
-  ray_is_vertical = ray_vector[0] == 0.0 and ray_vector[1] == 0.0
+WATER_LEVELS = [
+  Constants.LVL_SECRET_AQUARIUM,
+  Constants.LVL_WDW,
+  Constants.LVL_JRB,
+  Constants.LVL_DDD
+]
 
-  faces = level_geometry.get_triangles(face_type) # [[[-1.0, -1.0, 0.0], [1.0, -1.0, 0.0], [0.0, 1.0, 0.0]]]
-
-  intersection_count = 0
-  intersection_positions = []
-  intersection_faces = []
-  for face in faces:
-    #print("next face", face.index)
-    [p1, p2, p3] = face.vertices
-    [xmin, xmax, ymin, ymax, zmin, zmax] = face.bounding_box
-
-    # precheck bounds
-    if ray_is_vertical:
-      # for vertical rays we can quickly check if the coordinates are atleast in the bounding box of the tri
-      if ray_origin[0] < xmin or ray_origin[0] > xmax or ray_origin[1] < ymin or ray_origin[1] > ymax:
-        #print('oob precheck')
-        continue
-
-    edge_a = p2 - p1
-    edge_b = p3 - p1
-
-    h = np.cross(ray_vector, edge_b)
-    a = np.dot(edge_a, h)
-
-    if abs(a) < 0e-10:
-      #print("parallel")
-      continue
-    
-    f = 1.0/a
-    s = ray_origin - p1
-    u = f * (np.dot(s, h))
-
-    if u < 0.0 or u > 1.0:
-      #print("u outside 0-1")
-      continue
-
-    q = np.cross(s, edge_a)
-    v = f * (np.dot(ray_vector, q))
-    
-    if v < 0.0 or u + v > 1.0:
-      #print("v < 0 or u + v > 1")
-      continue
-    
-    t = f * np.dot(edge_b, q)
-    if t > 0e-10:
-      #print("hit")
-      intersection_count += 1
-      intersection_positions.append(
-        ray_origin + ray_vector * t
-      )
-      intersection_faces.append(face)
-      continue
-    #print("doesnt reach", t)
-
-  return (intersection_count, intersection_positions, intersection_faces)
-
-  """
-  [q0, q1] = ray
-  triangles = level_geometry.get_triangles() # [[[-1.0, -1.0, 0.0], [1.0, -1.0, 0.0], [0.0, 1.0, 0.0]]]
-
-  intersection_count = 0
-  intersection_positions = []
-  for triangle in triangles:
-    [p1, p2, p3] = triangle
-    signed_volume_a = signed_tetra_volume(q0, p1, p2, p3)
-    signed_volume_b = signed_tetra_volume(q1, p1, p2, p3)
-
-    if signed_volume_a != signed_volume_b:
-      s3 = signed_tetra_volume(q0,q1,p1,p2)
-      s4 = signed_tetra_volume(q0,q1,p2,p3)
-      s5 = signed_tetra_volume(q0,q1,p3,p1)
-
-      if s3 == s4 and s4 == s5:
-        intersection_count += 1
-
-        n = np.cross(p2-p1,p3-p1)
-        t = np.dot(p1-q0,n) / np.dot(q1-q0,n)
-
-        intersection_positions.append(
-          q0 + t * (12-q0)
-        )
-  return (intersection_count, intersection_positions)
-  """
-
-def get_closest_intersection(intersections, position):
-  closest_dist = 1e20 # big number as "infinity"
-  closest_index = 0
-
-  for index, intersection_point in enumerate(intersections):
-    diff = position - intersection_point
-    dist = np.sqrt(np.sum(np.power(diff, 2)))
-
-    if dist < closest_dist:
-      closest_dist = dist
-      closest_index = index
-  
-  return closest_dist
+COMPASS_NAMES = ["N", "E", "S", "W"]
 
 class LevelRandomizer:
   def __init__(self, rom : 'ROM'):
     self.rom = rom
+    self.reject_reason_counts = {}
 
   @staticmethod
   def can_shuffle(obj : Object3D):
@@ -247,10 +171,11 @@ class LevelRandomizer:
       return False
 
   def get_height_offset(self, obj : Object3D):
-    for (target_bscript_address, target_model_id) in HEIGHT_OFFSETS:
+    for (target_bscript_address, target_model_id) in ITEM_HEIGHT_VARIANCE:
       if (target_model_id is None or target_model_id == obj.model_id) and (target_bscript_address is None or target_bscript_address == obj.behaviour):
-        return HEIGHT_OFFSETS[(target_bscript_address, target_model_id)]
+        (minimum, maximum) = tuple(ITEM_HEIGHT_VARIANCE[(target_bscript_address, target_model_id)])
 
+        return random.randrange(minimum, maximum)
     return 1 # fallback to ensure it doesn't fail oob check or falls out of level
 
   def can_be_in_water(self, obj : Object3D):
@@ -259,32 +184,153 @@ class LevelRandomizer:
         return False
     return True
 
-  def is_in_water_box(self, water_box, position):
-    (
-      water_box_id,
-      water_box_start_x, water_box_start_z,
-      water_box_end_x, water_box_end_z,
-      water_box_y,
-      water_box_type
-    ) = water_box
+  def is_in_water_box(self, area_id, water_boxes, position):
+    applicable_waterboxes = list(filter(lambda box: box["area_id"] == area_id, water_boxes))
 
-    if water_box_type != "WATER":
-      #print("waterbox is not water, all good")
+    if not len(applicable_waterboxes):
       return False
 
-    if position[0] < water_box_start_x or position[0] > water_box_end_x:
-      #print("x is outside waterbox x, all good")
-      return False
-    if position[2] < water_box_start_z or position[2] > water_box_end_z:
-      #print("y is outside waterbox y, all good")
-      return False
-    if position[1] > water_box_y:
-      #print("item is higher than waterbox")
-      return False
+    for water_box in applicable_waterboxes:
+      if water_box["type"] != "WATER":
+        #print("waterbox is not water, all good")
+        return False
+
+      if position[0] < water_box["start"][0] or position[0] > water_box["end"][0]:
+        #print("x is outside waterbox x, all good")
+        return False
+      if position[1] < water_box["start"][1] or position[1] > water_box["end"][1]:
+        #print("y is outside waterbox y, all good")
+        return False
+      if position[2] < water_box["start"][2] or position[2] > water_box["end"][2]:
+        #print("item is higher than waterbox")
+        return False
 
     return True
+
+  def get_floor_pos(self, level_script, area, position):
+    mesh = level_script.level_geometry.area_geometries[area]
+    locations, index_ray, index_tri = mesh.ray.intersects_location(
+        ray_origins=[position],
+        ray_directions=[[0.0, -20000.0, 0.0]])
+
+    if len(locations):
+      # has floors, how many?
+      if len(locations) % 2 != 1:
+        # uneven amount of floors = oob
+        return False
+      else:
+        first_floor_index = index_tri.item(0)
+        
+        collision_type = level_script.level_geometry.get_collision_type_for_triangle(area, first_floor_index)
+        if collision_type not in WALKABLE_COLLISION_TYPES:
+          return False
+    else:
+      return False
     
-  def is_valid_position(self, level_script, object3d, position):
+    return locations[0]
+
+  def check_walls(self, level_script, area, position):
+    mesh = level_script.level_geometry.area_geometries[area]
+
+
+    for direction in WALL_CHECK_DIRECTIONS:
+      trace_pos = position
+      trace_pos[1] += 2
+      tri_index, ray_index = mesh.ray.intersects_id(ray_origins=[trace_pos], ray_directions=[direction], multiple_hits=False)
+
+      if len(tri_index) > 0:
+        tri_index = tri_index[0]
+        ray_index = ray_index[0]
+        # hit a triangle, what is the normal?
+        wall_dir = mesh.face_normals[tri_index]
+        check_dir = WALL_CHECK_DIRECTIONS_NORM[ray_index]
+
+        angle = (wall_dir[0] * check_dir[0] + wall_dir[1] * check_dir[1] + wall_dir[2] * check_dir[2])
+
+        if angle > 0:
+          self.reject_reason_counts[f"wall_facing_away_{COMPASS_NAMES[ray_index]}"] += 1
+          return False
+
+    return True
+
+  def get_valid_position(self, level_script, object3d, position):
+    is_in_water = self.is_in_water_box(object3d.area_id, level_script.water_boxes, position)
+    # Is this object in waterbox?
+    if is_in_water:
+      # can this object be inside a waterbox?
+      if not self.can_be_in_water(object3d):
+        #print("is in water; invalid")
+        self.reject_reason_counts["cant_be_in_water"] += 1
+        return False
+
+    # check if there's floor underneath
+    floor_check_position = self.get_floor_pos(level_script, object3d.area_id, position)
+    if floor_check_position is False:
+      #print("no floor underneath")
+      self.reject_reason_counts["no_floor_found"] += 1
+      return False
+    
+    # if not in water, drop onto floor
+    if not is_in_water:
+      position = floor_check_position
+      
+    
+    height_offset = self.get_height_offset(object3d)
+    position[1] += height_offset
+
+    # check for normals of walls nearby
+    #if not self.check_walls(level_script, object3d.area_id, position):
+    #  return False
+
+    return position
+
+  def shuffle_objects(self):
+    idx = 0
+    for (level, parsed) in self.rom.levelscripts.items():
+      if level in SPECIAL_LEVELS:
+        continue
+
+      # debug only set BoB
+      #if level != Constants.LVL_BOB:
+      #  continue
+
+      #floor_triangles = parsed.level_geometry.get_triangles('FLOOR')
+      shufflable_objects = list(filter(LevelRandomizer.can_shuffle, parsed.objects))
+      #other_objects = list(filter(lambda x: not LevelRandomizer.can_shuffle(x), parsed.objects))
+
+      total = len(shufflable_objects)
+      rejects = 0
+
+      self.reject_reason_counts = {
+        "cant_be_in_water": 0,
+        "no_floor_found": 0,
+        "wall_facing_away_N": 0,
+        "wall_facing_away_S": 0,
+        "wall_facing_away_W": 0,
+        "wall_facing_away_E": 0
+      }
+
+      #for other_object in other_objects:
+      #  parsed.level_geometry.add_debug_marker(other_object.position, other_object, color=(100, 100, 255))
+
+      while len(shufflable_objects) > 0:
+        obj = shufflable_objects.pop()
+
+        area_id = obj.area_id
+
+        point = parsed.level_geometry.get_random_point_in_area(area_id)
+        point[1] += 10
+        valid_pos = self.get_valid_position(parsed, obj, point)
+        if valid_pos is False:
+          #print('invalid position')
+          shufflable_objects.append(obj)
+          rejects += 1
+        else:
+          obj.set(self.rom, 'position', tuple([int(p) for p in list(valid_pos)]))
+          reasons_formated = ', '.join([f'{k}: {v}' for [k, v] in self.reject_reason_counts.items()])
+          print_progress_bar(total - len(shufflable_objects), total, f'Placing Objects', f'{level.name}: ({total - len(shufflable_objects)} placed, {rejects} rejected)')
+          #print(self.reject_reason_counts)
+"""
     if not self.can_be_in_water(object3d):
       #print(object3d, 'cant be in water')
       #print("found an object that cannot be in water", len(level_script.water_boxes))
@@ -327,42 +373,4 @@ class LevelRandomizer:
     if closest_ceiling < 10.0: return False
 
     return is_valid_amount
-
-
-  def shuffle_objects(self):
-    for (level, parsed) in self.rom.levelscripts.items():
-      if level in SPECIAL_LEVELS:
-        continue
-
-      floor_triangles = parsed.level_geometry.get_triangles('FLOOR')
-      shufflable_objects = list(filter(LevelRandomizer.can_shuffle, parsed.objects))
-      other_objects = list(filter(lambda x: not LevelRandomizer.can_shuffle(x), parsed.objects))
-
-      for other_object in other_objects:
-        parsed.level_geometry.add_debug_marker(other_object.position, other_object, color=(100, 100, 255))
-
-      while len(shufflable_objects) > 0:
-        obj = shufflable_objects.pop()
-
-        face = random.choice(floor_triangles)
-        [p1, p2, p3] = face.vertices
-        
-        r1 = random.random()
-        r2 = random.random()
-
-        if r1 + r2 > 1:
-          r1 = r1 - 1
-          r2 = r2 - 1
-        
-        point = p1 + (r1 * (p2 - p1)) + (r2 * (p3 - p1))
-
-        # match bscript and model_id
-        height_offset = self.get_height_offset(obj)
-        point[2] += height_offset
-
-        if not self.is_valid_position(parsed, obj, point):
-          #print('invalid position')
-          shufflable_objects.append(obj)
-        else:
-          obj.set(self.rom, 'position', tuple([int(p) for p in list(point)]))
-          parsed.level_geometry.add_debug_marker(point, obj, color=(255, 100, 100))
+"""
