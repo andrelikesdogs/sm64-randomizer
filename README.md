@@ -102,6 +102,13 @@ optional arguments:
                         start.
 ```
 
+## Contributing: Getting Started
+To work on this repository, follow the following steps. Please also definitely join the [discord](https://discordapp.com/invite/NwNZ3qb) for help.
+1. `git clone` this repository
+2. Make sure you somehow have python >3.6 (Mac OSX I suggest `brew install`, Linux I suggest `apt install python3`, windows I suggest the installer)
+3. Create a `venv` via `python3 -m venv .` while inside the folder
+4. Install dependencies via `pip install -r requirements-dev.txt`
+
 ## Special Thanks
 - [hack64](http://hack64.net/)'s wonderful SM64 hacking resources, clean, easy to use and great in-depth details
 - [SimpleFlips](https://www.youtube.com/user/SimpleFlips) Discord-Server for help with SM64 hacking/weirdness (especially Felegg)

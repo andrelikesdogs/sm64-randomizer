@@ -6,6 +6,8 @@ import sys
 import numpy as np
 from Entities.Object3D import Object3D
 import logging
+import trimesh
+import os
 #from Parsers.LevelScript import LevelScriptParser
 
 from random import shuffle
@@ -102,7 +104,7 @@ ITEM_HEIGHT_VARIANCE = {
 
 # Items that can not be placed in water, or they won't work anymore. i.e. Item-Boxes underwater are not breakable
 CANT_BE_IN_WATER = [
-  (None, 0x89), # Star
+  (None, 0x89), # Item Box
   (0x13003700, None), # Ice Bully (Big) - otherwise you win instantly
   (0x130031DC, 0xC3), # Bob-Omb Buddy (With Message)
   (0x13003228, None) # Bob-Omb Buddy (Opening Canon)
@@ -120,11 +122,13 @@ WALKABLE_COLLISION_TYPES = [
   0x1A, # varied noise
   0x21, # sand
   0x35, # hard and slippery
+  0x36, # slide
   0x37, # non slippery in ice level
   0x65, # wide cam
   0x70, # BOB: camera thing
   0x75, # CCM: camera thing
   0x76, # surface with flags
+  0x79, # CCM: camera thing
   
   ## may be harder
   #0x13, # slippery
@@ -146,14 +150,19 @@ WALL_CHECK_DIRECTIONS_NORM = [
   [0.0, 0.0, -1.0],
 ]
 
-WATER_LEVELS = [
-  Constants.LVL_SECRET_AQUARIUM,
-  Constants.LVL_WDW,
-  Constants.LVL_JRB,
-  Constants.LVL_DDD
+WINGCAP_LEVELS = [
+  Constants.LVL_WING_CAP,
+  Constants.LVL_SECRET_RAINBOW
 ]
 
+# Manual level deathfloor checks
+LEVEL_DEATHFLOORS = {
+#  [Constants.LVL_THI, 0x2]: -2000
+}
+
 COMPASS_NAMES = ["N", "E", "S", "W"]
+
+DEATH_PLANE_START = -7000
 
 class LevelRandomizer:
   def __init__(self, rom : 'ROM'):
@@ -209,51 +218,123 @@ class LevelRandomizer:
 
   def get_floor_pos(self, level_script, area, position):
     mesh = level_script.level_geometry.area_geometries[area]
-    locations, index_ray, index_tri = mesh.ray.intersects_location(
-        ray_origins=[position],
-        ray_directions=[[0.0, -20000.0, 0.0]])
+
+    if position[1] < DEATH_PLANE_START:
+      # death plane
+      #print("death plane")
+      return False
+
+    index_tri, index_ray, locations = mesh.ray.intersects_id(
+      ray_origins=[position],
+      ray_directions=[[0.0, -20000.0, 0.0]],
+      return_locations=True,
+      multiple_hits=False
+    )
 
     if len(locations):
-      # has floors, how many?
-      if len(locations) % 2 != 1:
-        # uneven amount of floors = oob
+      first_floor_index = index_tri.item(0)
+
+      if locations[0][1] < DEATH_PLANE_START:
         return False
-      else:
-        first_floor_index = index_tri.item(0)
-        
-        collision_type = level_script.level_geometry.get_collision_type_for_triangle(area, first_floor_index)
-        if collision_type not in WALKABLE_COLLISION_TYPES:
-          return False
+      
+      collision_type = level_script.level_geometry.get_collision_type_for_triangle(area, first_floor_index)
+      #print(hex(collision_type))
+      if collision_type not in WALKABLE_COLLISION_TYPES:
+        return False
     else:
       return False
     
-    return locations[0]
+    return (locations[0], index_tri[0])
 
   def check_walls(self, level_script, area, position):
     mesh = level_script.level_geometry.area_geometries[area]
+    position[1] += 5
 
-
-    for direction in WALL_CHECK_DIRECTIONS:
+    valid_position = True
+    invalid_ray = []
+    for ray_index, direction in enumerate(WALL_CHECK_DIRECTIONS_NORM):
       trace_pos = position
-      trace_pos[1] += 2
-      tri_index, ray_index = mesh.ray.intersects_id(ray_origins=[trace_pos], ray_directions=[direction], multiple_hits=False)
+      #trace_pos[1] += 2
+      tri_index, _ = mesh.ray.intersects_id(ray_origins=[trace_pos], ray_directions=[direction], multiple_hits=False)
 
       if len(tri_index) > 0:
         tri_index = tri_index[0]
-        ray_index = ray_index[0]
         # hit a triangle, what is the normal?
         wall_dir = mesh.face_normals[tri_index]
-        check_dir = WALL_CHECK_DIRECTIONS_NORM[ray_index]
+        check_dir = direction
 
-        angle = (wall_dir[0] * check_dir[0] + wall_dir[1] * check_dir[1] + wall_dir[2] * check_dir[2])
-
+        angle = (check_dir[0] * wall_dir[0] + check_dir[1] * wall_dir[1] + check_dir[2] * wall_dir[2])
         if angle > 0:
           self.reject_reason_counts[f"wall_facing_away_{COMPASS_NAMES[ray_index]}"] += 1
-          return False
+          invalid_ray.append(ray_index)
+          valid_position = False
+          if "SM64R_DEBUG" not in os.environ or os.environ["SM64R_DEBUG"] != 'PLOT':
+            break
 
-    return True
+    # debug stuff
+    if "SM64R_DEBUG" in os.environ and os.environ["SM64R_DEBUG"] == 'VIEWER' and level_script.level == Constants.LVL_TTC:
+      print("is valid?", valid_position)
+      debug_tri_indices, debug_ray_indices, debug_locations = mesh.ray.intersects_id(ray_origins=[position, position, position, position], ray_directions=[*WALL_CHECK_DIRECTIONS], multiple_hits=False, return_locations=True)
+      if len(debug_locations) > 0:
+        print(level_script.level.name)
+        for face_index, normal in enumerate(mesh.face_normals):
+          tri_color = (10, 10, 10, 200)
+          if normal[1] > 0.8:
+            tri_color = (255, 0, 0, 255)
+          #else:
+          #  if normal[1] > 0.01:
+          #    tri_color =(0, 255, 0, 200)
+          #  elif normal[1] < -0.01:
+          #    tri_color = (255, 0, 0, 200)
+          
+          mesh.visual.face_colors[face_index] = tri_color
+        
+        
+        path_vertices = []
+        path_entities = []
+
+        for ray_index, direction in enumerate(WALL_CHECK_DIRECTIONS_NORM):
+          path_vertices.append(
+            position
+          )
+          path_vertices.append(
+            debug_locations[ray_index] if ray_index in debug_ray_indices else position + (np.array(direction) * 1000)
+          )
+          path_entities.append(
+            trimesh.path.entities.Line(points=[len(path_vertices) - 2, len(path_vertices) - 1])
+          )
+
+        normal_paths = []
+        normal_entities = []
+        for face_index, vertices in enumerate(mesh.triangles):
+          #print(len(mesh.face_normals), len(face_indices))
+          normal = mesh.face_normals[face_index]
+          origin = np.mean(vertices, axis=0)
+          direction = origin + normal * 100
+          
+          normal_paths.append(origin)
+          normal_paths.append(direction)
+          normal_entities.append(trimesh.path.entities.Line(points=[len(normal_paths) - 2, len(normal_paths) - 1]))
+        
+        scene = trimesh.Scene([
+          mesh,
+          trimesh.path.path.Path(vertices=normal_paths, entities=normal_entities),
+          trimesh.path.path.Path(vertices=path_vertices, entities=path_entities),
+        ])
+        scene = scene.scaled(0.02)
+
+        scene.show()
+      # end debug stuff
+  
+
+    return valid_position
 
   def get_valid_position(self, level_script, object3d, position):
+    level = level_script.level
+
+    # check if there's floor underneath
+    result = self.get_floor_pos(level_script, object3d.area_id, position)
+
     is_in_water = self.is_in_water_box(object3d.area_id, level_script.water_boxes, position)
     # Is this object in waterbox?
     if is_in_water:
@@ -263,26 +344,71 @@ class LevelRandomizer:
         self.reject_reason_counts["cant_be_in_water"] += 1
         return False
 
-    # check if there's floor underneath
-    floor_check_position = self.get_floor_pos(level_script, object3d.area_id, position)
-    if floor_check_position is False:
-      #print("no floor underneath")
-      self.reject_reason_counts["no_floor_found"] += 1
-      return False
-    
-    # if not in water, drop onto floor
-    if not is_in_water:
-      position = floor_check_position
+    mesh = level_script.level_geometry.area_geometries[object3d.area_id]
+
+    # if its a level with a wingcap available
+    if level in WINGCAP_LEVELS:
+      if position[1] > mesh.bounds[1][1] - 300:
+        # make sure it's below the highest point of the level or it's unobtainable
+        return False
+      if position[1] < mesh.bounds[0][1] + 1000:
+        # make sure it's not touching the death floor
+        return False
+    else:
+      if result is False:
+        #print("no floor underneath")
+        self.reject_reason_counts["no_floor_found"] += 1
+        return False
+
+      (floor_check_position, triangle_index) = result
+      # if not in water, drop onto floor
+      if not is_in_water:
+        # drop onto floor
+        position = floor_check_position
+
+        is_dropped_in_water = self.is_in_water_box(object3d.area_id, level_script.water_boxes, position)
+        if is_dropped_in_water:
+          #self.reject_reason_counts["cant_be_in_water"] += 1
+          return False
+
+        # only outside water, check if the floor might be too steep
+        too_steep = mesh.face_normals[triangle_index][1] < 0.6
+
+        if too_steep:
+          self.reject_reason_counts["floor_too_steep"] += 1
+          return False
       
-    
-    height_offset = self.get_height_offset(object3d)
-    position[1] += height_offset
+      height_offset = self.get_height_offset(object3d)
+      position[1] += height_offset
 
     # check for normals of walls nearby
-    #if not self.check_walls(level_script, object3d.area_id, position):
-    #  return False
+    if not self.check_walls(level_script, object3d.area_id, position):
+      return False
 
     return position
+  
+  def generate_random_point(self, obj, levelscript):
+    area_id = obj.area_id
+    area_mesh = levelscript.level_geometry.area_geometries[area_id]
+
+    (bounds_min, bounds_max) = area_mesh.bounds
+    (x, y, z) = bounds_min
+
+    if levelscript.level == Constants.LVL_THI:
+      pass
+
+    if abs(bounds_min[0] - bounds_max[0]) > 0:
+      x = random.randrange(bounds_min[0], bounds_max[0])
+    
+    if abs(bounds_min[1] - bounds_max[1]) > 0:
+      y = random.randrange(bounds_min[1], bounds_max[1])
+
+    if abs(bounds_min[2] - bounds_max[2]) > 0:
+      z = random.randrange(bounds_min[2], bounds_max[2])
+      
+    return [x, y, z]
+
+
 
   def shuffle_objects(self):
     idx = 0
@@ -291,7 +417,7 @@ class LevelRandomizer:
         continue
 
       # debug only set BoB
-      #if level != Constants.LVL_BOB:
+      #if level != Constants.LVL_TTM:
       #  continue
 
       #floor_triangles = parsed.level_geometry.get_triangles('FLOOR')
@@ -304,6 +430,7 @@ class LevelRandomizer:
       self.reject_reason_counts = {
         "cant_be_in_water": 0,
         "no_floor_found": 0,
+        "floor_too_steep": 0,
         "wall_facing_away_N": 0,
         "wall_facing_away_S": 0,
         "wall_facing_away_W": 0,
@@ -316,10 +443,9 @@ class LevelRandomizer:
       while len(shufflable_objects) > 0:
         obj = shufflable_objects.pop()
 
-        area_id = obj.area_id
-
-        point = parsed.level_geometry.get_random_point_in_area(area_id)
-        point[1] += 10
+        point = self.generate_random_point(obj, parsed)
+        #point = parsed.level_geometry.get_random_point_in_area(area_id)
+        
         valid_pos = self.get_valid_position(parsed, obj, point)
         if valid_pos is False:
           #print('invalid position')
@@ -330,47 +456,3 @@ class LevelRandomizer:
           reasons_formated = ', '.join([f'{k}: {v}' for [k, v] in self.reject_reason_counts.items()])
           print_progress_bar(total - len(shufflable_objects), total, f'Placing Objects', f'{level.name}: ({total - len(shufflable_objects)} placed, {rejects} rejected)')
           #print(self.reject_reason_counts)
-"""
-    if not self.can_be_in_water(object3d):
-      #print(object3d, 'cant be in water')
-      #print("found an object that cannot be in water", len(level_script.water_boxes))
-      for water_box in level_script.water_boxes:
-        #print(water_box)
-        if self.is_in_water_box(water_box, position):
-          logging.info("invalid position for object, in water box")
-          #print(position, object3d)
-          return False
-    
-    # count floors under the position we want to test
-    (floors_underneath, floor_positions, floor_faces) = trace_geometry_intersections(
-      level_script.level_geometry,
-      [
-        position + np.array([0.0, 0.0, 1.0]),
-        position + np.array([0.0, 0.0, -1.0e7])
-      ]
-    )
-    
-    # if the amount is even, we're inside a wall or (if it's 0) oob
-    # if the amount is odd we're ok
-    is_valid_amount = floors_underneath % 2 == 1
-
-    if not is_valid_amount: return False
-
-    if floor_faces[0].collision_type not in WALKABLE_COLLISION_TYPES:
-      #print("invalid floor type", hex(floor_faces[0].collision_type))
-      return False
-
-    # require minimum distance from point from ceilings
-    (_, ceiling_positions, ceiling_faces) = trace_geometry_intersections(
-      level_script.level_geometry,
-      [
-        position + np.array([0.0, 0.0, 1.0]),
-        position + np.array([0.0, 0.0, +1.0e7])
-      ]
-    )
-    closest_ceiling = get_closest_intersection(ceiling_positions, position)
-
-    if closest_ceiling < 10.0: return False
-
-    return is_valid_amount
-"""

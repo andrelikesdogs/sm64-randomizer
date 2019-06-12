@@ -5,7 +5,7 @@ import time
 import traceback
 import json
 from pathlib import Path
-from random import seed
+from random import seed, randint
 from typing import List
 
 from __version__ import __version__
@@ -75,6 +75,12 @@ def generate_output_path(rom_in : Path):
   return 
 
 def run_with_parsed_args(opt_args : argparse.Namespace):
+  if not opt_args.seed:
+    opt_args.seed = randint(1e10, 10e10)
+  else:
+    if len(str(opt_args.seed)) < 10:
+      opt_args.seed = str(opt_args.seed).rjust(10, '0')
+    opt_args.seed = sum([(ord(x) * 1337) for x in str(opt_args.seed)])
   seed(opt_args.seed)
 
   rom_path = Path(opt_args.rom)
