@@ -241,6 +241,7 @@ $(document).ready(() => {
 
   let tracking_active = false
   let tracking_interval = null
+  let used_seed = null
   const activateTrackingMode = (upload_ticket) => {
     if (!tracking_active) {
       tracking_active = true
@@ -259,7 +260,7 @@ $(document).ready(() => {
               $downloadLink.attr("href", BASE_URL + '/download/' + upload_ticket)
               const fileNameParts = fileNameSelected.split('.')
               const fileExt = fileNameParts[fileNameParts.length - 1]
-              $downloadLink.attr("download", 'Super Mario 64 Randomizer ROM' + fileExt)
+              $downloadLink.attr("download", 'SM64Randomizer (Seed ' + used_seed + ')' + fileExt)
               $downloadLink.text("Download your ROM!")
 
               if ($queueGenerationButton.next().hasClass("download-rom")) {
@@ -384,6 +385,8 @@ $(document).ready(() => {
     const formDataBlob = new FormData(document.querySelector('form'))
     formDataBlob.delete("fake-upload")
     formDataBlob.set("input_rom", dataBlob, "input_rom.zip")
+
+    used_seed = formDataBlob.get("seed")
 
     if ($queueGenerationButton.next().hasClass("download-rom")) {
       $queueGenerationButton.next().remove()

@@ -346,6 +346,11 @@ class LevelRandomizer:
 
     mesh = level_script.level_geometry.area_geometries[object3d.area_id]
 
+    # Hardcoded fix for THI red coins spawning in wiggler
+    if level_script.level == Constants.LVL_THI and object3d.area_id == 0x03:
+      if position[1] > 1740:
+        return False
+
     # if its a level with a wingcap available
     if level in WINGCAP_LEVELS:
       if position[1] > mesh.bounds[1][1] - 300:
@@ -454,5 +459,5 @@ class LevelRandomizer:
         else:
           obj.set(self.rom, 'position', tuple([int(p) for p in list(valid_pos)]))
           reasons_formated = ', '.join([f'{k}: {v}' for [k, v] in self.reject_reason_counts.items()])
-          print_progress_bar(total - len(shufflable_objects), total, f'Placing Objects', f'{level.name}: ({total - len(shufflable_objects)} placed, {rejects} rejected)')
+          #print_progress_bar(total - len(shufflable_objects), total, f'Placing Objects', f'{level.name}: ({total - len(shufflable_objects)} placed, {rejects} rejected)')
           #print(self.reject_reason_counts)
