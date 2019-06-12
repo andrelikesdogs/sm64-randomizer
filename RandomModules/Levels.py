@@ -178,6 +178,10 @@ class LevelRandomizer:
     if obj.source == "MARIO_SPAWN":
       return True
     else:
+      # Hardcoded Static Wing-Cap Box for Wingcap Level
+      if obj.level == Constants.LVL_WING_CAP and obj.behaviour == 0x13002250:
+        return False
+      
       for (target_bscript_address, target_model_id) in WHITELIST_SHUFFLING:
         if (target_model_id is None or target_model_id == obj.model_id) and (target_bscript_address is None or target_bscript_address == obj.behaviour):
           return True
@@ -364,12 +368,18 @@ class LevelRandomizer:
 
     # if its a level with a wingcap available
     if level in WINGCAP_LEVELS:
-      if position[1] > mesh.bounds[1][1] - 300:
-        # make sure it's below the highest point of the level or it's unobtainable
-        return False
-      if position[1] < mesh.bounds[0][1] + 1000:
-        # make sure it's not touching the death floor
-        return False
+      if level == Constants.LVL_WING_CAP:
+        if position[1] > -300:
+          return False
+        if position[1] < -3000:
+          return False
+      else:
+        if position[1] > mesh.bounds[1][1] - 2000:
+          # make sure it's below the highest point of the level or it's unobtainable
+          return False
+        if position[1] < mesh.bounds[0][1] + 1000:
+          # make sure it's not touching the death floor
+          return False
     else:
       if result is False:
         #print("no floor underneath")
