@@ -6,9 +6,13 @@ import sys
 
 application_path = None
 if getattr(sys, 'frozen', False):
-    application_path = os.path.abspath(os.path.join(sys.executable, os.pardir))
+  print("frozen")
+  print("exec: ", sys.executable)
+  print("argv:", sys.argv[0])
+  application_path = os.path.realpath(os.path.dirname(sys.executable))
 else:
-    application_path = os.path.dirname(os.path.abspath(__file__))
+  print("unfrozen")
+  application_path = os.path.dirname(os.path.abspath(__file__))
 
 LVL_MAIN=Level(0x108A10,	0x108A40, None, "Main Entry")
 LVL_GAME_OVER=Level(0x269EA0, 0x26A3A0, None, "Game Over")

@@ -24,10 +24,10 @@ from RandomModules.Text import TextRandomizer
 from RandomModules.Stardoors import StardoorRandomizer
 from Enhancements.GameplayEnhancements import Gameplay
 
-from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE
+from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE, application_path
 
 randomizer_params = []
-with open(os.path.join("Data", "configurableParams.json"), "r") as json_params_file:
+with open(os.path.join(application_path, "Data", "configurableParams.json"), "r") as json_params_file:
   randomizer_params = json.loads(json_params_file.read())
 
 parser = argparse.ArgumentParser()
