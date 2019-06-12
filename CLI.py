@@ -5,7 +5,7 @@ import time
 import traceback
 import json
 from pathlib import Path
-from random import seed
+from random import seed, randint
 from typing import List
 
 from __version__ import __version__
@@ -24,10 +24,10 @@ from RandomModules.Text import TextRandomizer
 from RandomModules.Stardoors import StardoorRandomizer
 from Enhancements.GameplayEnhancements import Gameplay
 
-from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE
+from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE, application_path
 
 randomizer_params = []
-with open(os.path.join("Data", "configurableParams.json"), "r") as json_params_file:
+with open(os.path.join(application_path, "Data", "configurableParams.json"), "r") as json_params_file:
   randomizer_params = json.loads(json_params_file.read())
 
 parser = argparse.ArgumentParser()
@@ -75,6 +75,12 @@ def generate_output_path(rom_in : Path):
   return 
 
 def run_with_parsed_args(opt_args : argparse.Namespace):
+  if not opt_args.seed:
+    opt_args.seed = randint(1e10, 10e10)
+  else:
+    if len(str(opt_args.seed)) < 10:
+      opt_args.seed = str(opt_args.seed).rjust(10, '0')
+    opt_args.seed = sum([(ord(x) * 1337) for x in str(opt_args.seed)])
   seed(opt_args.seed)
 
   rom_path = Path(opt_args.rom)

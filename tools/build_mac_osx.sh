@@ -1,18 +1,7 @@
 rm -rf dist/main
-bin/pyinstaller \
---noconfirm \
---onefile \
---windowed \
---noconsole \
---osx-bundle-identifier "com.andremeyer.sm64-randomizer" \
---add-data="README.md:." \
---add-data="LICENSE:." \
---add-data="Data:." \
---i "favicon.icns" \
-main.py
+bin/pyinstaller main-osx.spec
 
-mv dist/main.app dist/SM64\ Randomizer.app
-mv dist/main dist/SM64\ Randomizer\ CLI
+mv dist/main dist/SM64\ Randomizer\ Generator
 
 # prepare release folder
 mkdir -p ./release

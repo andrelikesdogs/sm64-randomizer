@@ -288,16 +288,24 @@ class GuiApplication:
     master = self.frames[field['category']]
     optionFrame = Frame(master)
     key = field['name']
+    input_state = 'normal'
+
+    if 'disabled' in field:
+      input_state = 'disabled'
+      field['help'] = "Currently not available. Coming soon!"
+
 
     if field['type'] == 'checkbox':
       self.selections[key] = BooleanVar(optionFrame)
       checkboxField = ttk.Checkbutton(optionFrame, text=field['label'], variable=self.selections[key])
+      checkboxField.configure(state=input_state)
       if 'help' in field:
         CreateToolTip(checkboxField, field['help'])
       
       checkboxField.pack(side=LEFT)
     elif field['type'] == 'select':
       optionLabel = ttk.Label(optionFrame, text=field['label'])
+      optionLabel.configure(state=input_state)
       optionLabel.pack(side=LEFT)
       if 'help' in field:
         CreateToolTip(optionLabel, field['help'])
@@ -316,6 +324,7 @@ class GuiApplication:
         *[option['label'] for option in field['options']],
         command=lambda *args, sel_key=key, choices=choice_dict: self.selections[sel_key].set(choices[self.combobox_selections[sel_key].get()])
       )
+      optionsField.configure(state=input_state)
       self.selections[key].trace('w', lambda *args, sel_key=key, choices=choice_dict_invert: self.combobox_selections[sel_key].set(choice_dict_invert[self.selections[sel_key].get()]))
       
       optionsField.pack(side=LEFT, fill=X, expand=True)

@@ -1,4 +1,5 @@
 import Constants
+from Parsers.CollisionPresets import CollisionPresetParser
 
 CASTLE_DOORS_TO_REPLACE = [
   (0x22, 0x13000B0C), # 0 Star Door
@@ -76,23 +77,41 @@ class StardoorRandomizer:
     self.rom = rom
 
   def replace_all_doors(self):
-    return
-    
     # Replace all castle doors with 0x24 doors, in order to be able to change bparams
+    # Delete all doors in castle and keep track of properties
     castle_levelscript = self.rom.levelscripts[Constants.LVL_CASTLE_INSIDE]
 
     needs_replacing = []
     for object3d in castle_levelscript.objects:
-      if object3d.source == 'MACRO_OBJ':
-        object3d.remove(self.rom)
-      
-      #print(object3d.source, hex(object3d.model_id), object3d.behaviour_name)
       for (target_model_id, target_behaviour_script) in CASTLE_DOORS_TO_REPLACE:
         if (target_model_id is None or object3d.model_id == target_model_id) and (target_behaviour_script is None or object3d.behaviour == target_behaviour_script):
+          object3d.remove(self.rom)
           needs_replacing.append(object3d)
 
+    # Add new macro preset for door
+    preset_parser = CollisionPresetParser.get_instance(self.rom)
+    preset_parser.overwrite_macro_entry(0x47, 0x22, 0x13000B0C, 0, 0)
     
-    print(list(map(lambda x: (hex(x.mem_address + 0x109), hex(x.mem_address)), needs_replacing)))
+    # 0x47 will be the new default door
+    
+    # Add new macro entries to Castle Inside
+    #           ROM Address  Hex Address
+    #  Area 1   15217259     0xE8326B     
+    #  Area 2   15217383     0xE832E7
+    #  Area 3   15217395     0xE832F3
+
+    # JRB Door
+    #castle_levelscript.add_macro_object(0xE8326B, 0x47, 225, 1075, 205, -229, 10, 0)
+    castle_levelscript.add_macro_object(0xE8326B, 0x47, 0, -1050, -50, 750, 10, 0)
+    castle_levelscript.add_macro_object(0xE8326B, 0x47, 90, -950, -50, 750, 10, 0)
+    castle_levelscript.add_macro_object(0xE8326B, 0x47, 180, -1050, -50, 700, 10, 0)
+    castle_levelscript.add_macro_object(0xE8326B, 0x47, 270, -950, -50, 700, 10, 0)
+
+    area_1_macro_table = castle_levelscript.macro_tables[0xE8326B]
+    area_2_macro_table = castle_levelscript.macro_tables[0xE832E7]
+    area_3_macro_table = castle_levelscript.macro_tables[0xE832F3]
+
+
 
     pass
 

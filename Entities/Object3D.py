@@ -4,6 +4,7 @@ from Constants import BEHAVIOUR_NAMES
 class Object3D(BaseMemoryRecord):
   source: str # SPECIAL_MACRO_OBJ, PLACE_OBJ, MACRO_OBJ, MARIO_SPAWN
   model_id: str
+  current_area: int
   level: "Level" = None
   position: tuple = (0, 0, 0) # (X, Y, Z)
   rotation: tuple = (0, 0, 0) # (X, Y, Z)
@@ -31,12 +32,15 @@ class Object3D(BaseMemoryRecord):
       rom.write_byte(self.mem_address + 1, bytes([0x00])) # Set Model-ID to 0
     if self.source == 'MACRO_OBJ':
       rom.levelscripts[self.level].remove_macro_object(self)
+    if self.source == 'SPECIAL_MACRO_OBJ':
+      rom.levelscripts[self.level].remove_special_macro_object(self)
 
 
-  def __init__(self, source, model_id, position, level, rotation = None, behaviour = None, bparams = [], mem_address = None):
+  def __init__(self, source, area_id, model_id, position, level, rotation = None, behaviour = None, bparams = [], mem_address = None):
     super().__init__()
 
     self.source = source
+    self.area_id = area_id
     self.model_id = model_id
     self.position = position
     self.level = level
@@ -60,4 +64,5 @@ class Object3D(BaseMemoryRecord):
     #print(self)
   
   def __str__(self):
-    return f'Object3D: Source: {self.source}, Model-ID: {self.model_id}, position: {repr(self.position)}, rotation: {repr(self.rotation)}, bparams: {repr(self.bparams)}, bscript: {hex(self.behaviour or 0)}, mem_pos: {hex(self.mem_address)}'
+    return self.generate_name() + '\n' + f'Source: {self.source}, In-Area: {self.area_id}, Model-ID: {self.model_id}, position: {repr(self.position)}, rotation: {repr(self.rotation)}, bparams: {repr(self.bparams)}, bscript: {hex(self.behaviour or 0)}, mem_pos: {hex(self.mem_address)}'
+    #return f'Object3D: Source: {self.source}, Model-ID: {self.model_id}, position: {repr(self.position)}, rotation: {repr(self.rotation)}, bparams: {repr(self.bparams)}, bscript: {hex(self.behaviour or 0)}, mem_pos: {hex(self.mem_address)}'

@@ -4,11 +4,13 @@ import os
 from platform import system, architecture
 import subprocess
 import time
+import trimesh
 
 from randoutils import pretty_print_table, generate_debug_materials, generate_obj_for_level_geometry
 from Parsers.Level import Level
 from Parsers.LevelScript import LevelScriptParser
-from Constants import ALL_LEVELS
+from Constants import ALL_LEVELS, application_path
+import Constants
 
 class ROM:
   def __init__(self, path, out_path):
@@ -41,11 +43,11 @@ class ROM:
       try:
         operating_sys = system()
         if operating_sys == 'Darwin':
-          subprocess.check_call(['./3rdparty/n64cksum_mac_x64', str(self.out_path)])
+          subprocess.check_call([os.path.join(application_path, '3rdparty/n64cksum_mac_x64'), str(self.out_path)])
         elif operating_sys == 'Windows':
-          subprocess.check_call(['3rdparty/n64cksum_win_x86', str(self.out_path)])
+          subprocess.check_call([os.path.join(application_path, '3rdparty/n64cksum_win_x86'), str(self.out_path)])
         elif operating_sys == 'Linux':
-          subprocess.check_call(['./3rdparty/n64cksum_ubuntu_x64', str(self.out_path)])
+          subprocess.check_call([os.path.join(application_path, '3rdparty/n64cksum_ubuntu_x64'), str(self.out_path)])
         else:
           raise Exception(f"No n64checksum binary for this operating system: {operating_sys}")
         print("Success!")
@@ -108,11 +110,11 @@ class ROM:
     #bits = arch[0]
     args = ['-s', '24', str(path), ext_path]
     if operating_sys == 'Darwin':
-      subprocess.check_call(['./3rdparty/sm64extend_mac_x64', *args])
+      subprocess.check_call([os.path.join(application_path, '3rdparty/sm64extend_mac_x64'), *args])
     elif operating_sys == 'Linux':
-      subprocess.check_call(['./3rdparty/sm64extend_ubuntu_x64', *args])
+      subprocess.check_call([os.path.join(application_path, '3rdparty/sm64extend_ubuntu_x64'), *args])
     elif operating_sys == 'Windows':
-      subprocess.check_call(['3rdparty/sm64extend_win_x86.exe', *args])
+      subprocess.check_call([os.path.join(application_path, '3rdparty/sm64extend_win_x86.exe'), *args])
     else:
       raise Exception("Sorry, no sm64extend is available for your OS. Please raise an issue on our github, and we'll try to add it!")
     
@@ -123,6 +125,17 @@ class ROM:
 
   def read_levels(self):
     for level in ALL_LEVELS:
+      self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
+      self.levelscripts[level].level_geometry.process()
+
+      if 'SM64R_DEBUG' in os.environ:
+        if os.environ['SM64R_DEBUG'] == 'EXPORT':
+          for (area_id, mesh) in self.levelscripts[level].level_geometry.area_geometries.items():
+            with open(os.path.join("dumps", "level_geometry", f"{level.name}_{hex(area_id)}.stl"), "wb+") as obj_output:
+              mesh.export(obj_output, 'stl')
+        if os.environ['SM64R_DEBUG'] == 'PLOT':
+          self.levelscripts[level].level_geometry.plot()
+      
       if 'DEBUG' in os.environ:
         if not os.path.exists(os.path.join("dumps", "level_scripts")):
           os.makedirs(os.path.join("dumps", "level_scripts"))
@@ -134,7 +147,6 @@ class ROM:
           os.makedirs(os.path.join("dumps", "level_geometry"))
         
         with open(os.path.join("dumps", "level_scripts", f"{level.name}.txt"), "w+") as dump_target:
-          self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
           dump_target.write(self.levelscripts[level].dump())
           #print(f'{level.name} has {len(self.level_scripts[level].objects)} objects')
 
@@ -147,15 +159,7 @@ class ROM:
 
         with open(os.path.join("dumps", "level_geometry", "debug.mtl"), "w+") as mtl_debug:
           mtl_debug.write(generate_debug_materials())
-          
-        with open(os.path.join("dumps", "level_geometry", f"{level.name}.obj"), "w+") as obj_output:
-          pass
-          #data = generate_obj_for_level_geometry(self.levelscripts[level].level_geometry)
-          #obj_output.write(data)
         
-      else:
-        self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
-
   def print_info(self):
     pretty_print_table("ROM Properties", {
       'Loaded ROM': self.file.name,

@@ -15,21 +15,16 @@ $(document).ready(() => {
     }
   }
   const $fields = []
-  configurableParams.unshift({
-    name: 'seed',
-    label: "Enter a Seed",
-    help: "Enter the same seed as your friend, so you two will receive the same version!",
-    default: Math.round(Math.random() * 1e10).toString(),
-    category: 'gameplay',
-    type: 'text'
-  })
-
   $.each(configurableParams, (_, field) => {
     const fieldName = field.name
     const categoryName = field.category
     $targetCategory = $(`#category-${categoryName}`)
     if (!$targetCategory.length) {
       throw new Error(`Category does not exist: ${categoryName}`)
+    }
+
+    if (fieldName == 'seed') {
+      field.default = Math.round(1e8 + Math.random() * 1e12).toString()
     }
     
     $field = $('<div />')
@@ -38,7 +33,6 @@ $(document).ready(() => {
 
     const isDisabled = field.disabled != null
     if (isDisabled) {
-      console.log(field, 'disabled')
       $field.addClass('disabled')
 
       if (field.disabled !== true) {
@@ -76,7 +70,7 @@ $(document).ready(() => {
       if (field.default.WEB != null) {
         fieldDefault = field.default.WEB
       }
-    } else if (field.default.length > 0) {
+    } else if (field.default && field.default.length > 0) {
       fieldDefault = field.default
     }
 
@@ -167,10 +161,10 @@ $(document).ready(() => {
     } else if (endian_bytes.toString() == [0x40, 0x12].toString()) {
       endianess = 'little'
     } else {
-      console.log(endian_bytes.toString())
+      //console.log(endian_bytes.toString())
       throw new Error('Sorry, that doesn\'t seem like a ROM (Invalid byte-order bytes)')
     }
-    console.log(header.slice(0x18, 0x3B))
+    //console.log(header.slice(0x18, 0x3B))
     
     internalName = String.fromCharCode.apply(null, new Uint8Array(header.slice(0x18, 0x3B)))
 
@@ -241,6 +235,7 @@ $(document).ready(() => {
 
   let tracking_active = false
   let tracking_interval = null
+  let used_seed = null
   const activateTrackingMode = (upload_ticket) => {
     if (!tracking_active) {
       tracking_active = true
@@ -259,7 +254,7 @@ $(document).ready(() => {
               $downloadLink.attr("href", BASE_URL + '/download/' + upload_ticket)
               const fileNameParts = fileNameSelected.split('.')
               const fileExt = fileNameParts[fileNameParts.length - 1]
-              $downloadLink.attr("download", 'Super Mario 64 Randomizer ROM' + fileExt)
+              $downloadLink.attr("download", 'SM64Randomizer (Seed "' + used_seed + '").' + fileExt)
               $downloadLink.text("Download your ROM!")
 
               if ($queueGenerationButton.next().hasClass("download-rom")) {
@@ -385,6 +380,8 @@ $(document).ready(() => {
     formDataBlob.delete("fake-upload")
     formDataBlob.set("input_rom", dataBlob, "input_rom.zip")
 
+    used_seed = formDataBlob.get("seed")
+
     if ($queueGenerationButton.next().hasClass("download-rom")) {
       $queueGenerationButton.next().remove()
     }
@@ -435,7 +432,7 @@ $(document).ready(() => {
         const xhr = new window.XMLHttpRequest();
         xhr.upload.addEventListener("progress", (evt) => {
           var percentComplete = evt.loaded / evt.total;
-          console.log(percentComplete)
+          //console.log(percentComplete)
           $queueGenerationButton.children('.progress').css('width', (percentComplete * 100)+'%')
         })
 
