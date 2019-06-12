@@ -50,7 +50,7 @@ WHITELIST_SHUFFLING = [
   (0x13005440, 0x58), # Clam in JRB
   (0x13004634, None), # Pokey
   (0x13004668, 0x55), # Pokeys Head
-  (0x130030A4, None), # Blue Coin
+  (0x13002588, None), # Blue Coin
   (None, 0x7C), # Sign
   (0x13003EAC, 0xD7),
   (None, 0x74), # Coin Type 1
@@ -100,10 +100,12 @@ WHITELIST_SHUFFLING = [
 
 # Allowed variance in object height, for example to have a star be slightly above ground
 ITEM_HEIGHT_VARIANCE = {
-  (None, 0x89): [10, 200], # Star
-  (None, 0x7A): [10, 200], # Star
-  (0x13002250, None): [100, 300], # Item Block
-  (0x13004348, None): [10, 200], # Red Coin
+  (None, 0x89): [200, 500], # Star
+  (None, 0x7A): [200, 500], # Star
+  (0x13002250, None): [100, 500], # Item Block
+  (0x13004348, None): [100, 200], # Red Coin
+  (0x130009A4, None): [100, 200], # Single Coin
+  (0x13002588, None): [100, 200], # Blue Coin
 }
 
 # Items that can not be placed in water, or they won't work anymore. i.e. Item-Boxes underwater are not breakable
