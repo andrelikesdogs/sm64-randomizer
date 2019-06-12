@@ -10,6 +10,7 @@ from randoutils import pretty_print_table, generate_debug_materials, generate_ob
 from Parsers.Level import Level
 from Parsers.LevelScript import LevelScriptParser
 from Constants import ALL_LEVELS
+import Constants
 
 class ROM:
   def __init__(self, path, out_path):

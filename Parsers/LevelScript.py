@@ -4,6 +4,7 @@ from Entities.Object3D import Object3D
 from Entities.Warp import Warp
 from Entities.LevelGeometry import LevelGeometry
 from Constants import LVL_MAIN
+import Constants
 import sys
 
 from randoutils import format_binary
@@ -659,11 +660,11 @@ class LevelScriptParser:
         for water_box_index in range(amount):
           water_box_id = self.rom.read_integer(cursor, 2)
           water_box_bytes = self.rom.read_bytes(cursor, 12)
-          water_box_start_x = self.rom.read_integer(cursor + 2, 2)
-          water_box_start_z = self.rom.read_integer(cursor + 4, 2)
+          water_box_start_x = self.rom.read_integer(cursor + 2, 2, True)
+          water_box_start_z = self.rom.read_integer(cursor + 4, 2, True)
 
-          water_box_end_x = self.rom.read_integer(cursor + 6, 2)
-          water_box_end_z = self.rom.read_integer(cursor + 8, 2)
+          water_box_end_x = self.rom.read_integer(cursor + 6, 2, True)
+          water_box_end_z = self.rom.read_integer(cursor + 8, 2, True)
           
           water_box_y = self.rom.read_integer(cursor + 10, 2)
           water_box_type = "NO_EFFECT"
