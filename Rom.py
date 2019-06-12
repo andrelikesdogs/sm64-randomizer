@@ -9,7 +9,7 @@ import trimesh
 from randoutils import pretty_print_table, generate_debug_materials, generate_obj_for_level_geometry
 from Parsers.Level import Level
 from Parsers.LevelScript import LevelScriptParser
-from Constants import ALL_LEVELS
+from Constants import ALL_LEVELS, application_path
 import Constants
 
 class ROM:
@@ -43,11 +43,11 @@ class ROM:
       try:
         operating_sys = system()
         if operating_sys == 'Darwin':
-          subprocess.check_call(['./3rdparty/n64cksum_mac_x64', str(self.out_path)])
+          subprocess.check_call([os.path.join(application_path, '3rdparty/n64cksum_mac_x64'), str(self.out_path)])
         elif operating_sys == 'Windows':
-          subprocess.check_call(['3rdparty/n64cksum_win_x86', str(self.out_path)])
+          subprocess.check_call([os.path.join(application_path, '3rdparty/n64cksum_win_x86'), str(self.out_path)])
         elif operating_sys == 'Linux':
-          subprocess.check_call(['./3rdparty/n64cksum_ubuntu_x64', str(self.out_path)])
+          subprocess.check_call([os.path.join(application_path, '3rdparty/n64cksum_ubuntu_x64'), str(self.out_path)])
         else:
           raise Exception(f"No n64checksum binary for this operating system: {operating_sys}")
         print("Success!")
@@ -110,11 +110,11 @@ class ROM:
     #bits = arch[0]
     args = ['-s', '24', str(path), ext_path]
     if operating_sys == 'Darwin':
-      subprocess.check_call(['./3rdparty/sm64extend_mac_x64', *args])
+      subprocess.check_call([os.path.join(application_path, '3rdparty/sm64extend_mac_x64'), *args])
     elif operating_sys == 'Linux':
-      subprocess.check_call(['./3rdparty/sm64extend_ubuntu_x64', *args])
+      subprocess.check_call([os.path.join(application_path, '3rdparty/sm64extend_ubuntu_x64'), *args])
     elif operating_sys == 'Windows':
-      subprocess.check_call(['3rdparty/sm64extend_win_x86.exe', *args])
+      subprocess.check_call([os.path.join(application_path, '3rdparty/sm64extend_win_x86.exe'), *args])
     else:
       raise Exception("Sorry, no sm64extend is available for your OS. Please raise an issue on our github, and we'll try to add it!")
     

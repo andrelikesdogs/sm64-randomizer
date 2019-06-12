@@ -1,8 +1,7 @@
 rm -rf dist/main
-bin/pyinstaller main.spec
+bin/pyinstaller main-osx.spec
 
-mv dist/main.app dist/SM64\ Randomizer.app
-mv dist/main dist/SM64\ Randomizer\ CLI
+mv dist/main dist/SM64\ Randomizer\ Generator
 
 # prepare release folder
 mkdir -p ./release

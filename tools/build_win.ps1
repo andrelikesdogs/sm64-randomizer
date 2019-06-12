@@ -19,10 +19,8 @@ $env:Path += ";$home\AppData\Local\Programs\Python\Python37-32\Scripts"
 pip install -r .\requirements.txt
 Remove-Item ./dist/ -Recurse -ErrorAction SilentlyContinue
 Remove-Item ./release/*.exe
-pyinstaller --noconfirm --onefile --add-data="README.md;." --add-data="LICENSE;." --add-data="Data;." -i "./web/favicon.ico" main.py
-mv "dist/main.exe" "dist/SM64 Randomizer CLI.exe"
-pyinstaller --noconfirm --noconsole --onefile --add-data="README.md;." --add-data="LICENSE;." --add-data="Data;." --add-data="3rdparty/LICENSE;3rdparty/." --add-data="3rdparty/README.md;3rdparty/." -i "web/favicon.ico" main.py
-mv "dist/main.exe" "dist/SM64 Randomizer GUI.exe"
+pyinstaller main-win.spec
+mv "dist/main.exe" "dist/SM64 Randomizer Generator.exe"
 
 mkdir ./dist/3rdparty -ErrorAction SilentlyContinue
 mkdir ./dist/Data -ErrorAction SilentlyContinue
@@ -48,10 +46,8 @@ $env:Path += ";$home\AppData\Local\Programs\Python\Python37\Scripts"
 pip install -r .\requirements.txt
 Remove-Item ./dist/ -Recurse
 Remove-Item ./release/*.exe
-pyinstaller --noconfirm --onefile --add-data="README.md;." --add-data="LICENSE;." --add-data="Data;." -i "web/favicon.ico" main.py
-mv "dist/main.exe" "dist/SM64 Randomizer CLI.exe"
-pyinstaller --noconfirm --noconsole --onefile --add-data="README.md;." --add-data="LICENSE;." --add-data="Data;." --add-data="3rdparty/LICENSE;3rdparty/." --add-data="3rdparty/README.md;3rdparty/." -i "web/favicon.ico" main.py
-mv "dist/main.exe" "dist/SM64 Randomizer GUI.exe"
+pyinstaller main-win.spec
+mv "dist/main.exe" "dist/SM64 Randomizer Generator.exe"
 
 mkdir ./dist/3rdparty -ErrorAction SilentlyContinue
 mkdir ./dist/Data -ErrorAction SilentlyContinue
