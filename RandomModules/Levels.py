@@ -65,9 +65,10 @@ WHITELIST_SHUFFLING = [
   (0x130031DC, 0xC3), # Bob-Omb Buddy (With Message)
   (0x13003228, None), # Bob-Omb Buddy (Opening Canon)
   (0x1300478C, 0x66),
-  #(None, 0xDF), # Chuckya
+  (0x13000528, 0xDF), # Chuckya
   (0x13000054, None), # Eye-Ball
   (0x13001108, None), # Flamethrower
+  (0x1300518C, None), # Flamethrower
   (0x130046DC, 0xDC), # Fly-Guy
   (None, 0x89), # Item-Box
   (0x13004698, None), # Bat
@@ -87,6 +88,9 @@ WHITELIST_SHUFFLING = [
   (0x13003E3C, 0x7A), # Star
   #(0x13001B70, 0x00), # Checkerboard Elevator (Logic: DON'T TOUCH FOR VANISH CAP LEVEL)
   (0x13002F74, 0x00), # Mario Start 1
+  (0x13003354, None), # Amp
+  (0x13003388, None), # Amp 2
+  (0x130033BC, None), # Butterflies
   (0x1300442C, None), # TTC: Pendulum
   (0x130054B8, None), # TTC: Pendulum
   (0x13004FD4, None), # BBH: Haunted Chair
@@ -201,20 +205,11 @@ class LevelRandomizer:
 
     for water_box in applicable_waterboxes:
       if water_box["type"] != "WATER":
-        #print("waterbox is not water, all good")
-        return False
-
-      if position[0] < water_box["start"][0] or position[0] > water_box["end"][0]:
-        #print("x is outside waterbox x, all good")
-        return False
-      if position[1] < water_box["start"][1] or position[1] > water_box["end"][1]:
-        #print("y is outside waterbox y, all good")
-        return False
-      if position[2] < water_box["start"][2] or position[2] > water_box["end"][2]:
-        #print("item is higher than waterbox")
-        return False
-
-    return True
+        continue
+      #print("checking waterbox")
+      if position[0] > water_box["start"][0] and position[0] < water_box["end"][0] and position[1] > water_box["start"][1] and position[1] < water_box["end"][1] and position[2] > water_box["start"][2] and position[2] < water_box["end"][2]:
+        return True
+    return False
 
   def get_floor_pos(self, level_script, area, position):
     mesh = level_script.level_geometry.area_geometries[area]
@@ -273,7 +268,6 @@ class LevelRandomizer:
 
     # debug stuff
     if "SM64R_DEBUG" in os.environ and os.environ["SM64R_DEBUG"] == 'VIEWER' and level_script.level == Constants.LVL_TTC:
-      print("is valid?", valid_position)
       debug_tri_indices, debug_ray_indices, debug_locations = mesh.ray.intersects_id(ray_origins=[position, position, position, position], ray_directions=[*WALL_CHECK_DIRECTIONS], multiple_hits=False, return_locations=True)
       if len(debug_locations) > 0:
         print(level_script.level.name)
@@ -336,20 +330,37 @@ class LevelRandomizer:
     result = self.get_floor_pos(level_script, object3d.area_id, position)
 
     is_in_water = self.is_in_water_box(object3d.area_id, level_script.water_boxes, position)
+
+    can_be_in_water = self.can_be_in_water(object3d)
+
+    ### Begin Level Fixes ###
+    # Hardcoded fix for THI red coins spawning in wiggler
+    if level_script.level == Constants.LVL_THI and object3d.area_id == 0x03:
+      if position[1] > 1740:
+        return False
+
+    # Hardcoded fix for JRB Item-Box in Ship
+    if level_script.level == Constants.LVL_JRB and object3d.area_id == 0x02:
+      is_in_water = False
+      can_be_in_water = True
+
+    # Hardcoded fix for WDW Item-Box
+    if level_script.level == Constants.LVL_WDW:
+      is_in_water = False
+      can_be_in_water = True
+
+    ### End Level Fixes ###
+
     # Is this object in waterbox?
     if is_in_water:
       # can this object be inside a waterbox?
-      if not self.can_be_in_water(object3d):
+      if not can_be_in_water:
+        #print(f'{object3d.behaviour_name} cant be in water')
         #print("is in water; invalid")
         self.reject_reason_counts["cant_be_in_water"] += 1
         return False
 
     mesh = level_script.level_geometry.area_geometries[object3d.area_id]
-
-    # Hardcoded fix for THI red coins spawning in wiggler
-    if level_script.level == Constants.LVL_THI and object3d.area_id == 0x03:
-      if position[1] > 1740:
-        return False
 
     # if its a level with a wingcap available
     if level in WINGCAP_LEVELS:
@@ -372,7 +383,7 @@ class LevelRandomizer:
         position = floor_check_position
 
         is_dropped_in_water = self.is_in_water_box(object3d.area_id, level_script.water_boxes, position)
-        if is_dropped_in_water:
+        if is_dropped_in_water and not can_be_in_water:
           #self.reject_reason_counts["cant_be_in_water"] += 1
           return False
 
@@ -459,5 +470,6 @@ class LevelRandomizer:
         else:
           obj.set(self.rom, 'position', tuple([int(p) for p in list(valid_pos)]))
           reasons_formated = ', '.join([f'{k}: {v}' for [k, v] in self.reject_reason_counts.items()])
-          #print_progress_bar(total - len(shufflable_objects), total, f'Placing Objects', f'{level.name}: ({total - len(shufflable_objects)} placed, {rejects} rejected)')
+          if "SM64R_DEBUG" in os.environ and "PRINT" in os.environ["SM64R_DEBUG"].split(','):
+            print_progress_bar(total - len(shufflable_objects), total, f'Placing Objects', f'{level.name}: ({total - len(shufflable_objects)} placed, {rejects} rejected)')
           #print(self.reject_reason_counts)

@@ -666,7 +666,7 @@ class LevelScriptParser:
           water_box_end_x = self.rom.read_integer(cursor + 6, 2, True)
           water_box_end_z = self.rom.read_integer(cursor + 8, 2, True)
           
-          water_box_y = self.rom.read_integer(cursor + 10, 2)
+          water_box_y = self.rom.read_integer(cursor + 10, 2, True)
           water_box_type = "NO_EFFECT"
 
           if water_box_id < 0x32:
@@ -676,8 +676,8 @@ class LevelScriptParser:
           
           water_box = dict(
             box_id=water_box_id,
-            start=(water_box_start_x, water_box_y, water_box_start_z),
-            end=(water_box_end_x, -8192.0, water_box_end_z),
+            start=(min(water_box_start_x, water_box_end_x), min(water_box_y, -8192), min(water_box_start_z, water_box_end_z)),
+            end=(max(water_box_start_x, water_box_end_x), max(water_box_y, -8192), max(water_box_start_z, water_box_end_z)),
             type=water_box_type,
             area_id=self.current_area
           )
