@@ -20,6 +20,7 @@ class Object3D(BaseMemoryRecord):
       return f'{behaviour_name} (#{hex(self.behaviour)})'
     
     if self.model_id:
+      print(self.model_id)
       return f'Unknown (Model-ID: #{hex(self.model_id)}'
 
     if self.source == 'MARIO_SPAWN':
@@ -47,11 +48,13 @@ class Object3D(BaseMemoryRecord):
     self.rotation = rotation
     self.behaviour = behaviour
     self.behaviour_name = self.generate_name()
+    self.bparams = bparams
     self.mem_address = mem_address
     
     if mem_address is not None:
       if source == 'PLACE_OBJ':
         self.add_mapping('position', ('int', 'int', 'int'), mem_address + 2, mem_address + 8)
+        self.add_mapping('bparams', ('int', 'int', 'int', 'int'), mem_address + 14, mem_address + 18)
       elif source == source == 'MARIO_SPAWN':
         self.add_mapping('position', ('int', 'int', 'int'), mem_address + 4, mem_address + 10)
       elif source == 'MACRO_OBJ':

@@ -310,7 +310,7 @@ class LevelScriptParser:
     # end with 0x1E preset
     self.rom.write_byte(cursor, bytes([0x00, 0x1E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]))
   
-  def add_macro_object(self, start, preset_id, rot_y, x, y, z, bparam1, bparam2):
+  def add_macro_object(self, start, preset_id, rot_y, x, y, z, bparam1 = 0x0, bparam2 = 0x0):
     if start not in self.macro_tables:
       raise Exception(f"{hex(start)} was not found in macro table entries")
     macro_table = self.macro_tables[start]
@@ -318,19 +318,21 @@ class LevelScriptParser:
     preset_table = CollisionPresetParser.get_instance(self.rom).entries
     preset_data = preset_table[preset_id]
 
-    object3d = Object3D("MACRO_OBJ", preset_data.model_id, (x, y, z), self.level, (0, rot_y, 0))
+    object3d = Object3D("MACRO_OBJ", self.current_area, preset_data.model_id, (x, y, z), self.level, (0, rot_y, 0), preset_data.behaviour_addr, bparams=[bparam1, bparam2])
     x_bytes = x.to_bytes(2, self.rom.endianess, signed=True)
     y_bytes = y.to_bytes(2, self.rom.endianess, signed=True)
     z_bytes = z.to_bytes(2, self.rom.endianess, signed=True)
 
-    rot_clamped = (rot_y << 9) & 0xFE00
-    preset_id_clamped = preset_id & 0x1FF
+  # preset_id = preset_and_rot & 0x1FF # last 9 bit
+  # rot_y = preset_and_rot & 0xFE00 # first 7 bit
+      
+    rot_clamped = (rot_y & 0x7F) << 9
+    preset_id_clamped = (preset_id & 0x01FF)
     preset_and_rot = rot_clamped | preset_id_clamped
     preset_and_rot_bytes = preset_and_rot.to_bytes(2, self.rom.endianess)
 
     macro_row = preset_and_rot_bytes + x_bytes + y_bytes + z_bytes + bytes([bparam1]) + bytes([bparam2])
-    print("new entry for macros")
-    print(macro_row)
+    
     macro_table["entries"].append(
       dict(
         object3d=object3d,
