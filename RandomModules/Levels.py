@@ -50,7 +50,7 @@ WHITELIST_SHUFFLING = [
   (0x13005440, 0x58), # Clam in JRB
   (0x13004634, None), # Pokey
   (0x13004668, 0x55), # Pokeys Head
-  (0x13002588, None), # Blue Coin
+  # (0x13002588, None), # Blue Coin # Invisible coin shuffling is a bad idea
   (None, 0x7C), # Sign
   (0x13003EAC, 0xD7),
   (None, 0x74), # Coin Type 1
