@@ -190,6 +190,7 @@ button.help:hover .tooltip-content {
     cursor: pointer;
     pointer-events: none;
     width: 100%;
+    font-size: 100%;
   }
 }
 
@@ -229,7 +230,7 @@ button.help:hover .tooltip-content {
 }
 
 #queue-generation {
-  min-width: 500px;
+  max-width: 500px;
 }
 
 .progress-button {
