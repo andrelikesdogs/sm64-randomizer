@@ -44,11 +44,11 @@ LVL_METAL_CAP=Level(0x4BE9E0, 0x4BEC30, 0x1C, "Metal Cap") # 20
 LVL_WING_CAP=Level(0x4C2700, 0x4C2920, 0x1D, "Wing Cap") # 21
 
 LVL_BOWSER_1=Level(0x45BF60, 0x45C600, 0x11, "Bowser in the Dark World") # Bowser 1 "BIDW", # 16
-LVL_BOWSER_1_BATTLE=Level(0x4C41C0, 0x4C4320, 0x1E, "Bowser in the Dark World Battle"),
+LVL_BOWSER_1_BATTLE=Level(0x4C41C0, 0x4C4320, 0x1E, "Bowser in the Dark World Battle")
 LVL_BOWSER_2=Level(0x46A840, 0x46B090, 0x13, "Bowser in the Fire Sea") # Bowser 2 "BIFS", # 17
-LVL_BOWSER_2_BATTLE=Level(0x4CE9F0, 0x4CEC00, 0x21, "Bowser in the Fire Sea Battle"),
-LVL_BOWSER_3= Level(0x477D00, 0x4784A0, 0x15, "Bowser in the Sky") # Bowser 3 "BITS", # 18
-LVL_BOWSER_3_BATTLE=Level(0x4D14F0, 0x4D1910, 0x22, "Bowser in the Sky Battle"),
+LVL_BOWSER_2_BATTLE=Level(0x4CE9F0, 0x4CEC00, 0x21, "Bowser in the Fire Sea Battle")
+LVL_BOWSER_3=Level(0x477D00, 0x4784A0, 0x15, "Bowser in the Sky") # Bowser 3 "BITS", # 18
+LVL_BOWSER_3_BATTLE=Level(0x4D14F0, 0x4D1910, 0x22, "Bowser in the Sky Battle")
 
 LVL_SECRET_AQUARIUM=Level(0x46C1A0, 0x46C3A0, 0x14, "Secret Aquarium") # 24
 LVL_SECRET_PEACH_SLIDE=Level(0x4B7F10, 0x4B80D0, 0x1B, "Secret Slide") # 19
@@ -91,8 +91,12 @@ ALL_LEVELS = [
 
   # Bowser Levels
   LVL_BOWSER_1,
+  LVL_BOWSER_1_BATTLE,
   LVL_BOWSER_2, 
+  LVL_BOWSER_2_BATTLE,
   LVL_BOWSER_3,
+  LVL_BOWSER_3_BATTLE,
+
 
   # Secrets
   LVL_SECRET_AQUARIUM,
