@@ -1,6 +1,6 @@
 <p align="center"> 
   <img src="https://i.imgur.com/pf687MH.png" alt="SM64 Randomizer">
-  <a href="https://discordapp.com/invite/NwNZ3qb" target="_blank">
+  <a href="https://discord.gg/2ZYfhcB" target="_blank">
     <p align="center">
       <img src="https://i.imgur.com/0DkN9vW.png" alt="Join our Discord Server" height="64" /><br />
       Join our Discord Server for development updates, discussion and support
@@ -50,7 +50,7 @@ To use this package:
 ```
 python main.py ./Super_Mario_64_(U)_[!].z64 --shuffle-levels --shuffle-mario-color --shuffle-paintings match --seed 123
 ```
-_Note: Works on all versions of the game, as well as **ROM Hacks** (with some tweaking, contact us in Discord for help)_
+_Note: Works on all versions of the game, as well as **ROM Hacks** (with some tweaking, contact us in [Discord](https://discord.gg/2ZYfhcB) for help)_
 
 Output will be a file with the same name, ending in `.out.z64`. Run this on your emulator/console.
 
@@ -103,7 +103,7 @@ optional arguments:
 ```
 
 ## Contributing: Getting Started
-To work on this repository, follow the following steps. Please also definitely join the [discord](https://discordapp.com/invite/NwNZ3qb) for help.
+To work on this repository, follow the following steps. Please also definitely join the [discord](https://discord.gg/2ZYfhcB) for help.
 1. `git clone` this repository
 2. Make sure you somehow have python >3.6 (Mac OSX I suggest `brew install`, Linux I suggest `apt install python3`, windows I suggest the installer)
 3. Create a `venv` via `python3 -m venv .` while inside the folder
@@ -114,5 +114,5 @@ To work on this repository, follow the following steps. Please also definitely j
 - [SimpleFlips](https://www.youtube.com/user/SimpleFlips) Discord-Server for help with SM64 hacking/weirdness (especially Felegg)
 - Durkhaz for the amazing logo
 - CJay for server hosting of the generator
-- Beta Testers and people from the [discord](https://discordapp.com/invite/NwNZ3qb)
+- Beta Testers and people from the [discord](https://discord.gg/2ZYfhcB)
 - [smwcentral](https://www.smwcentral.net/)'s community and forum
