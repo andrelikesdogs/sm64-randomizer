@@ -92,42 +92,66 @@ class StardoorRandomizer:
           object3d.remove(self.rom)
           needs_replacing.append(object3d)
           #object3d.remove(self.rom)
-          
-
-    # Add new macro preset for door
-    preset_parser = CollisionPresetParser.get_instance(self.rom)
-
-    # 0x47 will be the new default door - previously unused
-    preset_parser.overwrite_macro_entry(0x47, 0x22, 0x13000B0C, 0, 0)
     
-    macro_table_area_mapping = {
-      0x1: 0xE8326B,
-      0x2: 0xE832E7,
-      0x3: 0xE832F3,
-    }
+    # In order to inject new objects into a level, we first need to implement an additional "PUSH"
+    # for this we have to find a spot. We will be removing the first entry for 0x24 for each area,
+    # replacing it with a push that will contain the removed objects, as well as many more that 
+    # will be added by the randomizer.
 
+    """
+    first_objs_in_area = {}
+
+    for object3d in castle_levelscript.objects:
+      if object3d.source == "PLACE_OBJ" and object3d.area_id not in first_objs_in_area:
+        first_objs_in_area[object3d.area_id] = object3d
+
+    SEGMENT_ID = 19
+    SEGMENT_SIZE = 2048
+
+    level_script_pos = 0x01900030
+    level_script_length = 0
+
+    created_segments = []
+    segment_offset = 0
+
+    for area_id, first_obj in first_objs_in_area.items():
+      new_segment_start = (SEGMENT_ID << 24) | (segment_offset * SEGMENT_SIZE)
+      created_segments.append(new_segment_start)
+      print(first_obj.mem_address)
+
+      # write objects in new position
+      self.rom.write_bytes(level_script_pos, prev_object_bytes)
+      level_script_length += len(prev_object_bytes)
+
+      self.rom.write_bytes(level_script_pos + 18, bytes([0x07, 0x04, 0x00, 0x00])) # POP
+      level_script_length += 0x04
+
+      # replace our target object with 0x06
+      prev_object_bytes = self.rom.read_bytes(first_obj.mem_address - 2, 18)
+
+      jump_cmd = bytes([0x06, 0x08, 0x00, 0x00, *new_segment_start.to_bytes(4, self.rom.endianess)])
+      load_cmd = bytes([0x17, 0x0C, 0x00, SEGMENT_ID, *level_script_pos.to_bytes(4, self.rom.endianess), *(level_script_pos + level_script_length).to_bytes(4, self.rom.endianess)])
+      self.rom.write_bytes(first_obj.mem_address - 2, jump_cmd + load_cmd)
+      self.rom.write_bytes(new_segment_start, prev_object_bytes)
+
+      segment_offset += 1
+      break
+
+    #### Macro Approach (Doesn't work - no bparams available???)
     for object3d in needs_replacing:
-      if object3d.area_id != 0x3:
-        continue
-
-      # peach slide door is turned wrong way??
-      rot_y = object3d.rotation[1]
-      if object3d.mem_address == 0xe79e3f:
-        pass
-      
-      print(object3d)
-      
       macro_table_address = macro_table_area_mapping[object3d.area_id]
       castle_levelscript.add_macro_object(
         macro_table_address,
         0x47, # new door preset
-        rot_y, # rot y
+        object3d.rotation[1], # rot y
         object3d.position[0], # x
         object3d.position[1], # y
         object3d.position[2], # z
         10, # required stars
+        10,
       )
-    
+      break
+       
     # Add new macro entries to Castle Inside
     #           ROM Address  Hex Address
     #  Area 1   15217259     0xE8326B     
@@ -148,6 +172,7 @@ class StardoorRandomizer:
 
 
     pass
+    """
 
   def open_keydoors(self):
     castle_levelscript = self.rom.levelscripts[Constants.LVL_CASTLE_INSIDE]

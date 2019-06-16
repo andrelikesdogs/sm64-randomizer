@@ -161,11 +161,6 @@ WINGCAP_LEVELS = [
   Constants.LVL_SECRET_RAINBOW
 ]
 
-# Manual level deathfloor checks
-LEVEL_DEATHFLOORS = {
-#  [Constants.LVL_THI, 0x2]: -2000
-}
-
 COMPASS_NAMES = ["N", "E", "S", "W"]
 
 DEATH_PLANE_START = -7000

@@ -162,7 +162,7 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       for (level_area, parsed) in rom.levelscripts.items():
         parsed.level_geometry.plot()
       #rom.levelscripts
-
+      
   SpoilerLog.output()
   print(f'Completed! Your randomized ROM File can be found as "{str(Path(out_path).absolute())}"')
 
