@@ -20,7 +20,6 @@ class Object3D(BaseMemoryRecord):
       return f'{behaviour_name} (#{hex(self.behaviour)})'
     
     if self.model_id:
-      print(self.model_id)
       return f'Unknown (Model-ID: #{hex(self.model_id)}'
 
     if self.source == 'MARIO_SPAWN':
@@ -29,7 +28,7 @@ class Object3D(BaseMemoryRecord):
     return f'Unknown (Source: {self.source})'
 
   def remove(self, rom):
-    
+
     if self.source == 'PLACE_OBJ':
       self.set(rom, 'model_id', 0x0)
       self.set(rom, 'behaviour', 0x0)

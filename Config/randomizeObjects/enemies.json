@@ -1,0 +1,200 @@
+[
+  {
+    "name": "Bob Omb",
+    "match": { "behaviour": "0x13003174" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Goomba",
+    "match": { "behaviour": "0x1300472C" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Goomba Triplet",
+    "match": { "behaviour": "0x13004770" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Thwomp",
+    "match": { "behaviour": "0x13000BC8" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Thwomp",
+    "match": { "behaviour": "0x13000B8C" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Grindel",
+    "match": { "behaviour": "0x1300525C" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Piranha",
+    "match": { "behaviour": "0x13001FBC" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Chuck-ya",
+    "match": { "behaviour": "0x13000528" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Eyeball",
+    "match": { "behaviour": "0x13000054" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Bat",
+    "match": { "behaviour": "0x13004698" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Fly-Guy",
+    "match": { "behaviour": "0x130046DC" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Lakitu",
+    "match": { "behaviour": "0x13004918" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Evil Lakitu",
+    "match": { "behaviour": "0x13004954" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Monty Mole",
+    "match": { "behaviour": "0x13004A00" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Ice Bully (Big)",
+    "match": { "behaviour": "0x13003700", "model_id": "0x65" },
+    "rules": {
+      "UNDERWATER": "NEVER",
+      "MIN_Y": 1300
+    }
+  },
+  {
+    "name": "Bully (Big)",
+    "match": { "behaviour": "0x13003660" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Bully (Group)",
+    "match": { "behaviour": "0x13003694" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Bully (Small)",
+    "match": { "model_id": "0x56" }
+  },
+  {
+    "name": "Boo",
+    "match": { "behaviour": "0x130027E4" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Boo (x3)",
+    "match": { "behaviour": "0x130027D0" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Moneybag",
+    "match": { "behaviour": "0x130039D4" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Amp",
+    "match": { "behaviour": "0x13003354" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Heave-Ho",
+    "match": { "behaviour": "0x13001548" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Skeeter",
+    "match": { "behaviour": "0x13005468" }
+  },
+  {
+    "name": "Scuttlebug",
+    "match": { "behaviour": "0x13002B5C" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Boo (Buddy 3)",
+    "match": { "behaviour": "0x130027E4" }
+  },
+  {
+    "name": "Boo (Buddy 2)",
+    "match": { "behaviour": "0x13002804" }
+  },
+  {
+    "name": "BBH: Haunted Chair",
+    "match": { "behaviour": "0x13004FD4" }
+  },
+  {
+    "name": "BBH: Haunted Book",
+    "match": { "behaviour": "0x1300506C" }
+  },
+  {
+    "name": "BBH: Piano",
+    "match": { "behaviour": "0x13005024" }
+  },
+  {
+    "name": "SSL: Pokey",
+    "match": { "behaviour": "0x13004634" }
+  },
+  {
+    "name": "Spindrift",
+    "match": { "behaviour": "0x130012B4" }
+  }
+]

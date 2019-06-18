@@ -1,0 +1,117 @@
+[
+  {
+    "name": "Coins in Formation",
+    "match": { "behaviour": "0x130008EC" }
+  },
+  {
+    "name": "Coin (Type 1)",
+    "match": { "model_id": "0x74" }
+  },
+  {
+    "name": "Coin (Type 3)",
+    "match": { "model_id": "0x76" }
+  },
+  {
+    "name": "Red Coin",
+    "match": { "behaviour": "0x13003EAC" }
+  },
+  {
+    "name": "Red Coin Star",
+    "match": { "behaviour": "0x13003E8C" },
+    "rules": {
+      "SPAWN_HEIGHT": [50, 200],
+      "MAX_SLOPE": 0.9
+    }
+  },
+  {
+    "name": "Breakable Box (Small.Big)",
+    "match": { "model_id": "0x82" }
+  },
+  {
+    "name": "Breakable Box (Jumping)",
+    "match": { "model_id": "0x81" }
+  },
+  {
+    "name": "Breakable Box (Jumping)",
+    "match": { "model_id": "0x81" }
+  },
+  {
+    "name": "Bouncing Box",
+    "match": { "behaviour": "0x13001650" }
+  },
+  {
+    "name": "Star",
+    "match": { "model_id": "0x7A" },
+    "rules": {
+      "MAX_SLOPE": 0.95
+    }
+  },
+  {
+    "name": "Sign",
+    "match": { "model_id": "0x7C" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "JRB: Clam",
+    "match": { "behaviour": "0x13005440" },
+    "rules": {
+      "UNDERWATER": "ONLY",
+      "DROP_TO_FLOOR": "FORCE"
+    }
+  },
+  {
+    "name": "1-UP",
+    "match": { "model_id": "0xD4" }
+  },
+  {
+    "name": "Butterflies",
+    "match": { "behaviour": "0x130033bc" }
+  },
+  {
+    "name": "Heartcontainer",
+    "match": { "model_id": "0x78" },
+    "rules": {
+      "SPAWN_HEIGHT": [30, 40]
+    }
+  },
+  {
+    "name": "[!] Item-Box",
+    "match": { "model_id": "0x89" }
+  },
+  {
+    "name": "Tree (Outside)",
+    "match": { "behaviour": "0x13002AA4" }
+  },
+  {
+    "name": "Tree (Courses)",
+    "match": { "model_id": "0x17" }
+  },
+  {
+    "name": "Tree (Snowy)",
+    "match": { "model_id": "0x19" }
+  },
+  {
+    "name": "Tree (Courtyard)",
+    "match": { "model_id": "0x18" }
+  },
+  {
+    "name": "Tree (SSL)",
+    "match": { "model_id": "0x1B" }
+  },
+  {
+    "name": "Fire Spewer",
+    "match": { "behaviour": "0x1300518C" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Flamethrower",
+    "match": { "behaviour": "0x13001108" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  }
+]

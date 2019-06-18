@@ -17,7 +17,7 @@ from randoutils import pretty_print_table
 
 from RandomModules.Music import MusicRandomizer
 from RandomModules.Mario import MarioRandomizer
-from RandomModules.Levels import LevelRandomizer
+from RandomModules.Objects import ObjectRandomizer
 from RandomModules.Colors import ColorRandomizer
 from RandomModules.Warps import WarpRandomizer
 from RandomModules.Text import TextRandomizer
@@ -131,9 +131,9 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     if opt_args.shuffle_entries:
       warp_random.shuffle_level_entries(opt_args.shuffle_paintings)
     
-    level_randomizer = LevelRandomizer(rom)
+    object_randomizer = ObjectRandomizer(rom)
     if opt_args.shuffle_objects:
-      level_randomizer.shuffle_objects()
+      object_randomizer.shuffle_objects()
 
     text_randomizer = TextRandomizer(rom)
     if opt_args.shuffle_text:
@@ -162,7 +162,7 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       for (level_area, parsed) in rom.levelscripts.items():
         parsed.level_geometry.plot()
       #rom.levelscripts
-      
+
   SpoilerLog.output()
   print(f'Completed! Your randomized ROM File can be found as "{str(Path(out_path).absolute())}"')
 

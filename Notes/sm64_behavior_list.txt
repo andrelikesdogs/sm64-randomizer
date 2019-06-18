@@ -1,0 +1,536 @@
+Super Mario 64 Full Behavior List
+http://dudaw.webs.com/
+
+NOTE: Any number prefixed with "0x" is in HEXADECIMAL format.
+Incomplete. Revisions needed.
+
+Last updated 12/4/2011.
+_______________________________________________________________________________________________
+
+Segmented Offset | ROM Offset | Default GFX/Model ID | Behavior Description
+---------------------------------------------------------------------------
+0x13000000       | 0x00219E00 |                      | Sliding star door
+0x13000054       | 0x00219E54 | 0                    | Mr. I (grouped object)
+0x1300008C       | 0x00219E8C | 0x66                 | Mr. I pupil
+0x130000AC       | 0x00219EAC | 0xAA                 | Mr. I particle
+0x130000F8       | 0x00219EF8 | 0xAA                 | Piranha Plant particle
+0x13000118       | 0x00219F18 | 0x0D                 | Giant Pole (Whomp's Fortress)
+0x13000144       | 0x00219F44 | 0                    | Pole (scalable by parameter 2)
+0x13000174       | 0x00219F74 | 0x36                 | Disable if behavior 0x13000194 is pounded (Tiny Huge Island huge top)
+0x13000194       | 0x00219F94 | 0x37                 | Explode when pounded, disable behavior 0x13000174 (Tiny Huge Island tiny top)
+0x130001CC       | 0x00219FCC | 0x55                 | Cap Switch (grouped object)
+0x130001F4       | 0x00219FF4 | 0x56                 | King Bob-omb
+0x13000254       | 0x0021A054 | 0                    | Anchor Mario (King Bob-omb)
+0x130002B8       | 0x0021A0B8 | 0xA8                 | Bubble (Mario)
+0x13000338       | 0x0021A138 | 0xA8                 | Small water wave (Mario)
+0x13000398       | 0x0021A198 | 0                    | Bubbles spawn (Mario)
+0x13000400       | 0x0021A200 | 0xA4                 | Water particles
+0x13000428       | 0x0021A228 | 0xA4                 | Water waves
+0x13000444       | 0x0021A244 | 0xA4                 | Snow particle
+0x1300046C       | 0x0021A26C | 0xA4                 | Snow particle
+0x13000494       | 0x0021A294 | 0                    | Fish group (in Aquarium)
+0x130004A8       | 0x0021A2A8 | 0x80                 | Open cannon (grouped object)
+0x130004E4       | 0x0021A2E4 | 0x7F                 | Cannon barrel
+0x13000500       | 0x0021A300 |                      | Cannon base
+0x13000528       | 0x0021A328 | 0xDF                 | Chuckya
+0x13000584       | 0x0021A384 | 0                    | Anchor Mario (Chuckya)
+0x130005B4       | 0x0021A3B4 | 0x?? (varies)        | Rotating platform (param1 = speed, param2 = collision pointer)
+0x130005D8       | 0x0021A3D8 | 0x08                 | Solid object (Whomp's Fortress tower)
+0x13000600       | 0x0021A400 | 0x09                 | Solid object (Bullet Bill cannon collision)
+0x13000624       | 0x0021A424 | 0x36                 | Breakable Wall Corner (plays "correct solution" track when blasted w/ cannon)
+0x13000638       | 0x0021A438 | 0x37                 | Breakable Wall Corner
+0x13000644       | 0x0021A444 | 0                    | Wall corner in Whomp's Fortress
+0x1300066C       | 0x0021A46C | 0x38                 | Kickable Giant Wooden Board
+0x130006A4       | 0x0021A4A4 | 0x39                 | Explodes when punched (Whomp's Fortress tower door)
+0x130006D8       | 0x0021A4D8 | 0                    | Rotating counter-clockwise (bridge in Whomp's Fortress)
+0x130006E0       | 0x0021A4E0 | 0xAF                 | Rotating counter-clockwise (bridge in Whomp's Fortress)
+0x13000708       | 0x0021A508 | 0xBE                 | Koopa Shell
+0x13000720       | 0x0021A520 | 0x7B                 | Tall Tall Slide Exit Podium
+0x1300075C       | 0x0021A55C | 0                    | Warp (Fading)
+0x13000780       | 0x0021A580 | 0                    | Warp Hole
+0x130007A0       | 0x0021A5A0 | 0x?? (varies)        | Warp Pipe
+0x130007DC       | 0x0021A5DC |                      | White puffs spawn (from ground-pound, clamshells etc.)
+0x130007F8       | 0x0021A5F8 | 0x7A                 | Spawned star (no coordinates)
+0x13000814       | 0x0021A614 | 0                    | Sparkles (from stars, etc.)
+0x13000830       | 0x0021A630 | 0x76                 | Blue coin from Mr.I
+0x13000888       | 0x0021A688 | 0x74                 | Coin inside of Boo
+0x130008EC       | 0x0021A6EC | 0                    | Coin group (param2 = formation type)
+0x1300090C       | 0x0021A70C | 0x74                 | Coin (type 1)
+0x1300091C       | 0x0021A71C | 0x74                 | Coin (type 2)
+0x13000920       | 0x0021A720 | 0x74                 | Coin (type 3)
+0x13000964       | 0x0021A764 | 0                    | Three coins spawn
+0x1300097C       | 0x0021A77C | 0xDE                 | Peach (awakening)
+0x13000984       | 0x0021A784 | 0                    | Ten coins spawn
+0x130009A4       | 0x0021A7A4 | 0x74                 | One coin spawn
+0x130009E0       | 0x0021A7E0 | 0x95                 | Sparkles (from all types of coins)
+0x13000A14       | 0x0021A814 | 0x95                 | Sparkles (from golden coins)
+0x13000A34       | 0x0021A834 | 0x8B                 | Tiny star particle (when Mario bumps a wall)
+0x13000A54       | 0x0021A854 | 0                    | Tiny star particle spawn (when Mario bumps a wall)
+0x13000A78       | 0x0021A878 | 0x8B                 | Tiny star particle (from ground pound)
+0x13000A98       | 0x0021A898 | 0                    | Tiny star particle spawn (from ground pound)
+0x13000ABC       | 0x0021A8BC | 0x8A                 | Tiny triangle (punching something)
+0x13000AD8       | 0x0021A8D8 | 0                    | Tiny triangle spawn (punching something)
+0x13000AFC       | 0x0021A8FC | varies               | Door
+0x13000B0C       | 0x0021A90C | varies               | Door
+0x13000B14       | 0x0021A914 | varies               | Door (warping)
+0x13000B58       | 0x0021A958 | 0x36                 | Grindel
+0x13000B8C       | 0x0021A98C | 0x58                 | Twhomp 2
+0x13000BC8       | 0x0021A9C8 | 0x58                 | Twhomp
+0x13000C04       | 0x0021AA04 |                      | Used by all tumbling bridge platforms
+0x13000C28       | 0x0021AA28 | varies               | Tumbling platform group (Whomp's Fortress)
+0x13000C44       | 0x0021AA44 | 0x37                 | Tumbling platform group (Big Boo's Haunt)
+0x13000C64       | 0x0021AA64 | 0                    | Tumbling platform
+0x13000C84       | 0x0021AA84 | 0x90/0x91            | Flame (static)
+0x13000CC8       | 0x0021AAC8 |                      | Another elevator (re-check)
+0x13000CFC       | 0x0021AAFC | 0x40                 | Elevator platform in RR (param2 = track#)
+0x13000D30       | 0x0021AB30 | 0x38                 | Elevator platform in HMC (param2 = track#)
+0x13000D6C       | 0x0021AB6C | 0x8E                 | White puff ??
+0x13000D98       | 0x0021AB98 | 0                    | Spawn behavior 0x13000D6C
+0x13000DB4       | 0x0021ABB4 | 0                    | Particles (stars, triangles, dirt, etc.)
+0x13000DD8       | 0x0021ABD8 | 0x8E                 | Animated water mist (Castle Grounds waterfall)
+0x13000DFC       | 0x0021ABFC |                      | Unknown
+0x13000E24       | 0x0021AC24 | White puffs (from ground pound)
+0x13000E3C       | 0x0021AC3C | Sand (from ground)
+0x13000E58       | 0x0021AC58 | Snow (from ground)
+0x13000E70       | 0x0021AC70 | Wind (from collision mapped areas)
+0x13000E88       | 0x0021AC88 | Toad at end
+0x13000EAC       | 0x0021ACAC | Peach at end
+0x13000ED0       | 0x0021ACD0 | Unknown
+0x13000F08       | 0x0021AD08 | Ukiki the monkey
+0x13000F48       | 0x0021AD48 | Little Cage
+0x13000F9C       | 0x0021AD9C | Sinking Platforms (Bowser's Fire Sea)
+0x13000FC8       | 0x0021ADC8 | Sinking Cage Platform (Bowser's Fire Sea)
+0x13001000       | 0x0021AE00 | Moving pole (Dire, Dire Docks)
+0x13001030       | 0x0021AE30 | Tilting Inverted Pyramid
+0x13001064       | 0x0021AE64 | Squishable Platform
+0x13001098       | 0x0021AE98 | Unknown
+0x130010B8       | 0x0021AEB8 | Flame moving back and forth (unused)
+0x130010D8       | 0x0021AED8 | Rotating platform with fire (Rainbow Ride) (param2 = red/blue flame)
+0x13001108       | 0x0021AF08 | Flame Thrower
+0x13001124       | 0x0021AF24 | Flame (from flame thrower)
+0x13001168       | 0x0021AF68 | Flame (jumping fireball)
+0x13001184       | 0x0021AF84 | Flame (from jumping fireballs)
+0x130011D0       | 0x0021AFD0 | Bowser shock wave
+0x130011EC       | 0x0021AFEC | Flame (from Mario)
+0x13001214       | 0x0021B014 | Black smoke (from Mario)
+0x13001254       | 0x0021B054 | Black smoke (from Bowser flames)
+0x1300127C       | 0x0021B07C | Black smoke (moving upward)
+0x13001298       | 0x0021B098 | Coins
+0x130012B4       | 0x0021B0B4 | Spindrift
+0x130012F4       | 0x0021B0F4 | Tower Platform Group (also disables collision type 0x65 camera settings)
+0x13001318       | 0x0021B118 | Whomp's Fortress sliding platforms
+0x13001340       | 0x0021B140 | Whomp's Fortress elevator platform
+0x13001368       | 0x0021B168 | Whomp's Fortress solid platform
+0x13001390       | 0x0021B190 | Unknown
+0x130013A8       | 0x0021B1A8 | Snow from tree
+0x130013C4       | 0x0021B1C4 | Leaves from tree
+0x130013DC       | 0x0021B1DC | Another tilting platform
+0x13001408       | 0x0021B208 | Moving Pyramid Platform
+0x1300142C       | 0x0021B22C | Bubble from Piranha Plant
+0x13001448       | 0x0021B248 | Bubbles (after waking Piranha Plant)
+0x13001468       | 0x0021B268 | Purple switch (Bowser staircase)
+0x13001478       | 0x0021B278 | Purple switch (grills)
+0x13001484       | 0x0021B288 | Purple switch
+0x130014AC       | 0x0021B2AC | Floor Switch (hidden objects)
+0x130014BC       | 0x0021B2BC | Hidden object (param2 = object#)
+0x130014E0       | 0x0021B2E0 | Breakable Box (Big)
+0x13001518       | 0x0021B318 | Pushable Metal Box
+0x13001548       | 0x0021B348 | Heave-Ho
+0x130015A4       | 0x0021B3A4 | Unknown, GFX 78/64?
+0x130015C0       | 0x0021B3C0 | Cabin Door?
+0x130015E4       | 0x0021B3E4 | Explodes when pounded (unused ice square in Snowman's Land)
+0x13001608       | 0x0021B408 | Beta trampoline
+0x13001634       | 0x0021B434 | Beta trampoline child animation
+0x13001650       | 0x0021B450 | Jumping Box
+0x1300167C       | 0x0021B47C | Cage (inside of Boo)
+0x130016AC       | 0x0021B4AC | Unknown
+0x130016B8       | 0x0021B4B8 | Igloo Thing
+0x130016E4       | 0x0021B4E4 | Key from Bowser
+0x13001714       | 0x0021B514 | Giant Star from Bowser
+0x13001744       | 0x0021B544 | Beta Boo key (inside of Boo)
+0x13001778       | 0x0021B578 | Beta Boo key (outside of Boo)
+0x1300179C       | 0x0021B59C | Bullet Bill generator
+0x130017F4       | 0x0021B5F4 | White puff / smoke type
+0x13001828       | 0x0021B628 | Bowser tail anchor
+0x13001850       | 0x0021B650 | Bowser
+0x130018CC       | 0x0021B6CC | Bowser body anchor
+0x13001904       | 0x0021B704 | Bowser flame spawn
+0x13001920       | 0x0021B720 | Bowser Battle 2 platform
+0x13001958       | 0x0021B758 | Bowser Platform Part (falls when Bowser jumps)
+0x13001984       | 0x0021B784 | Blue flame (from Bowser)
+0x130019C8       | 0x0021B7C8 | Flame (floating and landing)
+0x13001A0C       | 0x0021B80C | Blue flames group (x3)
+0x13001A30       | 0x0021B830 | Flame (bouncing) unused?
+0x13001A74       | 0x0021B874 | Flame (moving forward growing)
+0x13001AA4       | 0x0021B8A4 | Flame (from Bowser)
+0x13001AE8       | 0x0021B8E8 | Flame (large and burning out)
+0x13001B2C       | 0x0021B92C | Blue fish
+0x13001B54       | 0x0021B954 | Fish groups in castle tanks
+0x13001B70       | 0x0021B970 | Checkerboard elevators group
+0x13001B88       | 0x0021B988 | Rotating checkered platform (unused?)
+0x13001BB4       | 0x0021B9B4 | Bowser key (going into hole and turning) 1
+0x13001BD4       | 0x0021B9D4 | Bowser key (going into hole and turning) 2
+0x13001BF4       | 0x0021B9F4 | Invisible object underneath castle bridge ??
+0x13001C04       | 0x0021BA04 | Water Level Pillar
+0x13001C34       | 0x0021BA34 | Dire, Dire Docks warp
+0x13001C58       | 0x0021BA58 | Moat grills (disable if water is drained)
+0x13001C7C       | 0x0021BA7C | Clock Big Arm
+0x13001C8C       | 0x0021BA8C | Clock Small Arm
+0x13001C94       | 0x0021BA94 | Sparkle (from golden coin)
+0x13001CB0       | 0x0021BAB0 | Ukiki the monkey (opens cage)
+0x13001D0C       | 0x0021BB0C | Unknown
+0x13001D14       | 0x0021BB14 | Y-rotation (LLL hexagonal platform)
+0x13001D40       | 0x0021BB40 | Sinking Lava Rock Block
+0x13001D70       | 0x0021BB70 | Unknown
+0x13001D78       | 0x0021BB78 | Moving platform (LLL mesh rafts) (param2: 0 = move back and forth, 1 = move if Mario is stepping)
+0x13001DA4       | 0x0021BBA4 | Snow Ball
+0x13001DA8       | 0x0021BBA8 | Rotating Hexa Block With Fire Bars
+0x13001DCC       | 0x0021BBCC | Flame (on rotating hexagon in LLL)
+0x13001E04       | 0x0021BC04 | Piece of wood (LLL)
+0x13001E30       | 0x0021BC30 | Floating wood bridge (LLL)
+0x13001E4C       | 0x0021BC4C | Flames (from volcano)
+0x13001E6C       | 0x0021BC6C | Rotating platform (stops and produces fire if stepped on) (LLL)
+0x13001E94       | 0x0021BC94 | Slow and minimal tilting movement (LLL)
+0x13001EC4       | 0x0021BCC4 | Slow and minimal up-down movement (LLL)
+0x13001EF8       | 0x0021BCF8 | Tilts if Mario is stepping on it (LLL)
+0x13001F3C       | 0x0021BD3C | Koopa shell
+0x13001F68       | 0x0021BD68 | Flame (Koopa shell in lava)
+0x13001F90       | 0x0021BD90 | Tox Box
+0x13001FBC       | 0x0021BDBC | Piranha Plant
+0x13002018       | 0x0021BE18 | Solid object (LLL hexagonal mesh)
+0x13002038       | 0x0021BE38 | Bowser puzzle piece
+0x13002068       | 0x0021BE68 | Bowser Puzzle (Only in Lethal Lava Land)
+0x13002088       | 0x0021BE88 | Penguin mother
+0x130020D8       | 0x0021BED8 | Unknown
+0x130020E8       | 0x0021BEE8 | Penguin baby
+0x1300213C       | 0x0021BF3C | Fish 2
+0x1300214C       | 0x0021BF4C | Fish 3
+0x1300215C       | 0x0021BF5C | Fish
+0x13002160       | 0x0021BF60 | Large group of fish
+0x13002178       | 0x0021BF78 | Group of fish
+0x13002194       | 0x0021BF94 | Moves down when stepped on, and then back to initial position (WDW "express elevators")
+0x130021C0       | 0x0021BFC0 | Solid object (WDW express elevator platform)
+0x130021E4       | 0x0021BFE4 | Chirp Chirp (In Water Levels only)
+0x130021F4       | 0x0021BFF4 | Group of fish
+0x1300220C       | 0x0021C00C | Cheep-cheep
+0x13002250       | 0x0021C050 | [!] Box
+0x1300227C       | 0x0021C07C | Rotating exclamation mark
+0x1300229C       | 0x0021C09C | Called by some spawned objects
+0x130022B8       | 0x0021C0B8 | Solid object (JRB rocks)
+0x130022D8       | 0x0021C0D8 | Disable if first star is complete (Bowser Sub Door)
+0x13002308       | 0x0021C108 | Disable if first star is complete (Bowser Sub)
+0x13002338       | 0x0021C138 | Sushi the shark
+0x13002388       | 0x0021C188 | Sushi the shark collision child
+0x130023A4       | 0x0021C1A4 | Sliding box (Jolly Roger Bay)
+0x130023D0       | 0x0021C1D0 | Ship Half
+0x130023EC       | 0x0021C1EC | In Sunken Ship 3?
+0x1300241C       | 0x0021C21C | Sunken Ship
+0x1300243C       | 0x0021C23C | Unknown
+0x1300244C       | 0x0021C24C | Sunken Ship Half
+0x1300246C       | 0x0021C26C | In Sunken Ship?
+0x13002480       | 0x0021C280 | In Sunken Ship 2?
+0x1300248C       | 0x0021C28C | Warp to inside of sunken ship
+0x130024AC       | 0x0021C2AC | White puff generator
+0x130024DC       | 0x0021C2DC | White puff (from Mario)
+0x13002500       | 0x0021C300 | White puff from Mario 2
+0x13002528       | 0x0021C328 | White puff / smoke type
+0x13002558       | 0x0021C358 | Purple switch (for hidden boxes)
+0x13002568       | 0x0021C368 | Blue Coins Switch
+0x13002588       | 0x0021C388 | Coin (Blue)
+0x130025C0       | 0x0021C3C0 | Cage door (BOB & HMC)
+0x130025E0       | 0x0021C3E0 | Openable Grills
+0x130025F8       | 0x0021C3F8 | Crystal Tap (modifies water level in WDW)
+0x13002620       | 0x0021C420 | Initialize behavior 0x130025F8
+0x13002634       | 0x0021C434 | Sand particle from Tweester
+0x13002650       | 0x0021C450 | Tweester
+0x13002684       | 0x0021C484 | Spawn ghosts (spawn Big Boo when all are destroyed)
+0x1300269C       | 0x0021C49C | Animated texture ??
+0x130026D4       | 0x0021C4D4 | Boo in Castle
+0x13002710       | 0x0021C510 | Boo Buddy With Cage
+0x13002768       | 0x0021C568 | Boo Buddy
+0x13002790       | 0x0021C590 | Boo Buddy
+0x13002794       | 0x0021C594 | Big Boo on balcony
+0x130027D0       | 0x0021C5D0 | Boo Buddy group (x3)
+0x130027E4       | 0x0021C5E4 | Boo Buddy 3
+0x13002804       | 0x0021C604 | Boo Buddy 2
+0x1300286C       | 0x0021C66C | Hidden Staircase Step
+0x13002898       | 0x0021C698 | Unknown
+0x130028CC       | 0x0021C6CC | Tilts on z-axis when stepped on (Haunted House floor platforms)
+0x130028FC       | 0x0021C6FC | Bookshelf
+0x1300292C       | 0x0021C72C | Mesh Elevator
+0x13002968       | 0x0021C768 | Merry-Go-Round
+0x13002998       | 0x0021C798 | Plays music track when touched (used along with penguin shortcut)
+0x130029B0       | 0x0021C7B0 | Inside Cannon
+0x130029E4       | 0x0021C7E4 | Static checkered platform (unused?)
+0x13002A10       | 0x0021C810 | Billboarded object ??
+0x13002A20       | 0x0021C820 | Star ??
+0x13002A38       | 0x0021C838 | Unknown
+0x13002A48       | 0x0021C848 | Static object
+0x13002A5C       | 0x0021C85C | Castle Floor Trap
+0x13002A7C       | 0x0021C87C | Floor trap in castle
+0x13002AA4       | 0x0021C8A4 | Tree
+0x13002AD0       | 0x0021C8D0 | Sparkles (power-ups)
+0x13002AF0       | 0x0021C8F0 | Sparkles (power-ups)
+0x13002B08       | 0x0021C908 | Sparkles (from special triple jump)
+0x13002B5C       | 0x0021C95C | Scuttlebug
+0x13002BA0       | 0x0021C9A0 | Scuttlebug spawn
+0x13002BB8       | 0x0021C9B8 | Whomp King
+0x13002BCC       | 0x0021C9CC | Small Whomp
+0x13002BD4       | 0x0021C9D4 | Whomp King
+0x13002C14       | 0x0021CA14 | Water splash
+0x13002C64       | 0x0021CA64 | Water drops
+0x13002C7C       | 0x0021CA7C | White wave on water surface
+0x13002CB0       | 0x0021CAB0 | Unknown
+0x13002CE0       | 0x0021CAE0 | Waves on surface
+0x13002D28       | 0x0021CB28 | White wave on water surface 2
+0x13002D50       | 0x0021CB50 | Waves generator
+0x13002D7C       | 0x0021CB7C | Wave on surface (shrinking)
+0x13002DB0       | 0x0021CBB0 | Wave type
+0x13002DC0       | 0x0021CBC0 | Wave trail on surface
+0x13002DD0       | 0x0021CBD0 | Unknown
+0x13002E04       | 0x0021CC04 | Tiny white particles from wind generators
+0x13002E20       | 0x0021CC20 | Wind particle (blows Mario away)
+0x13002E3C       | 0x0021CC3C | Wind Blowing
+0x13002E58       | 0x0021CC58 | Penguin Crossing Bridge
+0x13002EA8       | 0x0021CCA8 | Yellow Ball (Pole in WF)
+0x13002EC0	 | 0x0021CCC0 | Mario
+0x13002EF8       | 0x0021CCF8 | Toad
+0x13002F40       | 0x0021CD40 | Star (held up when opening a sealed door)
+0x13002F60       | 0x0021CD60 | Warp 12128
+0x13002F64       | 0x0021CD64 | Warp (Mario Start 2)
+0x13002F68       | 0x0021CD68 | Warp 12136
+0x13002F6C       | 0x0021CD6C | Warp (Mario Start 3)
+0x13002F70       | 0x0021CD70 | Warp (Level Exit Recovering Life)
+0x13002F74       | 0x0021CD74 | Warp (Mario Start 1)
+0x13002F78       | 0x0021CD78 | Warp (Mario Start 5)
+0x13002F7C       | 0x0021CD7C | Warp Painting Exit (Success)
+0x13002F80       | 0x0021CD80 | Warp Painting Exit (Failure)
+0x13002F84       | 0x0021CD84 | Warp 12164
+0x13002F88       | 0x0021CD88 | Warp (Level Exit Ceiling)
+0x13002F8C       | 0x0021CD8C | Warp (Level Exit)
+0x13002F90       | 0x0021CD90 | Warp (Level Exit From Hole)
+0x13002F94       | 0x0021CD94 | Warp (to level)
+---------------------------------------------
+File Select Menu / Star Select Screens:
+0x13002FC0       | 0x0021CDC0 | 06                   | Yellow background
+0x13002FE4       | 0x0021CDE4 |                      | Growing button (as in, after it is selected)
+0x13003008       | 0x0021CE08 | 03, 08, 09, 0A       | Gray button
+0x1300302C       | 0x0021CE2C | 0x7A                 | Star
+0x13003048       | 0x0021CE48 | 0                    | Star selector
+---------------------------------------------
+0x13003068       | 0x0021CE68 | Coin inside of formation
+0x130030A4       | 0x0021CEA4 | Moving Blue Coin
+0x130030D4       | 0x0021CED4 | Blue coin (sliding)
+0x13003104       | 0x0021CF04 | Blue coin (jumping)
+0x13003134       | 0x0021CF34 | Seaweed
+0x13003158       | 0x0021CF58 | Bubbles?
+0x13003174       | 0x0021CF74 | Bob-Omb
+0x130031AC       | 0x0021CFAC | Smoke spawned from Bob-omb
+0x130031DC       | 0x0021CFDC | Pink Bob-omb (Generates Message)
+0x13003228       | 0x0021D028 | Pink Bob-omb (Opens Cannons)
+0x13003274       | 0x0021D074 | Cannon (Closed)
+0x130032A8       | 0x0021D0A8 | Whirlpool death
+0x130032C8       | 0x0021D0C8 | Bubbles
+0x130032E0       | 0x0021D0E0 | Wooden Signpost
+0x13003324       | 0x0021D124 | Sign On Wall
+0x13003354       | 0x0021D154 | Amp 2
+0x13003388       | 0x0021D188 | Amp
+0x130033BC       | 0x0021D1BC | Butterfly
+0x130033EC       | 0x0021D1EC | Hoot the Owl
+0x13003420       | 0x0021D220 | Can be picked up (unused)
+0x13003454       | 0x0021D254 | Unknown
+0x130034C4       | 0x0021D2C4 | Water wave ??
+0x13003510       | 0x0021D310 | Explosion
+                    0x80313E1C Object chasing Mario (spawned bombs and mushrooms)
+0x13003558       | 0x0021D358 | Large white smoke cloud
+0x13003588       | 0x0021D388 | Smoke from Bob-omb
+0x130035B0       | 0x0021D3B0 | White particle / water drop
+0x13003600       | 0x0021D400 | Unkown
+0x1300362C       | 0x0021D42C | Small Bully
+0x13003660       | 0x0021D460 | Big Bully Boss
+0x13003694       | 0x0021D494 | Bully group (spawn Big Bully when all 3 are destroyed)
+0x130036C8       | 0x0021D4C8 | Small Chill Bully (unused)
+0x13003700       | 0x0021D500 | Big Chill Bully
+0x13003738       | 0x0021D538 | Manta Rings (In Water Levels only)
+0x13003750       | 0x0021D550 | Water rings
+0x13003798       | 0x0021D598 | Water rings
+0x130037E0       | 0x0021D5E0 | Unknown
+0x130037EC       | 0x0021D5EC | Spikey Bowser bomb
+0x1300381C       | 0x0021D61C | Explosion (from spikey bombs) pt.1
+0x13003840       | 0x0021D640 | Explosion (from spikey bombs) pt.2
+0x13003868       | 0x0021D668 | Star (held up after collecting star)
+0x13003888       | 0x0021D688 | Sparkles (when Mario grabs a key)
+0x130038B0       | 0x0021D6B0 | White puff type
+0x130038D0       | 0x0021D6D0 | Bascule Bridge
+0x130038E8       | 0x0021D6E8 | Tilting bridge part (LLL)
+0x13003910       | 0x0021D710 | Rock Formation with eyes
+0x13003940       | 0x0021D740 | Large Rock With Eyes
+0x13003970       | 0x0021D770 | Sliding Brick Platform
+0x130039A0       | 0x0021D7A0 | Moneybag transforming
+0x130039D4       | 0x0021D7D4 | Moneybag (with coin)
+0x13003A08       | 0x0021D808 | Metal Balls
+0x13003A30       | 0x0021D830 | Rolling metal ball
+0x13003A58       | 0x0021D858 | Tiny metal ball
+0x13003A80       | 0x0021D880 | Metal Ball Generator 2
+0x13003AA4       | 0x0021D8A4 | Metal Ball Generator
+0x13003AC8       | 0x0021D8C8 | Mini Metal Balls Generator
+0x13003AE0       | 0x0021D8E0 | Flying Ship Wing
+0x13003B00       | 0x0021D900 | Spindel
+0x13003B30       | 0x0021D930 | Moving up and down (pyramid platforms)
+0x13003B60       | 0x0021D960 | Pyramid Elevator Case
+0x13003B98       | 0x0021D998 | Metal balls for pyramid elevator
+0x13003BB4       | 0x0021D9B4 | Pyramid Top
+0x13003BEC       | 0x0021D9EC | Pyramid top explosion
+0x13003C0C       | 0x0021DA0C | Unknown
+0x13003C30       | 0x0021DA30 | PlaySound loop (waterfall)
+0x13003C44       | 0x0021DA44 | PlaySound loop (volcano)
+0x13003C58       | 0x0021DA58 | Castle Flag
+0x13003C7C       | 0x0021DA7C | PlaySound loop (birds)
+0x13003C90       | 0x0021DA90 | Ambient Sounds?
+0x13003CA4       | 0x0021DAA4 | PlaySound loop (sand)
+0x13003CB8       | 0x0021DAB8 | Cannon Grill (disable if stars == 120)
+0x13003CE4       | 0x0021DAE4 | Big snowman bottom
+0x13003D0C       | 0x0021DB0C | Big snowman head
+0x13003D34       | 0x0021DB34 | Checkpoint for big snowman's body
+0x13003D4C       | 0x0021DB4C | Big snowman (whole body)
+0x13003D74       | 0x0021DB74 | Big boulder
+0x13003DA0       | 0x0021DBA0 | Boulder spawn (Hazy Maze Cave)
+0x13003DB8       | 0x0021DBB8 | Wing Cap
+0x13003DD8       | 0x0021DBD8 | Metal Cap
+0x13003DF8       | 0x0021DBF8 | Normal Cap
+0x13003E1C       | 0x0021DC1C | Vanish Cap
+0x13003E3C       | 0x0021DC3C | Star
+0x13003E64       | 0x0021DC64 | Star spawn (with coordinates)
+0x13003E8C       | 0x0021DC8C | Star For Red Coins (Hidden)
+0x13003EAC       | 0x0021DCAC | Coin (Red)
+0x13003EE4       | 0x0021DCE4 | Wind?
+0x13003EFC       | 0x0021DCFC | Star (Hidden)
+0x13003F1C       | 0x0021DD1C | "Secret" numbers (touch 5 to get a star)
+0x13003F40       | 0x0021DD40 | Rolling Wooden Log
+0x13003F78       | 0x0021DD78 | Falling block inside volcano
+0x13003FA4       | 0x0021DDA4 | Rolling log
+0x13003FDC       | 0x0021DDDC | 1-up spawn (from box)
+0x13004010       | 0x0021DE10 | 1-up spawn (moving away)
+0x13004044       | 0x0021DE44 | 1-up (Sliding)
+0x1300407C       | 0x0021DE7C | 1-up mushroom
+0x130040B4       | 0x0021DEB4 | 1-up (jumps when approached)
+0x130040EC       | 0x0021DEEC | 1-up mushroom (enable when behavior 0x13004124 is touched)
+0x13004124       | 0x0021DF24 | Trigger for hidden 1-up
+0x13004148       | 0x0021DF48 | 1-up (hidden in tree/pole)
+0x13004180       | 0x0021DF80 | Unused collectible item
+0x130041A4       | 0x0021DFA4 | 1-up (hidden in tree or pole)
+0x130041BC       | 0x0021DFBC | Hovering Metal Platform
+0x130041F0       | 0x0021DFF0 | Unknown
+0x13004218       | 0x0021E018 | Breakable Box (Small)
+0x13004244       | 0x0021E044 | Sliding snow mound
+0x13004270       | 0x0021E070 | Snow mound spawn (Only in Snow Man's Land)
+0x13004284       | 0x0021E084 | Platform floating on water (square)
+0x130042B4       | 0x0021E0B4 | Platform floating on water (rectangular)
+0x130042E4       | 0x0021E0E4 | Platform floating on water (Jolly Roger Bay)
+0x13004314       | 0x0021E114 | Arrow Lift
+0x13004348       | 0x0021E148 | Orange number
+0x13004370       | 0x0021E170 | Manta Ray
+0x130043A0       | 0x0021E1A0 | Falling Pillar
+0x130043C4       | 0x0021E1C4 | Unknown
+0x130043E0       | 0x0021E1E0 | Falling Pillar Base
+0x13004400       | 0x0021E200 | Floating Jolly Roger box (unused)
+0x1300442C       | 0x0021E22C | Clock Pendulum
+0x1300444C       | 0x0021E24C | Treasure chest group (sunken ship)
+0x13004470       | 0x0021E270 | Star (Hidden for Treasure Chests?)
+0x13004494       | 0x0021E294 | Treasure chest group (DDD)
+0x130044B8       | 0x0021E2B8 | Treasure chest
+0x130044E0       | 0x0021E2E0 | Unknown
+0x130044FC       | 0x0021E2FC | MIPS the Rabbit
+0x13004538       | 0x0021E338 | Yoshi
+0x13004580       | 0x0021E380 | Koopa
+0x130045D0       | 0x0021E3D0 | Koopa Flag (Only in Levels with Koopas)
+0x130045F8       | 0x0021E3F8 | Koopa flag (not actual goal)
+0x13004634       | 0x0021E434 | Pokey (Only use in SSL)
+0x13004668       | 0x0021E468 | Pokey head
+0x13004698       | 0x0021E498 | Swoop (Bat)
+0x130046DC       | 0x0021E4DC | Fly Guy
+0x1300472C       | 0x0021E52C | Goomba
+0x13004770       | 0x0021E570 | Goomba group (x3)
+0x1300478C       | 0x0021E58C | Chain Chomp
+0x130047E4       | 0x0021E5E4 | Chain-Chomp chains
+0x1300481C       | 0x0021E61C | Poundable Wooden Log
+0x13004868       | 0x0021E668 | Explodes when Chain-Chomp is freed
+0x13004898       | 0x0021E698 | Wiggler Boss
+0x130048E0       | 0x0021E6E0 | Wiggler body parts
+0x13004918       | 0x0021E718 | Lakitu (throws Spinies)
+0x13004954       | 0x0021E754 | Lakitu (behind mirror)
+0x13004988       | 0x0021E788 | Fwoosh (cloud enemy)
+0x130049AC       | 0x0021E7AC | Fwoosh (cloud enemy) face
+0x130049C8       | 0x0021E7C8 | Spiny
+0x13004A00       | 0x0021E800 | Monty Mole
+0x13004A58       | 0x0021E858 | Monty Mole in Hole
+0x13004A78       | 0x0021E878 | Monty Mole rock
+0x13004AB0       | 0x0021E8B0 | Platform on tracks (param1 = collision pointer, param2 = track#)
+0x13004AF4       | 0x0021E8F4 | Metal Balls for elevators (not actual paths)
+0x13004B1C       | 0x0021E91C | Tilting Bridge
+0x13004B44       | 0x0021E944 | Four Rotating Platforms
+0x13004B6C       | 0x0021E96C | Ferris Wheel Platform
+0x13004B8C       | 0x0021E98C | Water Bubble Drop
+0x13004BA8       | 0x0021E9A8 | Water bomb
+0x13004BD4       | 0x0021E9D4 | Water bomb shadow
+0x13004BF0       | 0x0021E9F0 | Rotating Cube
+0x13004C24       | 0x0021EA24 | Pendulum
+0x13004C5C       | 0x0021EA5C | Metal Platform
+0x13004C94       | 0x0021EA94 | Moving Platforms
+0x13004CCC       | 0x0021EACC | Rotating Platforms
+0x13004CF8       | 0x0021EAF8 | Box Platform
+0x13004D28       | 0x0021EB28 | Clock Platform
+0x13004D64       | 0x0021EB64 | Clock Big Hand Rotating
+0x13004D90       | 0x0021EB90 | Rotating Clockwork Gear
+0x13004DBC       | 0x0021EBBC | Mr. Blizzard
+0x13004E08       | 0x0021EC08 | Snowball from Snowman
+0x13004E4C       | 0x0021EC4C | Sliding back and forth (param1 = collision pointer, param2 = movement length)
+0x13004E78       | 0x0021EC78 | Octogonal Platform Rotating
+0x13004EA0       | 0x0021ECA0 | Pyramidal Platforms
+0x13004ECC       | 0x0021ECCC | Climbable Cage
+0x13004EF8       | 0x0021ECF8 | Recovery Heart
+0x13004F10       | 0x0021ED10 | Cannon
+0x13004F28       | 0x0021ED28 | Cannon barrel (shoots bubbles)
+0x13004F40       | 0x0021ED40 | Unagi the eel (swimming)
+0x13004F78       | 0x0021ED78 | Unknown
+0x13004F90       | 0x0021ED90 | Dorrie
+0x13004FD4       | 0x0021EDD4 | Haunted Chair
+0x13005024       | 0x0021EE24 | Mad Piano
+0x1300506C       | 0x0021EE6C | Bookend
+0x130050B4       | 0x0021EEB4 | BookShelf Check?
+0x130050D4       | 0x0021EED4 | Bookshelf Thing
+0x130050F4       | 0x0021EEF4 | Book switch (Big Boo's Haunt)
+0x13005120       | 0x0021EF20 | Piranha Plant
+0x13005158       | 0x0021EF58 | Flame (spawned from small Piranha Plant)
+0x1300518C       | 0x0021EF8C | Fire Spewer
+0x130051AC       | 0x0021EFAC | Flame (spawned from Fly Guys)
+0x130051E0       | 0x0021EFE0 | Snufit
+0x1300521C       | 0x0021F01C | Snufit bullet
+0x1300525C       | 0x0021F05C | Grindel
+0x130052B4       | 0x0021F0B4 | Eyerok Boss
+0x130052D0       | 0x0021F0D0 | Eyerok hand
+0x13005310       | 0x0021F110 | Klepto
+0x13005354       | 0x0021F154 | Bird Flock
+0x13005380       | 0x0021F180 | Penguin (Racing)
+0x130053C4       | 0x0021F1C4 | Finishing Line Check
+0x130053DC       | 0x0021F1DC | Shortcut Check (penguin won't give a star if touched)
+0x130053F4       | 0x0021F1F4 | Haunted Room Check?
+0x13005414       | 0x0021F214 | Unknown
+0x13005440       | 0x0021F240 | Clam Shell
+0x13005468       | 0x0021F268 | Skeeter
+0x130054A0       | 0x0021F2A0 | Water wave type?
+0x130054B8       | 0x0021F2B8 | Pendulum Platform
+0x130054EC       | 0x0021F2EC | Donut platform group
+0x13005504       | 0x0021F304 | Donut platform (falls and explodes when stepped on)
+0x13005528       | 0x0021F328 | Yellow Poles (Dire, Dire Docks)
+0x1300556C       | 0x0021F36C | Flat blue star for red coins
+0x13005598       | 0x0021F398 | Three butterflies group (2 turn into bombs, 1 gives a mushroom)
+0x130055DC       | 0x0021F3DC | Bubba
+0x13005610       | 0x0021F410 | Lakitu at the beginning
+0x13005638       | 0x0021F438 | Peach at the beginning
+0x1300565C       | 0x0021F45C | Birds at end 1
+0x13005680       | 0x0021F480 | Birds at end 2
+0x130056A4       | 0x0021F4A4 | Calls intro scene stuff (Lakitu, Peach, etc.)
+
+Note: behavior 0x13002998 is not present in the Japanese ROM. The Japanese version's behavior
+script bank is also 32 (0x20) bytes smaller in size than the US version.
