@@ -19,10 +19,10 @@ import os
 # MAX-Y           | spawn under specific y          | int - Max Height
 
 VALID_RULE_NAMES = [
-  "DROP_TO_FLOOR", "UNDERWATER", "MAX_SLOPE", "DISABLED", "SPAWN_HEIGHT", "MIN_Y", "MAX_Y", "DISTANCE_TO", "DISABLE", "NO_FLOOR_REQUIRED"
+  "DROP_TO_FLOOR", "UNDERWATER", "MAX_SLOPE", "DISABLED", "SPAWN_HEIGHT", "MIN_Y", "MAX_Y", "DISTANCE_TO", "DISABLE", "NO_FLOOR_REQUIRED", "BOUNDING_BOX"
 ]
 
-HEX_VALUES = ["course_id", "area_id", "behaviour", "model_id"]
+HEX_VALUES = ["course_id", "area_id", "behaviour", "model_id", "bparam1", "bparam2", "bparam3", "bparam4"]
 
 VALID_MATCH_TYPES = [*HEX_VALUES, "source"]
 
@@ -123,6 +123,22 @@ class RandomizeObjectsWhitelist:
       if object3d.level is None or object3d.level.level_id is None:
         return False
       if matching["course_id"] != object3d.level.level_id:
+        return False
+    
+    if "bparam1" in matching:
+      if object3d.bparams[0] != matching["bparam1"]:
+        return False
+
+    if "bparam2" in matching:
+      if object3d.bparams[1] != matching["bparam2"]:
+        return False
+
+    if "bparam3" in matching:
+      if object3d.bparams[2] != matching["bparam3"]:
+        return False
+
+    if "bparam4" in matching:
+      if object3d.bparams[3] != matching["bparam4"]:
         return False
 
     if "area_id" in matching and matching["area_id"] != object3d.area_id:

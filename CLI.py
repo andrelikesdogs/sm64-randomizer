@@ -11,7 +11,6 @@ from typing import List
 from __version__ import __version__
 
 from Rom import ROM
-from Debug import Debug
 from Spoiler import SpoilerLog
 from randoutils import pretty_print_table
 
@@ -21,6 +20,7 @@ from RandomModules.Objects import ObjectRandomizer
 from RandomModules.Colors import ColorRandomizer
 from RandomModules.Warps import WarpRandomizer
 from RandomModules.Text import TextRandomizer
+from RandomModules.Textures import TextureAtlas
 from RandomModules.Stardoors import StardoorRandomizer
 from Enhancements.GameplayEnhancements import Gameplay
 
@@ -33,6 +33,7 @@ with open(os.path.join(application_path, "Data", "configurableParams.json"), "r"
 parser = argparse.ArgumentParser()
 parser.add_argument("rom", type=str)
 parser.add_argument("--no-extend", default=False, help="disable auto-extend of ROM, which might fail on some systems", action="store_true")
+parser.add_argument("--alignment", type=int, default=None, help="Specify the byte alignment. If you know this value, you have a higher change of successfully randomizing romhacks.")
 parser.add_argument("--out", type=str, help="target of randomized rom")
 #parser.add_argument("--seed", type=int, default=round(time.time() * 256 * 1000), help="define a custom seed to have the same experience as someone else")
 parser.add_argument('--version', action='version', version=f'v{__version__}')
@@ -40,6 +41,7 @@ argument_labels = {
   "rom": "Input ROM",
   "out": "Output ROM",
   "no_extend": "Disable automatic extending",
+  "alignment": "Byte Alignment"
 }
 for field in randomizer_params:
   argument_args = []
@@ -89,7 +91,7 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
   if not rom_path.exists():
     raise Exception("invalid file, does not exist")
 
-  with ROM(rom_path, out_path) as rom:
+  with ROM(rom_path, out_path, opt_args.alignment) as rom:
     try:
       rom.verify_header()
     except Exception as err:
@@ -101,8 +103,9 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       print("The specified ROM file is not extended yet, we\'ll try to extend it for you")
       new_rom = None
 
+      target_alignment = opt_args.alignment if opt_args.alignment is not None else 8
       try:
-        new_rom = rom.try_extend()
+        new_rom = rom.try_extend(target_alignment)
       except Exception as err:
         print("Unfortunately, the ROM could not be extended. Please see the log below to figure out why. The Randomizer will continue using the vanilla rom. Please note not all functionality is available in this mode.")
         print(err)
@@ -110,6 +113,7 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       new_args = {**vars(opt_args)}
       new_args['rom'] = new_rom
       new_args['no_extend'] = True # don't extend twice
+      new_args['alignment'] = target_alignment
       run_with_parsed_args(argparse.Namespace(**new_args))
       return
 
@@ -118,6 +122,11 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     
     rom.set_initial_segments()
     rom.read_levels()
+
+    if rom.rom_type == 'EXTENDED':
+      # initialize texture atlas and dynamic positions
+      textures = TextureAtlas(rom)
+      textures.add_dynamic_positions()
 
     music_random = MusicRandomizer(rom)
     if opt_args.shuffle_music:

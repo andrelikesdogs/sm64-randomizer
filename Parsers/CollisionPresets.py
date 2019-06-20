@@ -10,22 +10,6 @@ class PresetEntry(NamedTuple):
   model_id: int
   behaviour_addr: int
 
-SPECIAL_PRESET_LOCATION_REGIONS = {
-  "NORTH_AMERICA": 0xED350,
-  "EUROPE": 0xBE100,
-  "JAPAN": 0xEC240,
-  "JAPAN_SHINDOU": 0xC98D0,
-  "CHINESE": 0xCBD90
-}
-
-PRESET_LOCATION_REGIONS = {
-  "NORTH_AMERICA": 0xEC7E0,
-  "EUROPE": 0xBD590,
-  "JAPAN": 0xEB6D0,
-  "JAPAN_SHINDOU": 0xC8D60,
-  "CHINESE": 0xCB220
-}
-
 class CollisionPresetParser:
   instance = None
 
@@ -34,8 +18,8 @@ class CollisionPresetParser:
     self.entries = {}
     self.special_entries = {}
     
-    self.preset_id_offset = PRESET_LOCATION_REGIONS[rom.region]
-    self.special_preset_id_offset = SPECIAL_PRESET_LOCATION_REGIONS[rom.region]
+    self.preset_id_offset = self.rom.macro_table_position
+    self.special_preset_id_offset = self.rom.special_macro_table_position
 
     self.read_entries()
     self.read_special_entries()

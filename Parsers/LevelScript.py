@@ -179,8 +179,7 @@ class LevelScriptParser:
           segment_id = self.rom.read_integer(cursor + 3)
           segment_addr = self.rom.read_integer(cursor + 4, 4)
           segment_end = self.rom.read_integer(cursor + 8, 4)
-
-          #print("ROM_TO_SEGMENT", hex(command.identifier), hex(length+2), format_binary(data))
+          
           self.rom.set_segment(segment_id, segment_addr, segment_end)
         elif command.identifier == 0x18 or command.identifier == 0x1A:
           """ 0x18 MIO0_DECOMPRESS or 0x1A MIO0_DECOMPRESS_TEXTURES """
@@ -190,7 +189,7 @@ class LevelScriptParser:
           segment_end = self.rom.read_integer(cursor + 8, 4)
           segment_addr = self.rom.read_integer(begin_mio0 + 12) + begin_mio0
 
-          self.rom.set_segment(segment_id, segment_addr, segment_end)
+          self.rom.set_segment(segment_id, segment_addr, segment_end, mio0=True)
         elif command.identifier == 0x2E:
           if self.rom.rom_type == 'EXTENDED':
             """ 0x2E LOAD_COLLISION """

@@ -178,6 +178,10 @@
     "match": { "behaviour": "0x13002804" }
   },
   {
+    "name": "Boo (Buddy)",
+    "match": { "behaviour": "0x13002768" }
+  },
+  {
     "name": "BBH: Haunted Chair",
     "match": { "behaviour": "0x13004FD4" }
   },

@@ -127,6 +127,13 @@
     "priority": 10
   },
   {
+    "name": "PSS: Warp at start of Slide",
+    "match": { "behaviour": "0x13002F64", "course_id": "0x1B" },
+    "rules": {
+      "MIN_Y": 6750
+    }
+  },
+  {
     "name": "WDW: Items can spawn in Water",
     "match": { "course_id": "0x0B"  },
     "rules": {
@@ -139,7 +146,8 @@
     "match": { "course_id": "0x0C", "area_id": "0x2"  },
     "rules": {
       "UNDERWATER": "ALLOWED",
-      "DROP_TO_FLOOR": true
+      "DROP_TO_FLOOR": "FORCE",
+      "MAX_Y": 1858
     },
     "priority": 5
   },
