@@ -6,11 +6,15 @@ from Entities.LevelGeometry import LevelGeometry
 from Constants import LVL_MAIN
 import Constants
 import sys
+from math import floor
 
 from randoutils import format_binary
 
 instances = {}
 addresses_checked = []
+
+MACRO_ROT_Y_MUL = 2.8125
+SPCL_MACRO_ROT_Y_MUL = 1.40625
 
 class LevelScriptParser:
   @staticmethod
@@ -175,8 +179,7 @@ class LevelScriptParser:
           segment_id = self.rom.read_integer(cursor + 3)
           segment_addr = self.rom.read_integer(cursor + 4, 4)
           segment_end = self.rom.read_integer(cursor + 8, 4)
-
-          #print("ROM_TO_SEGMENT", hex(command.identifier), hex(length+2), format_binary(data))
+          
           self.rom.set_segment(segment_id, segment_addr, segment_end)
         elif command.identifier == 0x18 or command.identifier == 0x1A:
           """ 0x18 MIO0_DECOMPRESS or 0x1A MIO0_DECOMPRESS_TEXTURES """
@@ -186,7 +189,7 @@ class LevelScriptParser:
           segment_end = self.rom.read_integer(cursor + 8, 4)
           segment_addr = self.rom.read_integer(begin_mio0 + 12) + begin_mio0
 
-          self.rom.set_segment(segment_id, segment_addr, segment_end)
+          self.rom.set_segment(segment_id, segment_addr, segment_end, mio0=True)
         elif command.identifier == 0x2E:
           if self.rom.rom_type == 'EXTENDED':
             """ 0x2E LOAD_COLLISION """
@@ -303,14 +306,20 @@ class LevelScriptParser:
     macro_table = self.macro_tables[start]
 
     cursor = start
-    for entry in macro_table["entries"]:
+    for index, entry in enumerate(macro_table["entries"]):
       self.rom.write_byte(cursor, entry["bytes"])
+
+      if index > macro_table["entry_count_original"]:
+        print("about to overwrite...:")
+        print(format_binary(self.rom.read_bytes(cursor, 10)))
       cursor += 10
     
     # end with 0x1E preset
     self.rom.write_byte(cursor, bytes([0x00, 0x1E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]))
+    #print(f'Level {self.level.name} has {len(macro_table["entries"])} macro objects')
+    #print(f'Start at {hex(start)} til {hex(cursor)}')
   
-  def add_macro_object(self, start, preset_id, rot_y, x, y, z, bparam1, bparam2):
+  def add_macro_object(self, start, preset_id, rot_y, x, y, z, bparam1 = 0x0, bparam2 = 0x0):
     if start not in self.macro_tables:
       raise Exception(f"{hex(start)} was not found in macro table entries")
     macro_table = self.macro_tables[start]
@@ -318,19 +327,23 @@ class LevelScriptParser:
     preset_table = CollisionPresetParser.get_instance(self.rom).entries
     preset_data = preset_table[preset_id]
 
-    object3d = Object3D("MACRO_OBJ", preset_data.model_id, (x, y, z), self.level, (0, rot_y, 0))
+    object3d = Object3D("MACRO_OBJ", self.current_area, preset_data.model_id, (x, y, z), self.level, (0, rot_y, 0), preset_data.behaviour_addr, bparams=[bparam1, bparam2])
     x_bytes = x.to_bytes(2, self.rom.endianess, signed=True)
     y_bytes = y.to_bytes(2, self.rom.endianess, signed=True)
     z_bytes = z.to_bytes(2, self.rom.endianess, signed=True)
 
-    rot_clamped = (rot_y << 9) & 0xFE00
-    preset_id_clamped = preset_id & 0x1FF
+  # preset_id = preset_and_rot & 0x1FF # last 9 bit
+  # rot_y = preset_and_rot & 0xFE00 # first 7 bit
+    
+    rot_y = int(float(rot_y) / MACRO_ROT_Y_MUL)
+
+    rot_clamped = (rot_y & 0x7F) << 9
+    preset_id_clamped = (preset_id & 0x01FF)
     preset_and_rot = rot_clamped | preset_id_clamped
     preset_and_rot_bytes = preset_and_rot.to_bytes(2, self.rom.endianess)
 
     macro_row = preset_and_rot_bytes + x_bytes + y_bytes + z_bytes + bytes([bparam1]) + bytes([bparam2])
-    print("new entry for macros")
-    print(macro_row)
+    
     macro_table["entries"].append(
       dict(
         object3d=object3d,
@@ -349,6 +362,7 @@ class LevelScriptParser:
 
     macro_table = dict(
       start=start,
+      entry_count_original=None,
       entries=[]
     )
     #print(self.level.name)
@@ -362,6 +376,7 @@ class LevelScriptParser:
 
       preset_id = preset_and_rot & 0x1FF # last 9 bit
       rot_y = preset_and_rot & 0xFE00 # first 7 bit
+      rot_y = rot_y * MACRO_ROT_Y_MUL
       
       if preset_id == 0 or preset_id == 0x1E:
         break
@@ -386,9 +401,10 @@ class LevelScriptParser:
         entry_pos += 1
 
       cursor += 10
+    macro_table["entry_count_original"] = len(macro_table["entries"])
     self.macro_tables[start] = macro_table
     self.objects.extend(objects_found)
-    #print(f'Level {self.level.name} has {len(objects_found)} macro objects')
+    #self.update_macro_objects(start) # selfcheck
 
   def remove_special_macro_object(self, object3d):
     if object3d not in self.special_macro_object_tables:
@@ -505,16 +521,16 @@ class LevelScriptParser:
     
     # dump changes on special_macro_list update in .bin format
     # old reads from input
-    old = self.rom.read_bytes(special_macro_table["start"], special_macro_table["end"] - special_macro_table["start"])
+    #old = self.rom.read_bytes(special_macro_table["start"], special_macro_table["end"] - special_macro_table["start"])
 
     # new reads manually from output
-    self.rom.target.seek(special_macro_table["start"]) #, special_macro_table["end"])
-    new = self.rom.target.read(special_macro_table["end"] - special_macro_table["start"])
+    #self.rom.target.seek(special_macro_table["start"]) #, special_macro_table["end"])
+    #new = self.rom.target.read(special_macro_table["end"] - special_macro_table["start"])
 
-    with open("old_dump.bin", "wb+") as old_file:
-      old_file.write(old)
-    with open("new_dump.bin", "wb+") as new_file:
-      new_file.write(new)
+    #with open("old_dump.bin", "wb+") as old_file:
+    #  old_file.write(old)
+    #with open("new_dump.bin", "wb+") as new_file:
+    #  new_file.write(new)
     #sys.exit(0)
   
 
@@ -619,24 +635,23 @@ class LevelScriptParser:
           if preset:
             length = preset.length
             entry_bytes = self.rom.read_bytes(cursor, length + 2)
-            if length == 8:
-              model_id = preset.model_id
-              position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
-              entry = Object3D("SPECIAL_MACRO_OBJ", self.current_area, model_id, position, self.level, None, preset.behaviour_addr, mem_address = cursor)
-            elif length == 10:
-              model_id = preset.model_id
-              position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
-              rotation = (None, self.rom.read_integer(None, 2, True), None)
-              entry = Object3D("SPECIAL_MACRO_OBJ", self.current_area, model_id, position, self.level, rotation, preset.behaviour_addr, mem_address = cursor)
-            elif length == 12:
-              model_id = preset.model_id
-              position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
-              rotation = (None, self.rom.read_integer(None, 2, True), None)
-              (b1, b2) = (self.rom.read_integer(), self.rom.read_integer())
-              entry = Object3D("SPECIAL_MACRO_OBJ", self.current_area, model_id, position, self.level, rotation, preset.behaviour_addr, [b1, b2], mem_address = cursor)
-            else:
-              raise Exception("Invalid Preset Length")
 
+            model_id = preset.model_id
+            position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
+            rotation = (None, None, None)
+            bparams = []
+
+            if length >= 10:
+              rot_y = self.rom.read_integer(None, 2, True)
+              rot_y = int(float(rot_y) * SPCL_MACRO_ROT_Y_MUL)
+              rotation = (None, rot_y, None)
+            
+            if length >= 12:
+              (b1, b2) = (self.rom.read_integer(), self.rom.read_integer())
+              bparams = [b1, b2]
+
+            entry = Object3D("SPECIAL_MACRO_OBJ", self.current_area, model_id, position, self.level, rotation, preset.behaviour_addr, bparams=bparams, mem_address = cursor)
+          
             self.special_macro_object_tables[entry] = start
             objects_found.append(entry)
             count += 1

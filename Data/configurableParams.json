@@ -101,6 +101,7 @@
     "label": "Disable Star-Warp",
     "category": "gameplay",
     "type": "checkbox",
+    "disabled": "work-in-progress",
     "default": {
       "CLI": false,
       "WEB": false
@@ -120,5 +121,17 @@
     ],
     "default": "vanilla",
     "help": "Changes how the doors to levels require different amounts of stars to be collected beforehand. Random means all doors require stars, but the amount will be random. Open simply means all doors are open from the start."
+  },
+  {
+    "name": "keydoor-requirements",
+    "label": "Keydoor Requirements",
+    "category": "gameplay",
+    "type": "select",
+    "options": [
+      { "value": "vanilla", "label": "Vanilla" },
+      { "value": "open", "label": "All Open" }
+    ],
+    "default": "vanilla",
+    "help": "Changes how the locked keydoors in the castle work. Vanilla means you will require the usual keys from the Bowser fights. Open means they're simply open from the start."
   }
 ]

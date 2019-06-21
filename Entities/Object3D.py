@@ -28,8 +28,10 @@ class Object3D(BaseMemoryRecord):
     return f'Unknown (Source: {self.source})'
 
   def remove(self, rom):
+
     if self.source == 'PLACE_OBJ':
-      rom.write_byte(self.mem_address + 1, bytes([0x00])) # Set Model-ID to 0
+      self.set(rom, 'model_id', 0x0)
+      self.set(rom, 'behaviour', 0x0)
     if self.source == 'MACRO_OBJ':
       rom.levelscripts[self.level].remove_macro_object(self)
     if self.source == 'SPECIAL_MACRO_OBJ':
@@ -47,11 +49,15 @@ class Object3D(BaseMemoryRecord):
     self.rotation = rotation
     self.behaviour = behaviour
     self.behaviour_name = self.generate_name()
+    self.bparams = bparams
     self.mem_address = mem_address
     
     if mem_address is not None:
       if source == 'PLACE_OBJ':
         self.add_mapping('position', ('int', 'int', 'int'), mem_address + 2, mem_address + 8)
+        self.add_mapping('bparams', ('int', 'int', 'int', 'int'), mem_address + 14, mem_address + 18)
+        self.add_mapping('model_id', 'int', mem_address + 1, mem_address + 2)
+        self.add_mapping('behaviour', 'int', mem_address + 18, mem_address + 22)
       elif source == source == 'MARIO_SPAWN':
         self.add_mapping('position', ('int', 'int', 'int'), mem_address + 4, mem_address + 10)
       elif source == 'MACRO_OBJ':

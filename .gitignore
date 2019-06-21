@@ -38,6 +38,11 @@ dist/
 romfiles/
 *.z64
 *.z64.zip
+*.n64
+*.n64.zip
+*.v64
+*.v64.zip
+
 release/
 # dont need to commit psd files and that crap
 dumps/

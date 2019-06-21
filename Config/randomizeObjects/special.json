@@ -1,0 +1,171 @@
+[
+  {
+    "name": "Mario Level Spawn",
+    "match": { "source": "MARIO_SPAWN" },
+    "rules": {
+      "UNDERWATER": "ALLOWED",
+      "SPAWN_HEIGHT": [100, 900],
+      "MAX_SLOPE": 0.99
+    }
+  },
+  {
+    "name": "Warp (Mario Start 2)",
+    "match": { "behaviour": "0x13002F64" },
+    "rules": {
+      "UNDERWATER": "ALLOWED",
+      "SPAWN_HEIGHT": [100, 900],
+      "MAX_SLOPE": 0.99
+    }
+  },
+  {
+    "name": "Warp (Mario Start 1)",
+    "match": { "behaviour": "0x13002F74" },
+    "rules": {
+      "UNDERWATER": "ALLOWED",
+      "SPAWN_HEIGHT": [100, 900],
+      "MAX_SLOPE": 0.99
+    }
+  },
+  {
+    "name": "Castle Courtyard: Boo Cage",
+    "match": { "behaviour": "0x13002710" },
+    "rules": {
+      "UNDERWATER": "NEVER",
+      "SPAWN_HEIGHT": [20, 200],
+      "MAX_SLOPE": 0.99
+    }
+  },
+  {
+    "name": "Toad",
+    "match": { "behaviour": "0x13002EF8" }
+  },
+  {
+    "name": "CCM: Lost Penguin",
+    "match": { "behaviour": "0x130020E8" }
+  },
+  {
+    "name": "CCM/SL: Wandering Penguin",
+    "match": { "behaviour": "0x13002E58" }
+  },
+  {
+    "name": "Bob-Omb Buddy (Messagebox)",
+    "match": { "behaviour": "0x130031DC" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Bob-Omb Buddy (Canon)",
+    "match": { "behaviour": "0x13003228" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Bowser 1 Battle disable Mario shuffle",
+    "match": { "course_id": "0x1E", "source": "MARIO_SPAWN" },
+    "rules": {
+      "DISABLE": true
+    },
+    "priority": 5
+  },
+  {
+    "name": "Bowser 2 Battle disable Mario shuffle",
+    "match": { "course_id": "0x21", "source": "MARIO_SPAWN" },
+    "rules": {
+      "DISABLE": true
+    },
+    "priority": 5
+  },
+  {
+    "name": "Bowser 3 Battle disable Mario shuffle",
+    "match": { "course_id": "0x22", "source": "MARIO_SPAWN" },
+    "rules": {
+      "DISABLE": true
+    },
+    "priority": 5
+  },
+  {
+    "name": "Koopa the Quick / Normal Koopa (Disabled)",
+    "match": { "model_id": "0x68" },
+    "rules": {
+      "UNDERWATER": "NEVER",
+      "DISABLE": true
+    }
+  },
+  {
+    "name": "Don't shuffle invisible boxes",
+    "match": { "behaviour": "0x130014BC" },
+    "rules": {
+      "DISABLE": true
+    },
+    "priority": 5
+  },
+  {
+    "name": "WC: Object can be in air",
+    "match": { "course_id": "0x1D" },
+    "rules": {
+      "NO_FLOOR_REQUIRED": true
+    }
+  },
+  {
+    "name": "WC: Red Coins Wingcap",
+    "match": { "behaviour": "0x13003EAC", "course_id": "0x1D" },
+    "rules": {
+      "MAX_Y": 370,
+      "MIN_Y": -2400,
+      "DISTANCE_TO": { "origin": [0, -2047, 0], "max_distance": 6000 },
+      "NO_FLOOR_REQUIRED": true
+    },
+    "priority": 5
+  },
+  {
+    "name": "WC: Box in Wingcap Level",
+    "match": { "behaviour": "0x13002250", "course_id": "0x1D" },
+    "rules": {
+      "NO_FLOOR_REQUIRED": false
+    },
+    "priority": 10
+  },
+  {
+    "name": "PSS: Warp at start of Slide",
+    "match": { "behaviour": "0x13002F64", "course_id": "0x1B" },
+    "rules": {
+      "MIN_Y": 6750
+    }
+  },
+  {
+    "name": "WDW: Items can spawn in Water",
+    "match": { "course_id": "0x0B"  },
+    "rules": {
+      "UNDERWATER": "ALLOWED"
+    },
+    "priority": 5
+  },
+  {
+    "name": "JRB: Itembox in Ship can spawn in Water",
+    "match": { "course_id": "0x0C", "area_id": "0x2"  },
+    "rules": {
+      "UNDERWATER": "ALLOWED",
+      "DROP_TO_FLOOR": "FORCE",
+      "MAX_Y": 1858
+    },
+    "priority": 5
+  },
+  {
+    "name": "THI: Red Coins below Boss Room",
+    "match": { "behaviour": "0x13003EAC", "course_id": "0x0D", "area_id": "0x03" },
+    "rules": {
+      "MAX_Y": 1750
+    },
+    "priority": 5
+  },
+  {
+    "name": "THI: Red Coin Star below Boss Room",
+    "match": { "behaviour": "0x13003E8C", "course_id": "0x0D", "area_id": "0x03" },
+    "rules": {
+      "MAX_Y": 1750
+    },
+    "priority": 5
+  }
+]

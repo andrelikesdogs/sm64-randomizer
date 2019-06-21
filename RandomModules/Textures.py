@@ -11,8 +11,70 @@ class MultiTexture(NamedTuple):
   name: str
   textures: List[Texture]
 
+paintings = [
+  ('bob', 0xA800, 0xB800),
+  ('ccm', 0xC800, 0xD800),
+  ('wf', 0xE800, 0xF800),
+  ('jrb', 0x10800, 0x11800),
+  ('lll', 0x13800, 0x12800),
+  ('ssl', 0x14800, 0x15800),
+  ('wdw', 0x17800, 0x18800),
+  ('thi', 0x19800, 0x1A800),
+  ('ttm', 0x1B800, 0x1C800),
+  ('ttc', 0x1D800, 0x1E800),
+  ('sl', 0x1F800, 0x20800)
+]
+
 class TextureAtlas:
   definitions : dict = {}
+
+  def __init__(self, rom : 'ROM'):
+    self.rom = rom
+
+  def add_dynamic_positions(self):
+    (paintings_start, _) = self.rom.segments_sequentially[54]
+    for (lvl_name, upper, lower) in paintings:
+      TextureAtlas.add_texture_definition(f'painting_{lvl_name}', MultiTexture(
+        lvl_name,
+        [
+          Texture(
+            paintings_start + upper,
+            int(32*64*16 / 8),
+            64,
+            32,
+            f'painting_{lvl_name}_upper'
+          ),
+          Texture(
+            paintings_start + lower,
+            int(32*64*16 / 8),
+            64,
+            32,
+            f'painting_{lvl_name}_lower'
+          ),
+        ]
+      ))
+
+    (unknown_painting_bank, _) = self.rom.segments_sequentially[39]
+    unknown_painting_position = unknown_painting_bank + 0x1894
+    TextureAtlas.add_texture_definition('painting_unknown', MultiTexture(
+      'unknown',
+      [
+        Texture(
+          unknown_painting_position + 0x6800,
+            int(32*64*16 / 8),
+            64,
+            32,
+            f'painting_unknown_upper'
+        ),
+          Texture(
+            unknown_painting_position + 0x6800,
+              int(32*64*16 / 8),
+              64,
+              32,
+              f'painting_unknown_lower'
+          )
+      ]
+    ))
 
   @staticmethod
   def add_texture_definition(name, texture : Union[Texture, MultiTexture]):
@@ -52,58 +114,3 @@ class TextureAtlas:
       tex_to = texture_a.textures[idx]
 
       rom.write_byte(tex_to.position, bytes_from)
-
-paintings = [
-  ('bob', 0xA800, 0xB800),
-  ('ccm', 0xC800, 0xD800),
-  ('wf', 0xE800, 0xF800),
-  ('jrb', 0x10800, 0x11800),
-  ('lll', 0x13800, 0x12800),
-  ('ssl', 0x14800, 0x15800),
-  ('wdw', 0x17800, 0x18800),
-  ('thi', 0x19800, 0x1A800),
-  ('ttm', 0x1B800, 0x1C800),
-  ('ttc', 0x1D800, 0x1E800),
-  ('sl', 0x1F800, 0x20800)
-]
-
-for (lvl_name, upper, lower) in paintings:
-  TextureAtlas.add_texture_definition(f'painting_{lvl_name}', MultiTexture(
-    lvl_name,
-    [
-      Texture(
-        0xE0BB07 + upper,
-        int(32*64*16 / 8),
-        64,
-        32,
-        f'painting_{lvl_name}_upper'
-      ),
-      Texture(
-        0xE0BB07 + lower,
-        int(32*64*16 / 8),
-        64,
-        32,
-        f'painting_{lvl_name}_lower'
-      ),
-    ]
-  ))
-
-TextureAtlas.add_texture_definition('painting_unknown', MultiTexture(
-  'unknown',
-  [
-    Texture(
-      0xD78271 + 0x6800,
-        int(32*64*16 / 8),
-        64,
-        32,
-        f'painting_unknown_upper'
-    ),
-      Texture(
-        0xD78271 + 0x6800,
-          int(32*64*16 / 8),
-          64,
-          32,
-          f'painting_unknown_lower'
-      )
-  ]
-))

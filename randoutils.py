@@ -17,6 +17,20 @@ def format_binary(bin_data):
 
   return ' '.join(hex(b)[2:].upper().rjust(2, '0') for b in bin_data)
 
+def round_up_at_half(n):
+  if n % 1 >= 0.5:
+    return math.ceil(n)
+    
+  return math.floor(n)
+
+
+def align_address(address, alignment=1):
+  aligned_count = float(address) / float(alignment)
+
+  alignment_corrected = round_up_at_half(address)
+  return int(alignment_corrected) * alignment
+
+
 def pretty_print_table(title, data):
   print(title.center(73, "-"))
   longest_line = max([len(label) for label in data.keys()])
@@ -31,7 +45,7 @@ def format_float(f):
   return f"{f:.5f}"
 
 def clamp(v, mi, ma):
-  return max(v, min(v, ma), mi)
+  return max(mi, min(v, ma))
 
 # From stackoverflow: https://stackoverflow.com/a/34325723
 def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):

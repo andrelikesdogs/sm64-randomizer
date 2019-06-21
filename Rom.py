@@ -5,6 +5,8 @@ from platform import system, architecture
 import subprocess
 import time
 import trimesh
+import sys
+import binascii
 
 from randoutils import pretty_print_table, generate_debug_materials, generate_obj_for_level_geometry
 from Parsers.Level import Level
@@ -12,8 +14,9 @@ from Parsers.LevelScript import LevelScriptParser
 from Constants import ALL_LEVELS, application_path
 import Constants
 
+
 class ROM:
-  def __init__(self, path, out_path):
+  def __init__(self, path, out_path, alignment=1):
     self.path = path
     self.out_path = out_path
 
@@ -21,10 +24,17 @@ class ROM:
     self.endianess = None
     self.file_stats = None
     self.rom_type = None
+    self.alignment = alignment
     self.require_checksum_fix = False
 
+    self.macro_table_position = None
+    self.special_macro_table_position = None
+
     self.segments = {}
+    self.segments_sequentially = []
     self.levelscripts = {}
+
+    self.segment_idx = 0
 
   def __enter__(self):
     self.file_stats = os.stat(self.path)
@@ -65,6 +75,7 @@ class ROM:
       self.endianess = 'big'
     elif endian_bytes == bytes([0x37, 0x80]):
       self.endianess = 'mixed'
+      print("Warning: mixed endianess is confusing")
     elif endian_bytes == bytes([0x40, 0x12]):
       self.endianess = 'little'
     else:
@@ -95,10 +106,16 @@ class ROM:
     else:
       print("Warning: Could not determine ROM-Type from size")
 
-  def try_extend(self):
+  def try_extend(self, alignment=1):
     # make copy
     path = Path(self.path)
-    ext_path = path.with_suffix(f'.ext{path.suffix}')
+    
+    ext_path = None
+    try:
+      ext_path = path.with_suffix(f'.ext{path.suffix}')
+    except:
+      print(f"Could not read \"{path.name}\"")
+      sys.exit(1)
     print("Creating Extended ROM inplace")
     shutil.copy(path, ext_path)
 
@@ -108,7 +125,7 @@ class ROM:
     operating_sys = system()
     #arch = architecture()
     #bits = arch[0]
-    args = ['-s', '24', str(path), ext_path]
+    args = ['-s', '24', '-a', str(alignment), str(path), str(ext_path)]
     if operating_sys == 'Darwin':
       subprocess.check_call([os.path.join(application_path, '3rdparty/sm64extend_mac_x64'), *args])
     elif operating_sys == 'Linux':
@@ -136,7 +153,7 @@ class ROM:
         if os.environ['SM64R_DEBUG'] == 'PLOT':
           self.levelscripts[level].level_geometry.plot()
       
-      if 'DEBUG' in os.environ:
+      if 'SM64R_DEBUG' in os.environ and os.environ['SM64R_DEBUG'] == 'DUMP':
         if not os.path.exists(os.path.join("dumps", "level_scripts")):
           os.makedirs(os.path.join("dumps", "level_scripts"))
         
@@ -159,6 +176,8 @@ class ROM:
 
         with open(os.path.join("dumps", "level_geometry", "debug.mtl"), "w+") as mtl_debug:
           mtl_debug.write(generate_debug_materials())
+
+    # self.match_segments(0x823B64)
         
   def print_info(self):
     pretty_print_table("ROM Properties", {
@@ -170,8 +189,56 @@ class ROM:
     })
 
   def set_initial_segments(self):
-    self.set_segment(0x15, self.read_integer(0x2A622C, 4), self.read_integer(0x2A6230, 4))
-    pass
+    # Taken from Quad64, thanks David <3
+    # https://github.com/DavidSM64/Quad64/blob/5018b239ef43a5bad4081942be91b8c752896e3a/src/ROM.cs#L92
+    if self.region == "NORTH_AMERICA":
+      self.macro_table_position = 0xEC7E0
+      self.special_macro_table_position = 0xED350
+      self.set_segment(0x15, self.read_integer(0x2A622C, 4), self.read_integer(0x2A6230, 4))
+    elif self.region == "EUROPE":
+      self.macro_table_position = 0xBD590
+      self.special_macro_table_position = 0xBE100
+      self.set_segment(0x15, 0x28CEE0, 0x28D8F0)
+    elif self.region == "JAPAN":
+      self.macro_table_position = 0xEB6D0
+      self.special_macro_table_position = 0xEC240
+      self.set_segment(0x15, 0x2AA240, 0x2AAC50)
+    elif self.region == "JAPAN_SHINDOU":
+      self.macro_table_position = 0xC8D60
+      self.special_macro_table_position = 0xC98D0
+      self.set_segment(0x15, 0x286AC0, 0x2874D0)
+    elif self.region == "CHINA":
+      self.macro_table_position = 0xCB220
+      self.special_macro_table_position = 0xCBD90
+      self.set_segment(0x15, 0x298AE0, 0x2994F0)
+    else:
+      raise ValueError("Unknown Region. Can't load segment 0x15")
+
+  def set_segment(self, segment_num, segment_start, segment_end, mio0=False):
+    segment_positions = (segment_start, segment_end)
+
+    self.segments_sequentially.append(segment_positions)
+    self.segments[segment_num] = segment_positions
+  
+  def match_segments(self, address):
+    """ Matches segments with an address. This can be used to find in which segment a hardcoded address will be, if used with an unaligned extended ROM.
+    
+    Arguments:
+        address {int} -- Address to find segment information for
+    """
+    print(f"matching for {hex(address)}")
+    for segment_idx, (address_start, address_end) in enumerate(self.segments_sequentially):
+      if address >= address_start and address < address_end:
+        offset = address - address_start
+        print(f'{hex(address)} found in segment index #{segment_idx}, offset: {hex(offset)}')
+        return (segment_idx, offset)
+
+  def align_address(self, address):
+    #self.match_segments(address)
+    #print(hex(address))
+
+
+    return address
 
   def read_cmds_from_level_block(self, level: Level, filter=[]):
     (start_position, end_position) = level.address
@@ -203,9 +270,6 @@ class ROM:
         #print("Ending Level Sequence (end of bytes)")
         break
 
-  def set_segment(self, segment_num, segment_start, segment_end):
-    self.segments[segment_num] = (segment_start, segment_end)
-  
   def read_segment_addr(self, addr):
     segment_address = addr & 0x00FFFFFF
     segment_id = (addr & 0xFF000000) >> 24
@@ -271,6 +335,10 @@ class ROM:
 
   ''' Write Methods '''
   def write_byte(self, position, data : bytes):
+    self.target.seek(position, 0)
+    self.target.write(data)
+
+  def write_bytes(self, position, data : bytes):
     self.target.seek(position, 0)
     self.target.write(data)
 

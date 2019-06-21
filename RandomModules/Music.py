@@ -12,6 +12,7 @@ class MusicRandomizer:
   def find_music_seqs(self, levels: List[Level]):
     music_seq_ids = []
     music_seq_pos = []
+    # TODO: use levelscript parser system for this
     for level in levels:
       for (cmd, data, pos) in self.rom.read_cmds_from_level_block(level, filter=[0x36, 0x37]):
         sequence_id = None

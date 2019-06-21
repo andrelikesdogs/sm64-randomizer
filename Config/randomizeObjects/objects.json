@@ -1,0 +1,169 @@
+[
+  {
+    "name": "Coins (Line Formation)",
+    "match": { "behaviour": "0x130008EC", "bparam2": 0 },
+    "rules": {
+      "BOUNDING_BOX": { "length": 1000, "width": 100, "height": 100 }
+    }
+  },
+  {
+    "name": "Coins (Upward Coin Formation)",
+    "match": { "behaviour": "0x130008EC", "bparam2": 1 },
+    "rules": {
+      "BOUNDING_BOX": { "length": 100, "width": 100, "height": 1000 }
+    }
+  },
+  {
+    "name": "Coins (Circle)",
+    "match": { "behaviour": "0x130008EC", "bparam2": 2 },
+    "rules": {
+      "BOUNDING_BOX": { "length": 100, "width": 1000, "height": 1000 }
+    }
+  },
+  {
+    "name": "Coins (Ring)",
+    "match": { "behaviour": "0x130008EC", "bparam2": 3 },
+    "rules": {
+      "BOUNDING_BOX": { "length": 1000, "width": 1000, "height": 100 }
+    }
+  },
+  {
+    "name": "Coins (Arrow)",
+    "match": { "behaviour": "0x130008EC", "bparam2": 4 },
+    "rules": {
+      "BOUNDING_BOX": { "length": 100, "width": 1000, "height": 1000 }
+    }
+  },
+  {
+    "name": "Coin (Type 1)",
+    "match": { "model_id": "0x74" }
+  },
+  {
+    "name": "Coin (Blue)",
+    "match": { "model_id": "0x76" },
+    "rules": {
+      "DISABLED": true
+    }
+  },
+  {
+    "name": "Red Coin",
+    "match": { "behaviour": "0x13003EAC" }
+  },
+  {
+    "name": "Red Coin Star",
+    "match": { "behaviour": "0x13003E8C" },
+    "rules": {
+      "SPAWN_HEIGHT": [50, 200],
+      "MAX_SLOPE": 0.9
+    }
+  },
+  {
+    "name": "Breakable Box (Small.Big)",
+    "match": { "model_id": "0x82" }
+  },
+  {
+    "name": "Breakable Box (Jumping)",
+    "match": { "model_id": "0x81" }
+  },
+  {
+    "name": "Breakable Box (Jumping)",
+    "match": { "model_id": "0x81" }
+  },
+  {
+    "name": "Bouncing Box",
+    "match": { "behaviour": "0x13001650" }
+  },
+  {
+    "name": "Star",
+    "match": { "model_id": "0x7A" },
+    "rules": {
+      "MAX_SLOPE": 0.95,
+      "SPAWN_HEIGHT": [200, 600]
+    }
+  },
+  {
+    "name": "Sign",
+    "match": { "model_id": "0x7C" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "JRB: Clam",
+    "match": { "behaviour": "0x13005440" },
+    "rules": {
+      "UNDERWATER": "ONLY",
+      "DROP_TO_FLOOR": "FORCE"
+    }
+  },
+  {
+    "name": "1-UP",
+    "match": { "model_id": "0xD4" }
+  },
+  {
+    "name": "Butterflies",
+    "match": { "behaviour": "0x130033bc" },
+    "rules": {
+      "SPAWN_HEIGHT": [30, 100]
+    }
+  },
+  {
+    "name": "Heartcontainer",
+    "match": { "model_id": "0x78" },
+    "rules": {
+      "SPAWN_HEIGHT": [30, 40]
+    }
+  },
+  {
+    "name": "[!] Item-Box",
+    "match": { "model_id": "0x89" },
+    "rules": {
+      "SPAWN_HEIGHT": [200, 500]
+    }
+  },
+  {
+    "name": "Tree (Outside)",
+    "match": { "behaviour": "0x13002AA4" }
+  },
+  {
+    "name": "Tree (Courses)",
+    "match": { "model_id": "0x17" }
+  },
+  {
+    "name": "Tree (Snowy)",
+    "match": { "model_id": "0x19" }
+  },
+  {
+    "name": "Tree (Courtyard)",
+    "match": { "model_id": "0x18" }
+  },
+  {
+    "name": "Tree (SSL)",
+    "match": { "model_id": "0x1B" }
+  },
+  {
+    "name": "Fire Spewer",
+    "match": { "behaviour": "0x1300518C" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "Flamethrower",
+    "match": { "behaviour": "0x13001108" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "BOB: Water Bubble Drop",
+    "match": { "behaviour": "0x13004B8C"},
+    "rules": {
+      "SPAWN_HEIGHT": [2400, 3000]
+    }
+  },
+  {
+    "name": "Poundable Log",
+    "match": { "behaviour": "0x1300481C" }
+  }
+]

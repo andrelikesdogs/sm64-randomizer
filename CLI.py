@@ -4,6 +4,7 @@ import argparse
 import time
 import traceback
 import json
+import hashlib
 from pathlib import Path
 from random import seed, randint
 from typing import List
@@ -11,16 +12,16 @@ from typing import List
 from __version__ import __version__
 
 from Rom import ROM
-from Debug import Debug
 from Spoiler import SpoilerLog
 from randoutils import pretty_print_table
 
 from RandomModules.Music import MusicRandomizer
 from RandomModules.Mario import MarioRandomizer
-from RandomModules.Levels import LevelRandomizer
+from RandomModules.Objects import ObjectRandomizer
 from RandomModules.Colors import ColorRandomizer
 from RandomModules.Warps import WarpRandomizer
 from RandomModules.Text import TextRandomizer
+from RandomModules.Textures import TextureAtlas
 from RandomModules.Stardoors import StardoorRandomizer
 from Enhancements.GameplayEnhancements import Gameplay
 
@@ -33,14 +34,17 @@ with open(os.path.join(application_path, "Data", "configurableParams.json"), "r"
 parser = argparse.ArgumentParser()
 parser.add_argument("rom", type=str)
 parser.add_argument("--no-extend", default=False, help="disable auto-extend of ROM, which might fail on some systems", action="store_true")
+parser.add_argument("--alignment", type=int, default=None, help="Specify the byte alignment. If you know this value, you have a higher change of successfully randomizing romhacks.")
 parser.add_argument("--out", type=str, help="target of randomized rom")
-#parser.add_argument("--seed", type=int, default=round(time.time() * 256 * 1000), help="define a custom seed to have the same experience as someone else")
 parser.add_argument('--version', action='version', version=f'v{__version__}')
+
 argument_labels = {
   "rom": "Input ROM",
   "out": "Output ROM",
   "no_extend": "Disable automatic extending",
+  "alignment": "Byte Alignment"
 }
+
 for field in randomizer_params:
   argument_args = []
   argument_kwargs = {}
@@ -75,21 +79,17 @@ def generate_output_path(rom_in : Path):
   return 
 
 def run_with_parsed_args(opt_args : argparse.Namespace):
-  if not opt_args.seed:
-    opt_args.seed = randint(1e10, 10e10)
-  else:
-    if len(str(opt_args.seed)) < 10:
-      opt_args.seed = str(opt_args.seed).rjust(10, '0')
-    opt_args.seed = sum([(ord(x) * 1337) for x in str(opt_args.seed)])
-  seed(opt_args.seed)
-
   rom_path = Path(opt_args.rom)
   out_path = opt_args.out or rom_path.with_suffix(f'.out{rom_path.suffix}')
 
   if not rom_path.exists():
     raise Exception("invalid file, does not exist")
 
-  with ROM(rom_path, out_path) as rom:
+  if not opt_args.seed:
+    print("Choosing random seed")
+    opt_args.seed = randint(1e10, 10e10)
+  
+  with ROM(rom_path, out_path, opt_args.alignment) as rom:
     try:
       rom.verify_header()
     except Exception as err:
@@ -101,23 +101,35 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       print("The specified ROM file is not extended yet, we\'ll try to extend it for you")
       new_rom = None
 
+      target_alignment = opt_args.alignment if opt_args.alignment is not None else 8
       try:
-        new_rom = rom.try_extend()
+        new_rom = rom.try_extend(target_alignment)
       except Exception as err:
         print("Unfortunately, the ROM could not be extended. Please see the log below to figure out why. The Randomizer will continue using the vanilla rom. Please note not all functionality is available in this mode.")
         print(err)
+        print(traceback.format_exc())
 
       new_args = {**vars(opt_args)}
       new_args['rom'] = new_rom
       new_args['no_extend'] = True # don't extend twice
+      new_args['alignment'] = target_alignment
       run_with_parsed_args(argparse.Namespace(**new_args))
       return
 
     pretty_print_table("Your Settings", {argument_labels[label]: value for (label, value) in vars(opt_args).items()})
     rom.print_info()
-    
+
+    # convert seed here! otherwise we might return the hashed seed and heck everything up    
+    opt_args.seed = int(hashlib.sha1(bytes(str(opt_args.seed), 'utf8')).hexdigest(), 16) % (10**12)
+    seed(opt_args.seed)
+
     rom.set_initial_segments()
     rom.read_levels()
+
+    if rom.rom_type == 'EXTENDED':
+      # initialize texture atlas and dynamic positions
+      textures = TextureAtlas(rom)
+      textures.add_dynamic_positions()
 
     music_random = MusicRandomizer(rom)
     if opt_args.shuffle_music:
@@ -131,9 +143,9 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     if opt_args.shuffle_entries:
       warp_random.shuffle_level_entries(opt_args.shuffle_paintings)
     
-    level_randomizer = LevelRandomizer(rom)
+    object_randomizer = ObjectRandomizer(rom)
     if opt_args.shuffle_objects:
-      level_randomizer.shuffle_objects()
+      object_randomizer.shuffle_objects()
 
     text_randomizer = TextRandomizer(rom)
     if opt_args.shuffle_text:
@@ -158,8 +170,8 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
 
       #stardoor_randomizer
 
-    if 'DEBUG' in os.environ and os.environ['DEBUG'] == 'PLOT':
-      for (level_area, parsed) in rom.levelscripts.items():
+    if 'SM64R_DEBUG' in os.environ and os.environ['SM64R_DEBUG'] == 'PLOT':
+      for (_, parsed) in rom.levelscripts.items():
         parsed.level_geometry.plot()
       #rom.levelscripts
 

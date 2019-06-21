@@ -27,6 +27,9 @@ section .inner {
   padding: 1em 4em 1em 4em;
   max-width: 960px;
   margin: auto; }
+  @media (max-width: 960px) {
+    section .inner {
+      padding: 8px 14px; } }
 
 section:first-of-type {
   padding-top: 4em; }
@@ -100,10 +103,11 @@ section:last-of-type {
   appearance: none;
   border: none;
   border-radius: 4px;
-  padding: 2em 4em;
+  padding: 1em 2em;
   margin: 10px 10px 0 10px;
   display: inline-block;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.4); }
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.4);
+  font-size: 150%; }
   .like-button.primary {
     color: #fff;
     background-color: #ff3232; }
