@@ -45,7 +45,7 @@ def format_float(f):
   return f"{f:.5f}"
 
 def clamp(v, mi, ma):
-  return max(v, min(v, ma), mi)
+  return max(mi, min(v, ma))
 
 # From stackoverflow: https://stackoverflow.com/a/34325723
 def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):

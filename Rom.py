@@ -125,7 +125,7 @@ class ROM:
     operating_sys = system()
     #arch = architecture()
     #bits = arch[0]
-    args = ['-s', '24', '-a', str(alignment), str(path), ext_path]
+    args = ['-s', '24', '-a', str(alignment), str(path), str(ext_path)]
     if operating_sys == 'Darwin':
       subprocess.check_call([os.path.join(application_path, '3rdparty/sm64extend_mac_x64'), *args])
     elif operating_sys == 'Linux':
@@ -153,7 +153,7 @@ class ROM:
         if os.environ['SM64R_DEBUG'] == 'PLOT':
           self.levelscripts[level].level_geometry.plot()
       
-      if 'DEBUG' in os.environ:
+      if 'SM64R_DEBUG' in os.environ and os.environ['SM64R_DEBUG'] == 'DUMP':
         if not os.path.exists(os.path.join("dumps", "level_scripts")):
           os.makedirs(os.path.join("dumps", "level_scripts"))
         
@@ -239,6 +239,36 @@ class ROM:
 
 
     return address
+
+  def read_cmds_from_level_block(self, level: Level, filter=[]):
+    (start_position, end_position) = level.address
+    self.file.seek(start_position, 0)
+
+    cmd = None
+    cmd_count = 0
+    cursor = start_position
+    while True:
+      cmd_count = cmd_count + 1
+
+      # if this function is used recursively, this would get lost
+      self.file.seek(cursor, 0)
+      cmd = self.file.read(1)[0]
+      cmd_length = max(self.file.read(1)[0] - 2, 0)
+      if cmd == 0x02:
+        #print("Ending Level Sequence (0x02 END_LEVEL)")
+        break
+
+      cursor = cursor + cmd_length + 2
+      #print('position: ' + str(cursor))
+
+      if not len(filter) or cmd in filter:
+        # read data and output
+        cmd_data = self.file.read(cmd_length)
+        yield (cmd, cmd_data, cursor - cmd_length)
+
+      if cursor > end_position:
+        #print("Ending Level Sequence (end of bytes)")
+        break
 
   def read_segment_addr(self, addr):
     segment_address = addr & 0x00FFFFFF

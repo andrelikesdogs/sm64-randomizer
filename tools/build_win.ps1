@@ -24,19 +24,20 @@ mv "dist/main.exe" "dist/SM64 Randomizer Generator.exe"
 
 mkdir ./dist/3rdparty -ErrorAction SilentlyContinue
 mkdir ./dist/Data -ErrorAction SilentlyContinue
+mkdir ./dist/Config -ErrorAction SilentlyContinue
 
 cp 3rdparty/*win* ./dist/3rdparty
 cp 3rdparty/LICENSE ./dist/3rdparty
 cp 3rdparty/README.md ./dist/3rdparty
 cp LICENSE ./dist/LICENSE
 cp README.md ./dist/README.md
-cp Data ./dist/Data
+cp Config/* ./dist/Config/
 cp Data/* ./dist/Data/
 
 $ArchiveName = "release/sm64-randomizer-$RandoVersion-win32.zip"
 del $ArchiveName -ErrorAction SilentlyContinue
 cd dist
-& 'C:\Program Files\7-Zip\7z.exe' -tzip a ../$ArchiveName ./*.exe 3rdparty/* *.md LICENSE ./Data
+& 'C:\Program Files\7-Zip\7z.exe' -tzip a ../$ArchiveName ./*.exe 3rdparty/* *.md LICENSE ./Data ./Config
 cd ..
 
 # 64 bit
@@ -51,17 +52,18 @@ mv "dist/main.exe" "dist/SM64 Randomizer Generator.exe"
 
 mkdir ./dist/3rdparty -ErrorAction SilentlyContinue
 mkdir ./dist/Data -ErrorAction SilentlyContinue
+mkdir ./dist/Config -ErrorAction SilentlyContinue
 
 cp 3rdparty/*win* ./dist/3rdparty
 cp 3rdparty/LICENSE ./dist/3rdparty
 cp 3rdparty/README.md ./dist/3rdparty
 cp LICENSE ./dist/LICENSE
 cp README.md ./dist/README.md
-cp Data ./dist
+cp Config/* ./dist/Config/
 cp Data/* ./dist/Data/
 
 $ArchiveName = "release/sm64-randomizer-$RandoVersion-win64.zip"
 del $ArchiveName -ErrorAction SilentlyContinue
 cd dist
-& 'C:\Program Files\7-Zip\7z.exe' -tzip a ../$ArchiveName ./*.exe 3rdparty/* *.md LICENSE ./Data
+& 'C:\Program Files\7-Zip\7z.exe' -tzip a ../$ArchiveName ./*.exe 3rdparty/* *.md LICENSE ./Data ./Config
 cd ..

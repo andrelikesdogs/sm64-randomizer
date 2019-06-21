@@ -17,7 +17,7 @@ if len(sys.argv) <= 1:
 import os
 import logging
 
-if 'DEBUG' in os.environ:
+if 'SM64R_DEBUG' in os.environ:
   logging.basicConfig(level=logging.DEBUG, format="%(message)s")
 else:
   logging.basicConfig(filename="sm64_rando_debug.log", level=logging.DEBUG, filemode="w", format="%(asctime)s %(module)s %(message)s")

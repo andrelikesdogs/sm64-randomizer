@@ -1,6 +1,7 @@
 from random import randint, choice
-from randoutils import align_address
+from randoutils import clamp
 import logging
+import math
 
 # SM64 USA (BE) ROM Position
 # 0x823B64
@@ -39,13 +40,21 @@ class MarioRandomizer:
       return
     
     for (part, mem_address) in MEM_COLOR_ADDRESSES.items():
-      if enable_dumb_colors:
-        color = (randint(0, 255), randint(0, 255), randint(0, 255), 255)
-      else:
-        color = choice(SENSIBLE_COLORS[part])
-      #print(f'{part} is now {color}')
+      # read existing colors
+      """
+      (r, g, b) = tuple([self.rom.read_integer(mem_address + i) for i in range(3)])
+      print(part, (r, g, b))
+      (r2, g2, b2) = tuple([self.rom.read_integer(mem_address + 0x8 + i) for i in range(3)])
+      print(part + " dark", (r2, g2, b2))
+      """
 
-      self.rom.write_bytes(self.bank_start + mem_address, bytes([*color, 255]))
+      color_light = choice(SENSIBLE_COLORS[part])
+      color_dark = tuple([clamp(v + 20, 0, 255) for v in color_light])
+      # print(color_dark)
+      # print(f'{part} is now {color}')
+
+      self.rom.write_bytes(self.bank_start + mem_address, bytes([*color_light, 255])) # light
+      self.rom.write_bytes(self.bank_start + mem_address + 0x8, bytes([*color_dark, 255])) # dark
     pass
     #self.rom.file.seek(0x114750)
     #read_range = 0x1279B0 - 0x114750

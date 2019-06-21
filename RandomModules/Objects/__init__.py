@@ -219,7 +219,7 @@ class ObjectRandomizer:
         return False
 
     if "DISTANCE_TO" in rules:
-      origin_position = rules["DISTANCE_MAX"]["origin"]
+      origin_position = rules["DISTANCE_TO"]["origin"]
       distance = math.sqrt(
         (position[0] - origin_position[0]) ** 2 +
         (position[1] - origin_position[1]) ** 2 +
@@ -342,7 +342,7 @@ class ObjectRandomizer:
 
           if tries > 1000:
             print()
-            print(f"Warning: No valid position found for {object3d} after 1000 tries, bailing.")
+            print(f"Warning: No valid position found for {object3d.behaviour_name} in {level.name} (Area: {hex(object3d.area_id)}) after 1000 tries, bailing.")
             break
 
           # 1. Generate a random point

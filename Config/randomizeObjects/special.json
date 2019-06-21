@@ -86,10 +86,11 @@
     "priority": 5
   },
   {
-    "name": "Koopa the Quick / Normal Koopa",
+    "name": "Koopa the Quick / Normal Koopa (Disabled)",
     "match": { "model_id": "0x68" },
     "rules": {
-      "UNDERWATER": "NEVER"
+      "UNDERWATER": "NEVER",
+      "DISABLE": true
     }
   },
   {
