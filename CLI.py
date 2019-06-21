@@ -34,7 +34,7 @@ with open(os.path.join(application_path, "Data", "configurableParams.json"), "r"
 parser = argparse.ArgumentParser()
 parser.add_argument("rom", type=str)
 parser.add_argument("--no-extend", default=False, help="disable auto-extend of ROM, which might fail on some systems", action="store_true")
-parser.add_argument("--alignment", type=int, default=None, help="Specify the byte alignment. If you know this value, you have a higher change of successfully randomizing romhacks.")
+parser.add_argument("--alignment", type=int, default=8, help="Specify the byte alignment. If you know this value, you have a higher change of successfully randomizing romhacks.")
 parser.add_argument("--out", type=str, help="target of randomized rom")
 parser.add_argument('--version', action='version', version=f'v{__version__}')
 
