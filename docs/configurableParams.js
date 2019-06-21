@@ -110,6 +110,7 @@ configurableParams = [
     "label": "Disable Star-Warp",
     "category": "gameplay",
     "type": "checkbox",
+    "disabled": "work-in-progress",
     "default": {
       "CLI": false,
       "WEB": false
