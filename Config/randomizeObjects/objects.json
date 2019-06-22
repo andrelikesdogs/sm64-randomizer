@@ -79,7 +79,8 @@
     "rules": {
       "MAX_SLOPE": 0.95,
       "SPAWN_HEIGHT": [200, 600]
-    }
+    },
+    "priority": 3
   },
   {
     "name": "Sign",

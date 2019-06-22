@@ -121,7 +121,7 @@
   },
   {
     "name": "Bully (Small)",
-    "match": { "model_id": "0x56" }
+    "match": { "model_id": "0x56", "behaviour": "0x1300362C" }
   },
   {
     "name": "Boo",
@@ -171,27 +171,45 @@
   },
   {
     "name": "Boo (Buddy 3)",
-    "match": { "behaviour": "0x130027E4" }
+    "match": { "behaviour": "0x130027E4" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
   },
   {
     "name": "Boo (Buddy 2)",
-    "match": { "behaviour": "0x13002804" }
+    "match": { "behaviour": "0x13002804" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
   },
   {
     "name": "Boo (Buddy)",
-    "match": { "behaviour": "0x13002768" }
+    "match": { "behaviour": "0x13002768" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
   },
   {
     "name": "BBH: Haunted Chair",
-    "match": { "behaviour": "0x13004FD4" }
+    "match": { "behaviour": "0x13004FD4" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
   },
   {
     "name": "BBH: Haunted Book",
-    "match": { "behaviour": "0x1300506C" }
+    "match": { "behaviour": "0x1300506C" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
   },
   {
     "name": "BBH: Piano",
-    "match": { "behaviour": "0x13005024" }
+    "match": { "behaviour": "0x13005024" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
   },
   {
     "name": "SSL: Pokey",
@@ -199,6 +217,13 @@
   },
   {
     "name": "Spindrift",
-    "match": { "behaviour": "0x130012B4" }
+    "match": { "behaviour": "0x130012B4" },
+    "rules": {
+      "UNDERWATER": "NEVER"
+    }
+  },
+  {
+    "name": "BOB: Chain Chomp",
+    "match": { "behaviour": "0x1300478C" }
   }
 ]

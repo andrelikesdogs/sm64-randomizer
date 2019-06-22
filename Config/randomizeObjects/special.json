@@ -135,6 +135,13 @@
     }
   },
   {
+    "name": "CCM: Warp at start of Slide",
+    "match": { "behaviour": "0x13002F64", "course_id": "0x05" },
+    "rules": {
+      "MIN_Y": 6656
+    }
+  },
+  {
     "name": "WDW: Items can spawn in Water",
     "match": { "course_id": "0x0B"  },
     "rules": {

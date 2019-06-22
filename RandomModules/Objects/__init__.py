@@ -238,7 +238,7 @@ class ObjectRandomizer:
       floor_slope = floor_properties["triangle_normal"][1]
 
       # 1 = Floor. 0 = Wall.
-      if floor_slope < float(rules["MAX_SLOPE"]):
+      if floor_slope < abs(float(rules["MAX_SLOPE"])):
         return False
     
     if "UNDERWATER" in rules:
@@ -304,13 +304,13 @@ class ObjectRandomizer:
       pass
 
     if abs(bounds_min[0] - bounds_max[0]) > 0:
-      x = random.randrange(bounds_min[0], bounds_max[0])
+      x = random.randrange(bounds_min[0] + 1000, bounds_max[0] - 1000)
     
     if abs(bounds_min[1] - bounds_max[1]) > 0:
       y = random.randrange(bounds_min[1], bounds_max[1])
 
     if abs(bounds_min[2] - bounds_max[2]) > 0:
-      z = random.randrange(bounds_min[2], bounds_max[2])
+      z = random.randrange(bounds_min[2] + 1000, bounds_max[2] - 1000)
       
     return [x, y, z]
 
