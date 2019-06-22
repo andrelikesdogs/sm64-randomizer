@@ -5,7 +5,7 @@ block_cipher = None
 
 a = Analysis(['main.py'],
              pathex=['C:\\Users\\Administrator\\Desktop\\sm64-randomizer'],
-             binaries=[],
+             binaries=[('Lib/site-packages/rtree/spatialindex*', '.')],
              datas=[('README.md', '.'), ('LICENSE', '.'), ('Data', '.'), ('Lib/site-packages/trimesh/resources', 'trimesh/resources/')],
              hiddenimports=[],
              hookspath=[],
