@@ -177,7 +177,7 @@ class ROM:
         with open(os.path.join("dumps", "level_geometry", "debug.mtl"), "w+") as mtl_debug:
           mtl_debug.write(generate_debug_materials())
 
-    # self.match_segments(0x823B64)
+    self.match_segments(0xD78271)
         
   def print_info(self):
     pretty_print_table("ROM Properties", {

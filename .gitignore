@@ -42,6 +42,7 @@ romfiles/
 *.n64.zip
 *.v64
 *.v64.zip
+*.debug/
 
 release/
 # dont need to commit psd files and that crap

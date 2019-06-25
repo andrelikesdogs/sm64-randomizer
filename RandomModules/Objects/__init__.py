@@ -206,7 +206,7 @@ class ObjectRandomizer:
 
     floor_properties = self.check_floor(obj.area_id, levelscript, position, rules)
 
-    if "NO_FLOOR_REQUIRED" not in rules:
+    if "NO_FLOOR_REQUIRED" not in rules or rules["NO_FLOOR_REQUIRED"] != True:
       if floor_properties is False:
         return False
 
@@ -330,7 +330,7 @@ class ObjectRandomizer:
           continue
 
         # randomization disabled - continue to next one
-        if "DISABLE" in randomizing_rules:
+        if "DISABLE" in randomizing_rules and randomizing_rules["DISABLE"] == True:
           continue
 
         found_valid_point = False

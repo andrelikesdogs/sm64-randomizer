@@ -54,20 +54,20 @@ class TextureAtlas:
         ]
       ))
 
-    (unknown_painting_bank, _) = self.rom.segments_sequentially[39]
-    unknown_painting_position = unknown_painting_bank + 0x1894
+    (castle_ground_textures_start, _) = self.rom.segments_sequentially[39]
+    unknown_painting_start = castle_ground_textures_start + 0x1894
     TextureAtlas.add_texture_definition('painting_unknown', MultiTexture(
       'unknown',
       [
         Texture(
-          unknown_painting_position + 0x6800,
+          unknown_painting_start + 0x6800,
             int(32*64*16 / 8),
             64,
             32,
             f'painting_unknown_upper'
         ),
           Texture(
-            unknown_painting_position + 0x6800,
+            unknown_painting_start + 0x6800,
               int(32*64*16 / 8),
               64,
               32,
@@ -75,6 +75,25 @@ class TextureAtlas:
           )
       ]
     ))
+
+    TextureAtlas.add_texture_definition('castle_grounds_tree_shadow', Texture(
+      unknown_painting_start + 0xBC00,
+      int(32*32*16/8),
+      32,
+      32,
+      f'castle_grounds_tree_shadow'
+    ))
+
+  @staticmethod
+  def hide_texture(rom : "ROM", name):
+    if name not in TextureAtlas.definitions:
+      raise ValueError(f"{name} is not defined as a texture")
+    
+    definition = TextureAtlas.definitions[name]
+    empty_data = bytes([0x0 for i in range(definition.size)])
+    print(f"deleting texture {name}: {len(empty_data)} bytes")
+    rom.write_bytes(definition.position + 0x13, empty_data) # 0x13: header
+
 
   @staticmethod
   def add_texture_definition(name, texture : Union[Texture, MultiTexture]):

@@ -142,6 +142,26 @@
     }
   },
   {
+    "name": "WMotR: No floor required",
+    "match": { "course_id": "0x1F" },
+    "rules": {
+      "NO_FLOOR_REQUIRED": true,
+      "MIN_Y": -1359,
+      "MAX_Y": 5000
+    },
+    "priority": 2
+  },
+  {
+    "name": "WMotR: Floor required for Boxes",
+    "match": { "course_id": "0x1F", "behaviour": "0x13002250" },
+    "rules": {
+      "NO_FLOOR_REQUIRED": false,
+      "MIN_Y": -1359,
+      "MAX_Y": 5000
+    },
+    "priority": 2
+  },
+  {
     "name": "WDW: Items can spawn in Water",
     "match": { "course_id": "0x0B"  },
     "rules": {

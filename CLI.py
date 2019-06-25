@@ -24,6 +24,7 @@ from RandomModules.Text import TextRandomizer
 from RandomModules.Textures import TextureAtlas
 from RandomModules.Stardoors import StardoorRandomizer
 from Enhancements.GameplayEnhancements import Gameplay
+from Enhancements.TextureChanges import TextureChanges
 
 from Constants import ALL_LEVELS, MISSION_LEVELS, LVL_CASTLE_INSIDE, application_path
 
@@ -146,6 +147,11 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     object_randomizer = ObjectRandomizer(rom)
     if opt_args.shuffle_objects:
       object_randomizer.shuffle_objects()
+
+      texture_changer = TextureChanges(rom)
+      texture_changer.remove_tree_shadows()
+
+      
 
     text_randomizer = TextRandomizer(rom)
     if opt_args.shuffle_text:
