@@ -1,40 +1,5 @@
 [
   {
-    "name": "Coins (Line Formation)",
-    "match": { "behaviour": "0x130008EC", "bparam2": 0 },
-    "rules": {
-      "BOUNDING_BOX": { "length": 1000, "width": 100, "height": 100 }
-    }
-  },
-  {
-    "name": "Coins (Upward Coin Formation)",
-    "match": { "behaviour": "0x130008EC", "bparam2": 1 },
-    "rules": {
-      "BOUNDING_BOX": { "length": 100, "width": 100, "height": 1000 }
-    }
-  },
-  {
-    "name": "Coins (Circle)",
-    "match": { "behaviour": "0x130008EC", "bparam2": 2 },
-    "rules": {
-      "BOUNDING_BOX": { "length": 100, "width": 1000, "height": 1000 }
-    }
-  },
-  {
-    "name": "Coins (Ring)",
-    "match": { "behaviour": "0x130008EC", "bparam2": 3 },
-    "rules": {
-      "BOUNDING_BOX": { "length": 1000, "width": 1000, "height": 100 }
-    }
-  },
-  {
-    "name": "Coins (Arrow)",
-    "match": { "behaviour": "0x130008EC", "bparam2": 4 },
-    "rules": {
-      "BOUNDING_BOX": { "length": 100, "width": 1000, "height": 1000 }
-    }
-  },
-  {
     "name": "Coin (Type 1)",
     "match": { "model_id": "0x74" }
   },

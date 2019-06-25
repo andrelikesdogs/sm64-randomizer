@@ -390,8 +390,9 @@ class LevelScriptParser:
       else:
         preset = preset_table[preset_id]
         position = (self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True), self.rom.read_integer(None, 2, True))
-        (bparam1, bparam2) = (self.rom.read_integer(None, 1), self.rom.read_integer(None, 1))
-        object3d = Object3D("MACRO_OBJ", self.current_area, preset.model_id, position, self.level, (None, rot_y, None), preset.behaviour_addr, mem_address = cursor, bparams=[bparam1, bparam2])
+        bparam1 = self.rom.read_integer(None, 1)
+        bparam2 = self.rom.read_integer(None, 1)
+        object3d = Object3D("MACRO_OBJ", self.current_area, preset.model_id, position, self.level, (None, rot_y, None), preset.behaviour_addr, mem_address = cursor, bparams=[bparam1 if bparam1 > 0 else preset.default_b1, bparam2 if bparam2 > 0 else preset.default_b2])
         objects_found.append(object3d)
         macro_table["entries"].append(dict(
           object3d=object3d,

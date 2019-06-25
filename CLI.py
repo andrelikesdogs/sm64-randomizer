@@ -167,6 +167,8 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
         stardoor_randomizer.open_level_stardoors()
       elif opt_args.stardoor_requirements == "random":
         stardoor_randomizer.shuffle_level_stardoors()
+    if opt_args.keydoor_requirements is not "vanilla":
+      stardoor_randomizer.open_keydoors()
 
       #stardoor_randomizer
 
