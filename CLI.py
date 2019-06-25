@@ -94,8 +94,9 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     try:
       rom.verify_header()
     except Exception as err:
+      print("Could not read ROM header")
       print(err)
-      print("invalid rom, does not match known headers")
+      print(traceback.format_exc())
       sys.exit(2)
 
     if rom.rom_type == 'VANILLA' and not opt_args.no_extend:

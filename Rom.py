@@ -1,6 +1,7 @@
 from pathlib import Path
 import shutil
 import os
+from io import BytesIO
 from platform import system, architecture
 import subprocess
 import time
@@ -12,6 +13,7 @@ from randoutils import pretty_print_table, generate_debug_materials, generate_ob
 from Parsers.Level import Level
 from Parsers.LevelScript import LevelScriptParser
 from Constants import ALL_LEVELS, application_path
+from Config import Config
 import Constants
 
 
@@ -20,10 +22,14 @@ class ROM:
     self.path = path
     self.out_path = out_path
 
+    self.config = None
+
     self.region = None
     self.endianess = None
     self.file_stats = None
     self.rom_type = None
+    self.header = None
+    self.header_int = None
     self.alignment = alignment
     self.require_checksum_fix = False
 
@@ -65,21 +71,50 @@ class ROM:
         print("Unfortunately, the checksum fix failed. Please manually fix your ROMs checksum. Feel free to report this issue to github.com/andre-meyer/sm64-randomizer/issues")
         raise err
 
-  def verify_header(self):
+  def swap_mixed_to_big(self):
+    print("Converting from Mixed to Big Endianess")
+
+    self.file.seek(0)
+    data = self.file.read()
+
+    mem_rom = BytesIO()
+    
+    for i in range(0, len(data), 2):
+      mem_rom.write(bytes([data[i + 1]]))
+      mem_rom.write(bytes([data[i]]))
+
+    self.file.close()
+    self.file = mem_rom
+
+  def verify_header(self, repeated=False):
     self.file.seek(0)
     header = self.file.read(0x40)
     
     # read endianess
     endian_bytes = header[0:2]
     if endian_bytes == bytes([0x80, 0x37]):
+      # Big Endianess (z64)
       self.endianess = 'big'
     elif endian_bytes == bytes([0x37, 0x80]):
-      self.endianess = 'mixed'
-      print("Warning: mixed endianess is confusing")
+      # Mixed Endianess (Converts to Big) (n64/v64)
+      self.swap_mixed_to_big()
+      self.endianess = 'big'
+
+      if not repeated:
+        return self.verify_header(True)
     elif endian_bytes == bytes([0x40, 0x12]):
-      self.endianess = 'little'
+      # Little Endianess
+      self.endianess = 'little' # (n64)
     else:
       raise Exception('invalid endianess in ROM')
+
+    # b'Zc\xff+'
+    # b'cZ+\xff'
+
+    self.header = header[0x10:0x14]
+    if self.endianess in ['big', 'little']:
+      self.header_int = int.from_bytes(self.header, self.endianess)
+      print(hex(self.header_int))
 
     # read region
     region_byte = header[0x3E]
@@ -101,11 +136,11 @@ class ROM:
 
     if self.file_stats.st_size > 8388608:
       self.rom_type = 'EXTENDED'
-    elif self.file_stats.st_size == 8388608:
-      self.rom_type = 'VANILLA'
     else:
-      print("Warning: Could not determine ROM-Type from size")
-
+      self.rom_type = 'VANILLA'
+    
+    self.config = Config.find_configuration(self.header_int)
+      
   def try_extend(self, alignment=1):
     # make copy
     path = Path(self.path)

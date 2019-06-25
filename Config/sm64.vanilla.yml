@@ -1,0 +1,174 @@
+# SM64 Randomizer Generator Configuration File
+
+name: "Super Mario 64 Vanilla"
+rom:
+  # ROM specific configurations, where certain tables end/start. This is mainly dependant on the region
+  - checksum: 0x635a42c5
+    name: "Super Mario 64 [U] (BE) Extended"
+    macro_table_address: 0xEC7E0
+    special_macro_table_address: 0xED350
+    defined_segments:
+      - segment: 0x15
+        read_addresses: true
+        start: 0x2A622C
+        end: 0x2A6230
+  - checksum: 0x4eaacdbc
+    name: "Super Mario 64 [E] (BE) Extended"
+    macro_table_address: 0xBD590
+    special_macro_table_address: 0xBE100
+    defined_segments:
+      - segment: 0x15
+        start: 0x28CEE0
+        end: 0x2AAC50
+  - checksum: 0x4eaacdbc
+    name: "Super Mario 64 [J] (BE) Extended"
+    macro_table_address: 0xEB6D0
+    special_macro_table_address: 0xEC240
+    defined_segments:
+      - segment: 0x15
+        start: 0x2AA240
+        end: 0x2AAC50
+  - checksum: 0xd6fa4456
+    name: "Super Mario 64 [SHINDOU] (BE) Extended"
+    macro_table_address: 0xC8D60
+    special_macro_table_address: 0xC98D0
+    defined_segments:
+      - segment: 0x15
+        start: 0x286AC0
+        end: 0x2874D0
+  - checksum: 0xDEADBEEF # Missing
+    name: "Super Mario 64 [CHINA] (BE) Extended"
+    
+    
+  
+levels:
+  # Level definings serve multiple purposes:
+  # - Define course-ids to find them in matchings
+  # - Define their paintings, this is so they can be shuffled
+  # - Define their order, this is to ensure playability after shuffle
+
+  # Overworld Levels
+  - name: "Castle Grounds"
+    course_id: 0x10
+    properties:
+      - overworld
+  - name: "Castle Inside"
+    course_id: 0x06
+    properties:
+      - overworld
+  - name: "Castle Courtyard"
+    course_id: 0x1A
+    properties:
+      - overworld
+  
+  # Normal Levels
+  - name: "Bob-Omb's Battlefield"
+    course_id: 0x09
+  - name: "Whomp's Fortress"
+    course_id: 0x18
+  - name: "Jolly Roger Bay"
+    course_id: 0x0C
+    areas:
+      - id: 0x02
+        name: "JRB: Ship"
+        properties:
+          - no_water
+  - name: "Cool, Cool Mountain"
+    course_id: 0x05
+    areas:
+      - id: 0x02
+        name: "CCM Slide"
+        properties:
+          - slide
+  - name: "Big Boo's Haunt"
+    course_id: 0x04
+  - name: "Hazy Maze Cave"
+    course_id: 0x07
+  - name: "Lethal Lava Land"
+    course_id: 0x16
+  - name: "Shifting Sand Land"
+    course_id: 0x08
+  - name: "Dire, Dire Docks"
+    course_id: 0x17
+  - name: "Snowman's Land"
+    course_id: 0x0A
+  - name: "Wet-Dry World"
+    course_id: 0x0B
+  - name: "Tall, Tall Mountain"
+    course_id: 0x24
+    areas:
+      - id: 0x02
+        name: "TTM: Slide 1"
+        properties:
+          - slide
+      - id: 0x03
+        name: "TTM: Slide 2"
+        properties:
+          - slide
+      - id: 0x03
+        name: "TTM: Slide 3"
+        properties:
+          - slide
+  - name: "Tiny-Huge Island"
+    course_id: 0x0D
+  - name: "Tick Tock Clock"
+    course_id: 0x0E
+  - name: "Rainbow Ride"
+    course_id: 0x0F
+  
+  # Cap Levels
+  - name: "Vanish Cap"
+    course_id: 0x12
+  - name: "Metal Cap"
+    course_id: 0x1C
+  - name: "Wing Cap"
+    course_id: 0x1D
+
+  # Bonus Levels
+  - name: "Secret Aquarium"
+    course_id: 0x14
+  - name: "Peach's Slide"
+    course_id: 0x1B
+    properties:
+      - slide
+  - name: "Winged Mario over the Rainbow"
+    course_id: 0x1F
+    properties:
+      - fly_stage
+  
+  # Bowser Levels
+  - name: "Bowser in the Dark World"
+    course_id: 0x11
+    properties:
+      - continues_level: 0x1E
+  - name: "Bowser in the Dark World Battle"
+    course_id: 0x1E
+    properties:
+      - disabled
+      - key_receive
+  
+  - name: "Bowser in the Fire Sea"
+    course_id: 0x13
+    properties:
+      - continues_level: 0x21
+  - name: "Bowser in the Dark World Battle"
+    course_id: 0x21
+    properties:
+      - disabled
+      - key_receive
+  
+  - name: "Bowser in the Sky"
+    course_id: 0x15
+    properties:
+      - disabled:
+        - entry_shuffle
+      - continues_level: 0x22
+  - name: "Bowser in the Sky Battle"
+    course_id: 0x22
+    properties:
+      - disabled
+      - key_receive
+      - end_game
+
+objects:
+  - todo
