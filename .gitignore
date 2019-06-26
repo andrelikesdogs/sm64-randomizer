@@ -50,3 +50,6 @@ web/design
 
 # js crap
 node_modules/
+
+#ide files
+*.wpr
