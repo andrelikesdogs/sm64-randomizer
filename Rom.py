@@ -101,11 +101,9 @@ class ROM:
 
     if self.file_stats.st_size > 8388608:
       self.rom_type = 'EXTENDED'
-    elif self.file_stats.st_size == 8388608:
-      self.rom_type = 'VANILLA'
     else:
-      print("Warning: Could not determine ROM-Type from size")
-
+      self.rom_type = 'VANILLA'
+    
   def try_extend(self, alignment=1):
     # make copy
     path = Path(self.path)
@@ -207,7 +205,7 @@ class ROM:
       self.macro_table_position = 0xC8D60
       self.special_macro_table_position = 0xC98D0
       self.set_segment(0x15, 0x286AC0, 0x2874D0)
-    elif self.region == "CHINA":
+    elif self.region == "CHINESE":
       self.macro_table_position = 0xCB220
       self.special_macro_table_position = 0xCBD90
       self.set_segment(0x15, 0x298AE0, 0x2994F0)
