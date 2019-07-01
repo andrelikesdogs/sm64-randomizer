@@ -29,7 +29,7 @@ class ROM:
     self.file_stats = None
     self.rom_type = None
     self.header = None
-    self.header_int = None
+    self.checksum = None
     self.alignment = alignment
     self.require_checksum_fix = False
 
@@ -113,8 +113,7 @@ class ROM:
 
     self.header = header[0x10:0x14]
     if self.endianess in ['big', 'little']:
-      self.header_int = int.from_bytes(self.header, self.endianess)
-      print(hex(self.header_int))
+      self.checksum = int.from_bytes(self.header, self.endianess)
 
     # read region
     region_byte = header[0x3E]
@@ -138,8 +137,6 @@ class ROM:
       self.rom_type = 'EXTENDED'
     else:
       self.rom_type = 'VANILLA'
-    
-    self.config = Config.find_configuration(self.header_int)
       
   def try_extend(self, alignment=1):
     # make copy
@@ -158,8 +155,6 @@ class ROM:
     self.file.close()
 
     operating_sys = system()
-    #arch = architecture()
-    #bits = arch[0]
     args = ['-s', '24', '-a', str(alignment), str(path), str(ext_path)]
     if operating_sys == 'Darwin':
       subprocess.check_call([os.path.join(application_path, '3rdparty/sm64extend_mac_x64'), *args])
@@ -176,7 +171,7 @@ class ROM:
     self.require_checksum_fix = True
 
   def read_levels(self):
-    for level in ALL_LEVELS:
+    for level in self.config.levels:
       self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
       self.levelscripts[level].level_geometry.process()
 
@@ -208,46 +203,48 @@ class ROM:
           #print(f' - {len(special_objs)} Special 0x2E Objects')
           #print(f' - {len(macro_objs)} Macro 0x39 Objects')
           #print(f' - {len(normal_objs)} Normal 0x24 Objects')
-
+        
         with open(os.path.join("dumps", "level_geometry", "debug.mtl"), "w+") as mtl_debug:
           mtl_debug.write(generate_debug_materials())
-
-    self.match_segments(0xD78271)
         
   def print_info(self):
     pretty_print_table("ROM Properties", {
       'Loaded ROM': self.file.name,
       'Output ROM': self.target.name,
+      'Checksum': hex(self.checksum),
       'ROM Endianness': self.endianess.upper(),
       'ROM Region': self.region,
-      'ROM Type': self.rom_type
+      'ROM Type': self.rom_type,
+      'Config File': self.config.filename,
+      'Config Used': self.config.rom_settings["name"]
     })
 
-  def set_initial_segments(self):
-    # Taken from Quad64, thanks David <3
-    # https://github.com/DavidSM64/Quad64/blob/5018b239ef43a5bad4081942be91b8c752896e3a/src/ROM.cs#L92
-    if self.region == "NORTH_AMERICA":
-      self.macro_table_position = 0xEC7E0
-      self.special_macro_table_position = 0xED350
-      self.set_segment(0x15, self.read_integer(0x2A622C, 4), self.read_integer(0x2A6230, 4))
-    elif self.region == "EUROPE":
-      self.macro_table_position = 0xBD590
-      self.special_macro_table_position = 0xBE100
-      self.set_segment(0x15, 0x28CEE0, 0x28D8F0)
-    elif self.region == "JAPAN":
-      self.macro_table_position = 0xEB6D0
-      self.special_macro_table_position = 0xEC240
-      self.set_segment(0x15, 0x2AA240, 0x2AAC50)
-    elif self.region == "JAPAN_SHINDOU":
-      self.macro_table_position = 0xC8D60
-      self.special_macro_table_position = 0xC98D0
-      self.set_segment(0x15, 0x286AC0, 0x2874D0)
-    elif self.region == "CHINA":
-      self.macro_table_position = 0xCB220
-      self.special_macro_table_position = 0xCBD90
-      self.set_segment(0x15, 0x298AE0, 0x2994F0)
-    else:
-      raise ValueError("Unknown Region. Can't load segment 0x15")
+  def read_configuration(self):
+    configuration = Config.find_configuration(self.checksum)
+
+    if not configuration:
+      raise TypeError(f"Could not find a configuration for the loaded rom. Checksum: {hex(self.checksum)}")
+
+    print("Loaded Configuration")
+    print(configuration)
+
+    for defined_segment in configuration.rom_settings["defined_segments"]:
+      segment_id = defined_segment["segment"]
+      segment_start = None
+      segment_end = None
+
+      if "read_addresses" in defined_segment:
+        segment_start = self.read_integer(defined_segment["start"], 4)
+        segment_end = self.read_integer(defined_segment["end"], 4)
+      else:
+        segment_start = self.read_integer(defined_segment["start"], 4)
+        segment_end = self.read_integer(defined_segment["end"], 4)
+        
+      self.set_segment(segment_id, segment_start, segment_end)
+    
+    self.config = configuration
+    self.macro_table_position = configuration.rom_settings["macro_table_address"]
+    self.special_macro_table_position = configuration.rom_settings["special_macro_table_address"]
 
   def set_segment(self, segment_num, segment_start, segment_end, mio0=False):
     segment_positions = (segment_start, segment_end)
@@ -267,13 +264,6 @@ class ROM:
         offset = address - address_start
         print(f'{hex(address)} found in segment index #{segment_idx}, offset: {hex(offset)}')
         return (segment_idx, offset)
-
-  def align_address(self, address):
-    #self.match_segments(address)
-    #print(hex(address))
-
-
-    return address
 
   def read_cmds_from_level_block(self, level: Level, filter=[]):
     (start_position, end_position) = level.address
@@ -302,14 +292,11 @@ class ROM:
         yield (cmd, cmd_data, cursor - cmd_length)
 
       if cursor > end_position:
-        #print("Ending Level Sequence (end of bytes)")
         break
 
   def read_segment_addr(self, addr):
     segment_address = addr & 0x00FFFFFF
     segment_id = (addr & 0xFF000000) >> 24
-
-    #print("Segment requested:", hex(segment_id), hex(segment_address))
 
     if segment_id == 0x0:
       return None

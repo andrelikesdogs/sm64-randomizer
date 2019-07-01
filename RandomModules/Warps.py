@@ -46,7 +46,250 @@ class WarpRandomizer:
     target_key = choice(list(warps_available.keys()))
     return choice(warps_available[target_key])
 
-  def shuffle_level_entries(self, painting_mode : str):
+  def shuffle_level_entries(self, settings : dict):
+    # For different levels of SM64, we can assume there are 4 different types of warps we need to consider
+    # these are not coded any differently, but they are important to find, to get a complete set of warps for any given "target level"
+    # "entrances_src" - Found in Overworlds - Paintings, Holes in the floor
+    # "entrances_dst" - Found in Target lvl - Entry positions into levels, mostly '0xa' for the beginning
+    # "exits_dst"     - Found in Overworlds - Lead to themselves handle animations somehow. Level exits (0xf0, 0xf1, 0xf3) also lead to them
+    # "exits_src"     - Found in Target lvl - `0xf0`, `0xf1` and `0xf3` (Win, Lose, Recovery/Pause-Exit)
+
+    # levels that contain entries to levels
+    overworld_levels = list(filter(lambda level: "overworld" in level.properties, self.rom.config.levels))
+    shuffle_warp_levels = list(filter(lambda level: "shuffle_warps" in level.properties, self.rom.config.levels))
+
+    # both lists combined
+    shuffleable_warp_levels = [*overworld_levels, *shuffle_warp_levels]
+
+    target_levels = []
+
+    # list of warps that are used for handling animations in ow levels
+    all_exit_dst_warps = []
+
+    # entrances for levels
+    entrance_src_for_levels = {}
+    entrance_dst_for_levels = {}
+    exit_dst_for_levels = {}
+    exit_src_for_levels = {}
+
+    # all levels that may contain entrance warps, this will find:
+    # - entrance_srcs to levels
+    # - exit_dsts from levels, not matched yet
+    # 
+    for level in shuffleable_warp_levels:
+      for warp in self.rom.levelscripts[level].warps:
+        target_level = self.rom.config.levels_by_course_id[warp.to_course_id]
+
+        # Levels with disabled entry_shuffle
+        if "disabled" in target_level.properties:
+          if target_level.properties["disabled"] is True or "entry_shuffle" in target_level.properties["disabled"]:
+            continue
+
+        # Warps that lead to themselves
+        if warp.to_warp_id == warp.warp_id:
+          all_exit_dst_warps.append(warp) # we can't know where it's from until we check the levels
+          continue
+        
+        # Levels that are overworlds
+        if target_level in overworld_levels:
+          continue
+        
+        if target_level not in entrance_src_for_levels:
+          entrance_src_for_levels[target_level] = []
+
+        if warp not in entrance_src_for_levels[target_level]:
+          entrance_src_for_levels[target_level].append(warp)
+
+        if target_level not in target_levels:
+          target_levels.append(target_level)
+
+    # all levels that we found entrances for, check these levels warps, this will find
+    # - exit_dsts from levels, now matched
+    # - exit_srcs from levels
+    # - entrance_dsts from levels
+    for level in entrance_src_for_levels.keys():
+      for warp in self.rom.levelscripts[level].warps:
+        # find in exit_dsts to match it
+        for exit_dst in all_exit_dst_warps:
+          # matched warp must match area, course and warp-id
+          if exit_dst.warp_id == warp.to_warp_id and exit_dst.course_id == warp.to_course_id and exit_dst.area_id == warp.to_area_id:
+            if level not in exit_dst_for_levels:
+              exit_dst_for_levels[level] = []
+
+            if exit_dst not in exit_dst_for_levels[level]:
+              exit_dst_for_levels[level].append(exit_dst) # this was previously not matched to a level
+
+            if level not in exit_src_for_levels:
+              exit_src_for_levels[level] = []
+
+            if warp not in exit_src_for_levels[level]:
+              exit_src_for_levels[level].append(warp)
+
+            break # because this warp is already matched and only matches 1 to 1
+
+        for entrance_src in entrance_src_for_levels[level]:
+          # (course_id will always match, because we're checking the warps from and to this level)
+          # must match warp_id <-> to_warp_id, area_id (in which area) <-> to_area_id
+          if entrance_src.to_warp_id == warp.warp_id and entrance_src.to_area_id == warp.area_id and entrance_src.to_course_id == warp.course_id:
+            if level not in entrance_dst_for_levels:
+              entrance_dst_for_levels[level] = []
+
+            if warp not in entrance_dst_for_levels[level]:
+              entrance_dst_for_levels[level].append(warp)
+
+    # pool of warps that can be shuffled between
+    warp_pools = {}
+    # all warp sets
+    warp_sets = []
+
+    # Create "warp sets" that lead from ow to level and from level to ow
+    for target_level in target_levels:
+      source_level = None
+      warp_set = dict(
+        source_level=None,
+        target_level=target_level,
+        allowed=[],
+        entrance_srcs=[],
+        entrance_dsts=[],
+        exit_srcs=[],
+        exit_dsts=[]
+      )
+
+      if target_level in entrance_src_for_levels:
+        warp_set["entrance_srcs"] = entrance_src_for_levels[target_level]
+
+        # use an entry from entrance sources to get the source level
+        first_entrance = entrance_src_for_levels[target_level][0]
+        source_level = self.rom.config.levels_by_course_id[first_entrance.course_id]
+        warp_set["source_level"] = source_level
+
+      if target_level in entrance_dst_for_levels:
+        warp_set["entrance_dsts"] = entrance_dst_for_levels[target_level]
+
+      if target_level in exit_src_for_levels:
+        warp_set["exit_srcs"] = exit_src_for_levels[target_level]
+
+      if target_level in exit_dst_for_levels:
+        warp_set["exit_dsts"] = exit_dst_for_levels[target_level]
+
+      if "shuffle_warps" in source_level.properties:
+        satisfies_all_rules = None
+        matching_ruleset = []
+        
+        for rules in source_level.properties["shuffle_warps"]:
+          satisfies_all_rules = None
+        
+          for rule in rules["to"]:
+            satisfies_all_rules = True
+
+            if "course_id" in rule and rule["course_id"] != target_level.course_id:
+              satisfies_all_rules = False
+            
+            if satisfies_all_rules:
+              break
+          
+          if satisfies_all_rules:
+            matching_ruleset = rules["with"]
+        
+        warp_set["allowed"] = matching_ruleset
+
+      pool = frozenset([frozenset(rule.items()) for rule in warp_set["allowed"]])
+      if pool not in warp_pools:
+        warp_pools[pool] = []
+      warp_pools[pool].append(warp_set)
+      warp_sets.append(warp_set)
+    
+    for ruleset, warpsets in warp_pools.items():
+      ### Debug Warpsets
+      print(ruleset)
+      for warpset in warpsets:
+        print(f"Warps from {warpset['source_level'].name} to {warpset['target_level'].name}")
+        print(f" Entrances: SRC: {len(warpset['entrance_srcs'])}    DEST: {len(warpset['entrance_dsts'])}")
+        print(f" Exits:     SRC: {len(warpset['exit_srcs'])}    DEST: {len(warpset['exit_dsts'])}")
+
+      ### Split into Sources and Destinations
+      warpsets_srcs = []
+      warpsets_dsts = []
+
+      for warpset in warpsets:
+        warpsets_srcs.append(dict(
+          level=warpset["target_level"],
+          entrances=warpset["entrance_srcs"],
+          exits=warpset["exit_srcs"]
+        ))
+        warpsets_dsts.append(dict(
+          level=warpset["target_level"],
+          entrances=warpset["entrance_dsts"],
+          exits=warpset["exit_dsts"]
+        ))
+
+      # Perform the shuffle
+      shuffle(warpsets_srcs)
+      shuffle(warpsets_dsts)
+      
+      # Relink the warps
+      for group_idx in range(len(warpsets_srcs)):
+        src_set = warpsets_srcs[group_idx]
+        dst_set = warpsets_dsts[group_idx]
+
+        print(f'{src_set["level"].name} now goes to {dst_set["level"].name}')
+
+        # relink entrances
+        for idx in range(len(src_set["entrances"])):
+          src = src_set["entrances"][idx]
+          
+          if idx in dst_set["entrances"]:
+            dst = dst_set["entrances"][idx]
+            src.set("to_course_id", dst.course_id)
+            src.set("to_area_id", dst.area_id)
+            src.set("to_warp_id", dst.warp_id)
+        
+        # relink exits
+        for idx in range(len(src_set["exits"])):
+          src = src_set["exits"][idx]
+
+          if idx in dst_set["exits"]:
+            dst = dst_set["exits"][idx]
+            src.set("to_course_id", dst.course_id)
+            src.set("to_area_id", dst.area_id)
+            src.set("to_warp_id", dst.warp_id)
+
+    ### Debug View
+    for target_level in target_levels:
+      print(f" Warps found for {target_level.name}")
+      if target_level in entrance_src_for_levels:
+        print(f" Entry Sources: {len(entrance_src_for_levels[target_level])}")
+        for w in entrance_src_for_levels[target_level]:
+          print(w)
+      else:
+        print(" No Entry Sources")
+      
+      if target_level in entrance_dst_for_levels:
+        print(f" Entry Destinations: {len(entrance_dst_for_levels[target_level])}")
+        for w in entrance_dst_for_levels[target_level]:
+          print(w)
+      else:
+        print(" No Entry Destinations")
+      
+      if target_level in exit_src_for_levels:
+        print(f" Exit Sources: {len(exit_src_for_levels[target_level])}")
+        for w in exit_src_for_levels[target_level]:
+          print(w)
+      else:
+        print(" No Exit Sources")
+      
+      
+      if target_level in exit_dst_for_levels:
+        print(f" Exit Destinations: {len(exit_dst_for_levels[target_level])}")
+        for w in exit_dst_for_levels[target_level]:
+          print(w)
+      else:
+        print(" No Exit Destinations")
+      
+      print("-" * 30)
+
+
+  def shuffle_level_entries_old(self, painting_mode : str):
     # levels that contain entries to levels
     entry_levels = [LVL_CASTLE_COURTYARD, LVL_CASTLE_GROUNDS, LVL_CASTLE_INSIDE]
     entry_level_course_ids = [level.level_id for level in entry_levels]

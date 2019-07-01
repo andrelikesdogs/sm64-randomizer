@@ -119,13 +119,13 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       return
 
     pretty_print_table("Your Settings", {argument_labels[label]: value for (label, value) in vars(opt_args).items()})
+    rom.read_configuration()
     rom.print_info()
 
     # convert seed here! otherwise we might return the hashed seed and heck everything up    
     opt_args.seed = int(hashlib.sha1(bytes(str(opt_args.seed), 'utf8')).hexdigest(), 16) % (10**12)
     seed(opt_args.seed)
 
-    rom.set_initial_segments()
     rom.read_levels()
 
     if rom.rom_type == 'EXTENDED':

@@ -155,11 +155,11 @@ class LevelScriptParser:
         elif command.identifier == 0x0C:
           """ 0x0C CONDITIONAL_JUMP """
         
-          level_id = self.rom.read_integer(cursor + 7)
+          course_id = self.rom.read_integer(cursor + 7)
 
           # All 0x0C Conditional Jumps are *mostly* used to jump to the right levels address.
           # That's why we can make this behaviour act according to the currently targeted level.
-          if self.level is not None and self.level.level_id is not None and level_id == self.level.level_id:
+          if self.level and self.level.course_id == course_id:
             segment_jmp_offset = self.rom.read_integer(cursor + 8, 4)
             jmp_segment_start = self.rom.read_segment_addr(segment_jmp_offset)
 
@@ -243,7 +243,7 @@ class LevelScriptParser:
           to_area_id = self.rom.read_integer(cursor + 4)
           to_warp_id = self.rom.read_integer(cursor + 5)
           has_checkpoint = self.rom.read_integer(cursor + 6) == 0x80
-          self.warps.append(Warp("NORMAL", warp_id, to_area_id, to_course_id, to_warp_id, self.current_area, has_checkpoint, mem_address = cursor + 2))
+          self.warps.append(Warp("NORMAL", warp_id, to_area_id, to_course_id, to_warp_id, self.level.course_id, self.current_area, has_checkpoint, mem_address = cursor + 2))
         elif command.identifier == 0x27:
           """ 0x27 SETUP_PAINTING_WARP """
           warp_id = self.rom.read_integer(cursor + 2)
@@ -251,7 +251,7 @@ class LevelScriptParser:
           to_area_id = self.rom.read_integer(cursor + 4)
           to_warp_id = self.rom.read_integer(cursor + 5)
           has_checkpoint = self.rom.read_integer(cursor + 6) == 0x80
-          self.warps.append(Warp("PAINTING", warp_id, to_area_id, to_course_id, to_warp_id, self.current_area, has_checkpoint, mem_address = cursor + 2))
+          self.warps.append(Warp("PAINTING", warp_id, to_area_id, to_course_id, to_warp_id, self.level.course_id, self.current_area, has_checkpoint, mem_address = cursor + 2))
         elif command.identifier == 0x2B:
           """ 0x2B SET_MARIOS_DEFAULT_POSITION """
           spawn_area_id = self.rom.read_integer(cursor + 2)

@@ -1,6 +1,17 @@
+# Actual Warp Notes
+
+- `n` warps will lead to a level. Even if it's just one painting. Even if it's a hole-warp. They will warp to `0xa` inside level
+- `n` warps in the overworld will be "animation warps" that lead to themselves. Exit warps will lead here.
+- `m * area_count` warps inside the level will lead out of the level. Where `m` will be either 2 or 3
+
+< Target Level >     < ------- >      < Animation Warps >      < ------- >      < Overworld Level >
+
+```
 Important Notes:
 Warps inside levels are always 0xa
 Warps outside consist of two warps: area 0x
+
+
 
 Painting Warps:
 	- 0x0 ['0x9', '0x1', '0xa'] !
@@ -319,4 +330,4 @@ Over the Rainbow
 	- 0xa ['0x1f', '0x1', '0xa']
 	- 0xf0 ['0x6', '0x2', '0x38']
 	- 0xf1 ['0x6', '0x2', '0x6d']
-	- 0xf3 ['0x10', '0x1', '0xa']
+	- 0xf3 ['0x10', '0x1', '0xa']```

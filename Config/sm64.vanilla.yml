@@ -1,14 +1,26 @@
 # SM64 Randomizer Generator Configuration File
+# Game Versions: All Regions, Vanilla SM64
+# Author: Andre Meyer
 
+# This file can be used as an example to build more configuration files for harder
+# difficulty, for ROM-hacks, or to adjust properties that might be subjective.
+
+# Name is used to display for debugging.
 name: "Super Mario 64 Vanilla"
+
+# ROM section defines different offsets, segments and specific names, depending on checksums.
 rom:
-  # ROM specific configurations, where certain tables end/start. This is mainly dependant on the region
+  # Checksum is taken from the SM64 ROM Header
   - checksum: 0x635a42c5
     name: "Super Mario 64 [U] (BE) Extended"
+    # Start of Macro Table for Objects placed via Macro
     macro_table_address: 0xEC7E0
+    # Start of Special Macro Object Table for Objects placed via Special Macro
     special_macro_table_address: 0xED350
+    # Segment 0x15 loads automatically. This section describes this segment and others, if desired
     defined_segments:
       - segment: 0x15
+        # read_address specifies that this property should be read from the start and end addresses
         read_addresses: true
         start: 0x2A622C
         end: 0x2A6230
@@ -36,11 +48,15 @@ rom:
       - segment: 0x15
         start: 0x286AC0
         end: 0x2874D0
-  - checksum: 0xDEADBEEF # Missing
+  - checksum: 0x00000000 # Missing - iQue doesn't have a checksum :thinking:
     name: "Super Mario 64 [CHINA] (BE) Extended"
-    
-    
-  
+    macro_table_address: 0xCB220
+    special_macro_table_address: 0xCBD90
+    defined_segments:
+      - segment: 0x15
+        start: 0x298AE0
+        end: 0x2994F0
+
 levels:
   # Level definings serve multiple purposes:
   # - Define course-ids to find them in matchings
@@ -52,10 +68,30 @@ levels:
     course_id: 0x10
     properties:
       - overworld
+      - shuffle_warps:
+          - to: # which warps in this level should match? warps "to" metal cap
+              - course_id: 0x12
+            with: # which warps can be here instead? shuffle "with" metal/vanish/wing cap
+              - course_id: 0x12
+                area_id: 0x1
+              - course_id: 0x1C
+                area_id: 0x1
+              - course_id: 0x1D
+                area_id: 0x1
   - name: "Castle Inside"
     course_id: 0x06
     properties:
       - overworld
+      - shuffle_warps:
+          - to: # which warps in this level should match? warps "to" metal cap
+              - course_id: 0x1D
+            with: # which warps can be here instead? shuffle "with" metal/vanish/wing cap
+              - course_id: 0x12
+                area_id: 0x1
+              - course_id: 0x1D
+                area_id: 0x1
+              - course_id: 0x1C
+                area_id: 0x1
   - name: "Castle Courtyard"
     course_id: 0x1A
     properties:
@@ -64,17 +100,25 @@ levels:
   # Normal Levels
   - name: "Bob-Omb's Battlefield"
     course_id: 0x09
+    properties:
+      - shuffle_painting: painting_bob
   - name: "Whomp's Fortress"
     course_id: 0x18
+    properties:
+      - shuffle_painting: painting_wf
   - name: "Jolly Roger Bay"
     course_id: 0x0C
     areas:
       - id: 0x02
         name: "JRB: Ship"
         properties:
-          - no_water
+          - disable_water_check
+    properties:
+      - shuffle_painting: painting_jrb
   - name: "Cool, Cool Mountain"
     course_id: 0x05
+    properties:
+      - shuffle_painting: painting_ccm
     areas:
       - id: 0x02
         name: "CCM Slide"
@@ -82,18 +126,48 @@ levels:
           - slide
   - name: "Big Boo's Haunt"
     course_id: 0x04
+    properties:
+      - shuffle_painting: painting_unknown
   - name: "Hazy Maze Cave"
     course_id: 0x07
+    properties:
+      - shuffle_painting: painting_unknown
+      - requires_key: 0x1
+      - shuffle_warps:
+          - to: # which warps in this level should match? warps "to" metal cap
+              - course_id: 0x1C
+            with: # which warps can be here instead? shuffle "with" metal/vanish/wing cap
+              - course_id: 0x12
+                area_id: 0x1
+              - course_id: 0x1D
+                area_id: 0x1
+              - course_id: 0x1C
+                area_id: 0x1
   - name: "Lethal Lava Land"
     course_id: 0x16
+    properties:
+      - shuffle_painting: painting_lll
+      - requires_key: 0x1
   - name: "Shifting Sand Land"
     course_id: 0x08
+    properties:
+      - shuffle_painting: painting_ssl
+      - requires_key: 0x1
   - name: "Dire, Dire Docks"
     course_id: 0x17
+    properties:
+      - shuffle_painting: painting_unknown
+      - requires_key: 0x1
   - name: "Snowman's Land"
     course_id: 0x0A
+    properties:
+      - shuffle_painting: painting_sl
+      - requires_key: 0x2
   - name: "Wet-Dry World"
     course_id: 0x0B
+    properties:
+      - shuffle_painting: painting_wdw
+      - requires_key: 0x2
   - name: "Tall, Tall Mountain"
     course_id: 0x24
     areas:
@@ -109,53 +183,80 @@ levels:
         name: "TTM: Slide 3"
         properties:
           - slide
+    properties:
+      - shuffle_painting: painting_ttm
+      - requires_key: 0x2
   - name: "Tiny-Huge Island"
     course_id: 0x0D
+    properties:
+      - shuffle_painting: painting_thi
+      - requires_key: 0x2
   - name: "Tick Tock Clock"
     course_id: 0x0E
+    properties:
+      - shuffle_painting: painting_ttc
+      - requires_key: 0x2
   - name: "Rainbow Ride"
     course_id: 0x0F
+    properties:
+      - shuffle_painting: painting_unknown
+      - requires_key: 0x2
   
   # Cap Levels
   - name: "Vanish Cap"
     course_id: 0x12
+    properties:
+      - shuffle_painting: painting_unknown
   - name: "Metal Cap"
     course_id: 0x1C
+    properties:
+      - shuffle_painting: painting_unknown
+      - requires_key: 0x1
   - name: "Wing Cap"
     course_id: 0x1D
+    properties:
+      - shuffle_painting: painting_unknown
 
   # Bonus Levels
   - name: "Secret Aquarium"
     course_id: 0x14
+    properties:
+      - shuffle_painting: painting_unknown
   - name: "Peach's Slide"
     course_id: 0x1B
     properties:
       - slide
+      - shuffle_painting: painting_unknown
   - name: "Winged Mario over the Rainbow"
     course_id: 0x1F
     properties:
       - fly_stage
+      - shuffle_painting: painting_unknown
+      - requires_key: 0x2
   
   # Bowser Levels
   - name: "Bowser in the Dark World"
     course_id: 0x11
     properties:
       - continues_level: 0x1E
+      - shuffle_painting: painting_unknown
   - name: "Bowser in the Dark World Battle"
     course_id: 0x1E
     properties:
       - disabled
-      - key_receive
+      - key_receive: 0x1
   
   - name: "Bowser in the Fire Sea"
     course_id: 0x13
     properties:
       - continues_level: 0x21
+      - shuffle_painting: painting_unknown
+      - requires_key: 0x1
   - name: "Bowser in the Dark World Battle"
     course_id: 0x21
     properties:
       - disabled
-      - key_receive
+      - key_receive: 0x2
   
   - name: "Bowser in the Sky"
     course_id: 0x15
@@ -163,12 +264,292 @@ levels:
       - disabled:
         - entry_shuffle
       - continues_level: 0x22
+      - shuffle_painting: painting_unknown
+      - requires_key: 0x2
   - name: "Bowser in the Sky Battle"
     course_id: 0x22
     properties:
       - disabled
-      - key_receive
       - end_game
 
-objects:
-  - todo
+object_randomization:
+  # default
+  rules:
+    - drop_to_floor
+  
+  objects:
+    # Bosses
+    # - Generally shouldn't spawn on slopes, as that makes it heard to fight them
+    - name: "Bosses"
+      rules:
+        - max_slope: 0.0
+        - underwater: never
+      objects:
+        - name: King Bob-Omb
+          match: 0x130001F4
+        - name: Whomp King
+          match: 0x13002BB8
+        - name: Ice Bully (Big)
+          match: 0x13003700
+          rules:
+            - min_y: 1300 # Ice Bully in SL dies under a specific height
+        - name: Bully (Big)
+          match: 0x13003660
+    # Enemies
+    # - Generally shouldn't spawn underwater
+    - name: "Enemies"
+      rules:
+        - underwater: never
+      objects:
+        - name: Mr. I
+          match: 0x13000054
+        - name: Bob-Omb
+          match: 0x13003174
+        - name: Goomba
+          match: 0x13004770
+        - name: Goomba Triplet
+          match: 0x13004770
+        - name: Thwomp
+          match:
+            - 0x13000BC8
+            - 0x13000B8C
+        - name: Grindel
+          match: 0x1300525C
+        - name: Piranha Plant
+          match: 0x13001FBC
+        - name: Chuck-Ya
+          match: 0x13000528
+        - name: Bat
+          match: 0x13004698
+          # todo: bats should spawn on ceilings
+        - name: Fly-Guy
+          match: 0x130046DC
+        - name: Lakitu
+          match: 0x13004954
+          # match: 0x13004918 # Friendly Lakitu?
+        - name: Bully (Group + Boss)
+          match: 0x13003694
+        - name: Bully (Small)
+          match: 0x1300362C
+        - name: Boo
+          match: 0x130027E4
+        - name: Boo (x3)
+          match: 0x130027D0
+        - name: Boo Secret (Kill 5)
+          match:
+            - 0x130027E4 # 3
+            - 0x13002804 # 2
+            - 0x13002768 # 1
+        - name: Moneybag
+          match: 0x130039D4
+        - name: Amp
+          match: 0x13003354
+        - name: Heave-Ho
+          match: 0x13001548
+        - name: Skeeter
+          match: 0x13005468
+        - name: Scuttlebug
+          match: 0x13002B5C
+        - name: "BBH: Book"
+          match: 0x1300506C
+        - name: "BBH: Nightmare Piano"
+          match: 0x13005024
+        - name: "SSL: Pokey"
+          match: 0x13004634
+        - name: Spindrift
+          match: 0x130012B4
+        - name: "BOB: Chain Chomp"
+          match: 0x1300478C
+        - name: "Koopa (not KtQ)"
+          match:
+            - 0x13004580
+            - bparam2: 1
+    
+    # Objects
+    - name: "Coin Formations"
+      match:
+        - 0x130008EC
+      objects:
+        - name: Grounded Line Formation (5x)
+          match:
+            - bparam2: 0
+        - name: Grounded Ring Formation (8x)
+          match:
+            - bparam2: 2
+        - name: Grounded Arrow (8x)
+          match:
+            - bparam2: 4
+        - name: Horizontal Floating Line (x5)
+          match:
+            - bparam2: 16
+        - name: Vertical Floating Line (x5)
+          match:
+            - bparam2: 17
+        - name: Horizontal Floating Ring (x8)
+          match:
+            - bparam2: 18
+        - name: Vertical Floating Ring (x8)
+          match:
+            - bparam2: 19
+    
+    - name: "Coin"
+      rules:
+        - spawn_height: [50, 200]
+      objects:
+        - name: Yellow Coin
+          match:
+            - 0x1300090C
+            - 0x1300091C # For Triggers?
+        - name: Red Coin
+          match: 0x13003EAC
+        - name: Blue Coin
+          match: 0x13002588
+          # TODO: Tie to corresponding button
+          rules:
+            - disabled
+    
+    - name: "Star"
+      rules:
+        - spawn_height: [100, 600]
+      objects:
+        - name: Star
+          match:
+            - 0x13003E3C
+            - 0x13003EFC # Hidden
+        - name: Star in Box
+          match: 0x13002250
+          objects:
+            - name: "Star #1"
+              match:
+                - bparam2: 0x8
+            - name: "Star #2"
+              match:
+                - bparam2: 0xA
+            - name: "Star #3"
+              match:
+                - bparam2: 0xB
+            - name: "Star #4"
+              match:
+                - bparam2: 0xC
+            - name: "Star #5"
+              match:
+                - bparam2: 0xD
+            - name: "Star #6"
+              match:
+                - bparam2: 0xE
+    
+    - name: "Tree"
+      rules:
+        - underwater: never
+      # GFX 0x17 = Castle Ground Trees
+      # GFX 0x19 = Snowy Trees
+      # GFX 0x18 = Courtyard Trees
+      # GFX 0x1B = Shifting Sand Land Trees/Palm
+      match: 0x13002AA4
+    
+    - name: "Level Objects"
+      rules:
+        - underwater: never
+      objects:
+        - name: "Fire Spewer"
+          match: 0x1300518C
+        - name: "Flamethrower"
+          match: 0x13001108
+        - name: "BOB: Water Bubble Dropper"
+          match: 0x13004B8C
+          rules:
+            - spawn_height: [2400, 3000]
+        - name: "Poundable Log"
+          match: 0x1300481C
+        - name: "Breakable Box (Small)"
+          match: 0x13004218
+        - name: "Breakable Box (Big)"
+          match: 0x130014E0
+        - name: "Sign"
+          match: 0x130032E0
+        - name: "JRB: Clam"
+          match: 0x13005440
+          rules:
+            - underwater: only
+            - drop_to_floor: force
+        - name: 1-UP
+          match:
+            - 0x1300407C # Static
+        - name: Butterflies
+          match: 0x130033BC
+          rules:
+            - spawn_height: [30, 200]
+        - name: Recovery Heart
+          match: 0x13004EF8
+        - name: Item Box
+          match: 0x13002250
+          rules:
+            - spawn_height: [200, 500]
+
+    - name: "Warps"
+      exclude:
+        - course_property: overworld
+      rules:
+        - underwater: allowed
+        - spawn_height: [100, 900]
+        - max_slope: 0.99
+      objects:
+        - name: "Mario Level Spawn"
+          match:
+            - source: 'MARIO_SPAWN'
+        - name: "Warp (Mario Start #1)" # In Air?
+          match: 0x13002F74
+        - name: "Warp (Mario Start #2)" # On Ground?
+          match: 0x13002F64
+        - name: "Warp (Mario Start #3)" # In Water
+          match: 0x13002F94
+
+    - name: "Special"
+      rules:
+        - underwater: never
+      objects:
+        - name: Toad
+          match: 0x13002EF8
+        - name: "CCM: Lost Penguin"
+          match: 0x130020E8
+        - name: "CCM/SL: Wandering Penguin"
+          match: 0x13002E58
+        - name: "Pink Bob-Omb (Message)"
+          match: 0x130031DC
+          rules:
+            - underwater: never
+        - name: "Pink Bob-Omb (Canon)"
+          match: 0x13003228
+
+    - name: "Level Property Checks"  
+      objects:
+        - name: "Wingcap Level"
+          match:
+            - course_property: fly_stage
+          match_from: 
+            - 'Coin'
+            - 'Coin Formations'
+          rules:
+            - no_floor_required
+        
+        - name: "Changeable-Water Levels"
+          match:
+            - course_property: disable_water_check
+          rules:
+            - underwater
+            - drop_to_floor: force
+
+    - name: "Level Special Cases"
+      objects:
+        - name: "JRB: Limit max height in Ship"
+          match:
+            - course_id: 0x0C
+            - area_id: 0x02
+          rules:
+            - max_y: 1858
+        - name: "THI: Red Coins / Red Coin Star below Boss Room"
+          match:
+            - 0x13003EAC # Red Coin
+            - 0x13003E8C # Red Coin Star
+          rules:
+            - max_y: 1750
