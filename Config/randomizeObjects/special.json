@@ -18,6 +18,13 @@
     }
   },
   {
+    "name": "Warp (Mario Start 2)",
+    "match": { "behaviour": "0x13002F64", "course_id": "0x06" },
+    "rules": {
+      "DISABLE": true
+    }
+  },
+  {
     "name": "Warp (Mario Start 1)",
     "match": { "behaviour": "0x13002F74" },
     "rules": {
@@ -109,6 +116,14 @@
     }
   },
   {
+    "name": "BOB: Disable Coin Formation randomization",
+    "match": { "behaviour": "0x130008EC", "course_id": "0x09", "bparam2": "0x13" },
+    "rules": {
+      "DISABLE": true
+    },
+    "priority": 15
+  },
+  {
     "name": "WC: Red Coins Wingcap",
     "match": { "behaviour": "0x13003EAC", "course_id": "0x1D" },
     "rules": {
@@ -168,6 +183,36 @@
       "UNDERWATER": "ALLOWED"
     },
     "priority": 5
+  },
+  {
+    "name": "WMotR: Red Coins Spawn everywhere",
+    "match": { "behaviour": "0x13003EAC", "course_id": "0x1F"  },
+    "rules": {
+      "MIN_Y": -2500,
+      "MAX_Y": 4880,
+      "DISTANCE_TO": { "origin": [0, 1900, 0], "max_distance": 5000 },
+      "NO_FLOOR_REQUIRED": true
+    },
+    "priority": 10
+  },
+  {
+    "name": "WMotR: Coin Formations Spawn everywhere",
+    "match": { "behaviour": "0x130008EC", "course_id": "0x1F"  },
+    "rules": {
+      "MIN_Y": -2500,
+      "MAX_Y": 4880,
+      "DISTANCE_TO": { "origin": [0, 1900, 0], "max_distance": 5000 },
+      "NO_FLOOR_REQUIRED": true
+    },
+    "priority": 10
+  },
+  {
+    "name": "WMotR: Itembox Disabled",
+    "match": { "behaviour": "0x13002250", "course_id": "0x1F"  },
+    "rules": {
+      "DISABLE": true
+    },
+    "priority": 10
   },
   {
     "name": "JRB: Itembox in Ship can spawn in Water",

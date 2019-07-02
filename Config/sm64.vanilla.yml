@@ -126,12 +126,9 @@ levels:
           - slide
   - name: "Big Boo's Haunt"
     course_id: 0x04
-    properties:
-      - shuffle_painting: painting_unknown
   - name: "Hazy Maze Cave"
     course_id: 0x07
     properties:
-      - shuffle_painting: painting_unknown
       - requires_key: 0x1
       - shuffle_warps:
           - to: # which warps in this level should match? warps "to" metal cap
@@ -156,7 +153,6 @@ levels:
   - name: "Dire, Dire Docks"
     course_id: 0x17
     properties:
-      - shuffle_painting: painting_unknown
       - requires_key: 0x1
   - name: "Snowman's Land"
     course_id: 0x0A
@@ -199,39 +195,29 @@ levels:
   - name: "Rainbow Ride"
     course_id: 0x0F
     properties:
-      - shuffle_painting: painting_unknown
       - requires_key: 0x2
   
   # Cap Levels
   - name: "Vanish Cap"
     course_id: 0x12
-    properties:
-      - shuffle_painting: painting_unknown
   - name: "Metal Cap"
     course_id: 0x1C
     properties:
-      - shuffle_painting: painting_unknown
       - requires_key: 0x1
   - name: "Wing Cap"
     course_id: 0x1D
-    properties:
-      - shuffle_painting: painting_unknown
 
   # Bonus Levels
   - name: "Secret Aquarium"
     course_id: 0x14
-    properties:
-      - shuffle_painting: painting_unknown
   - name: "Peach's Slide"
     course_id: 0x1B
     properties:
       - slide
-      - shuffle_painting: painting_unknown
   - name: "Winged Mario over the Rainbow"
     course_id: 0x1F
     properties:
       - fly_stage
-      - shuffle_painting: painting_unknown
       - requires_key: 0x2
   
   # Bowser Levels
@@ -239,7 +225,6 @@ levels:
     course_id: 0x11
     properties:
       - continues_level: 0x1E
-      - shuffle_painting: painting_unknown
   - name: "Bowser in the Dark World Battle"
     course_id: 0x1E
     properties:
@@ -250,7 +235,6 @@ levels:
     course_id: 0x13
     properties:
       - continues_level: 0x21
-      - shuffle_painting: painting_unknown
       - requires_key: 0x1
   - name: "Bowser in the Dark World Battle"
     course_id: 0x21
@@ -264,7 +248,6 @@ levels:
       - disabled:
         - entry_shuffle
       - continues_level: 0x22
-      - shuffle_painting: painting_unknown
       - requires_key: 0x2
   - name: "Bowser in the Sky Battle"
     course_id: 0x22

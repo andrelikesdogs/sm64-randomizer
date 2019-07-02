@@ -132,6 +132,8 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       # initialize texture atlas and dynamic positions
       textures = TextureAtlas(rom)
       textures.add_dynamic_positions()
+    
+    rom.match_segments(0xE16307)
 
     music_random = MusicRandomizer(rom)
     if opt_args.shuffle_music:
@@ -143,7 +145,7 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
 
     warp_random = WarpRandomizer(rom)
     if opt_args.shuffle_entries:
-      warp_random.shuffle_level_entries(opt_args.shuffle_paintings)
+      warp_random.shuffle_level_entries(vars(opt_args))
     
     object_randomizer = ObjectRandomizer(rom)
     if opt_args.shuffle_objects:
@@ -169,11 +171,14 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       gameplay_stuff.disable_starwarp()
     
     stardoor_randomizer = StardoorRandomizer(rom)
-    if opt_args.stardoor_requirements is not "vanilla":
+    if opt_args.stardoor_requirements != "vanilla":
       if opt_args.stardoor_requirements == "open":
         stardoor_randomizer.open_level_stardoors()
       elif opt_args.stardoor_requirements == "random":
         stardoor_randomizer.shuffle_level_stardoors()
+      
+    if opt_args.keydoor_requirements != "vanilla":
+      stardoor_randomizer.open_keydoors()
 
       #stardoor_randomizer
 

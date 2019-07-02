@@ -32,7 +32,8 @@ class TextureAtlas:
     self.rom = rom
 
   def add_dynamic_positions(self):
-    (paintings_start, _) = self.rom.segments_sequentially[54]
+    # castle paintings
+    (paintings_start, _) = self.rom.segments_sequentially[26]
     for (lvl_name, upper, lower) in paintings:
       TextureAtlas.add_texture_definition(f'painting_{lvl_name}', MultiTexture(
         lvl_name,
@@ -54,6 +55,7 @@ class TextureAtlas:
         ]
       ))
 
+    # the "unknown" texture
     (castle_ground_textures_start, _) = self.rom.segments_sequentially[39]
     unknown_painting_start = castle_ground_textures_start + 0x1894
     TextureAtlas.add_texture_definition('painting_unknown', MultiTexture(
@@ -116,7 +118,6 @@ class TextureAtlas:
 
     texture_a = TextureAtlas.definitions[name_a]
     texture_b = TextureAtlas.definitions[name_b]
-
     if len(texture_a.textures) != len(texture_b.textures):
       raise ValueError('Can only swap textures between two texture groups with the same length right now')
 

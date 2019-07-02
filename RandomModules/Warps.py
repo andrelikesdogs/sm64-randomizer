@@ -199,62 +199,94 @@ class WarpRandomizer:
       warp_pools[pool].append(warp_set)
       warp_sets.append(warp_set)
     
+    # list of changes that will be done
+    change_list = []
+
+    # go through pools, shuffle within those pools and assign warps
     for ruleset, warpsets in warp_pools.items():
       ### Debug Warpsets
-      print(ruleset)
-      for warpset in warpsets:
-        print(f"Warps from {warpset['source_level'].name} to {warpset['target_level'].name}")
-        print(f" Entrances: SRC: {len(warpset['entrance_srcs'])}    DEST: {len(warpset['entrance_dsts'])}")
-        print(f" Exits:     SRC: {len(warpset['exit_srcs'])}    DEST: {len(warpset['exit_dsts'])}")
+      print('-' * 30)
+      #print(ruleset)
+      #for warpset in warpsets:
+        #print(f"Warps from {warpset['source_level'].name} to {warpset['target_level'].name}")
+        #print(f" Entrances: SRC: {len(warpset['entrance_srcs'])}    DEST: {len(warpset['entrance_dsts'])}")
+        #print(f" Exits:     SRC: {len(warpset['exit_srcs'])}    DEST: {len(warpset['exit_dsts'])}")
 
-      ### Split into Sources and Destinations
-      warpsets_srcs = []
-      warpsets_dsts = []
+      ### Split into Overworld and Levels
+      warpsets_ow = []
+      warpsets_lvl = []
+      lvl_paintings = {}
 
       for warpset in warpsets:
-        warpsets_srcs.append(dict(
+        painting = warpset["target_level"].properties["shuffle_painting"] if "shuffle_painting" in warpset["target_level"].properties else "painting_unknown"
+        lvl_paintings[warpset["target_level"]] = painting
+        warpsets_ow.append(dict(
           level=warpset["target_level"],
           entrances=warpset["entrance_srcs"],
-          exits=warpset["exit_srcs"]
+          exits=warpset["exit_dsts"]
         ))
-        warpsets_dsts.append(dict(
+        warpsets_lvl.append(dict(
           level=warpset["target_level"],
           entrances=warpset["entrance_dsts"],
-          exits=warpset["exit_dsts"]
+          exits=warpset["exit_srcs"]
         ))
 
       # Perform the shuffle
-      shuffle(warpsets_srcs)
-      shuffle(warpsets_dsts)
+      shuffle(warpsets_ow)
+      shuffle(warpsets_lvl)
+
+      # If random paintings enabled
+      if "shuffle_paintings" in settings:
+        if settings["shuffle_paintings"] == "random":
+          keys = list(lvl_paintings.keys())
+          shuffled_keys = [*keys]
+          shuffle(shuffled_keys)
+          for key in keys:
+            lvl_paintings[key] = lvl_paintings[shuffled_keys]
       
       # Relink the warps
-      for group_idx in range(len(warpsets_srcs)):
-        src_set = warpsets_srcs[group_idx]
-        dst_set = warpsets_dsts[group_idx]
+      for group_idx in range(len(warpsets_ow)):
+        ow_set = warpsets_ow[group_idx]
+        lvl_set = warpsets_lvl[group_idx]
 
-        print(f'{src_set["level"].name} now goes to {dst_set["level"].name}')
+        SpoilerLog.add_entry('warps', f'{ow_set["level"].name} leads to {lvl_set["level"].name}')
+        # print(f'{ow_set["level"].name} now goes to {lvl_set["level"].name}')
 
-        # relink entrances
-        for idx in range(len(src_set["entrances"])):
-          src = src_set["entrances"][idx]
-          
-          if idx in dst_set["entrances"]:
-            dst = dst_set["entrances"][idx]
-            src.set("to_course_id", dst.course_id)
-            src.set("to_area_id", dst.area_id)
-            src.set("to_warp_id", dst.warp_id)
+        # link overworld entrances to new level
+        for idx in range(len(ow_set["entrances"])):
+          src = ow_set["entrances"][idx]
+          dst = choice(lvl_set["entrances"])
+          change_list.append((src, dst.course_id, dst.area_id, dst.warp_id))
         
         # relink exits
-        for idx in range(len(src_set["exits"])):
-          src = src_set["exits"][idx]
+        for idx in range(len(lvl_set["exits"])):
+          src = lvl_set["exits"][idx]
+          targets = []
+          target = choice(ow_set["exits"])
 
-          if idx in dst_set["exits"]:
-            dst = dst_set["exits"][idx]
-            src.set("to_course_id", dst.course_id)
-            src.set("to_area_id", dst.area_id)
-            src.set("to_warp_id", dst.warp_id)
+          for dst in ow_set["exits"]:
+            if dst.warp_id == src.to_warp_id:
+              targets.append(dst)
+          
+          if len(targets):
+            target = choice(targets)
+          
+          change_list.append((src, target.course_id, target.area_id, target.warp_id))
+        
+        if "shuffle_paintings" in settings and settings["shuffle_paintings"] != "off":
+          if "shuffle_painting" in ow_set["level"].properties:
+            print(ow_set["level"].name, ": set new painting to ", lvl_set["level"].name)
+            source_painting = ow_set["level"].properties["shuffle_painting"]
+            print(lvl_paintings[lvl_set["level"]], source_painting)
+            TextureAtlas.copy_texture_from_to(self.rom, source_painting, lvl_paintings[lvl_set["level"]])
+
+      for (target, course_id, area_id, warp_id) in change_list:
+        target.set(self.rom, "to_course_id", course_id)
+        target.set(self.rom, "to_area_id", area_id)
+        target.set(self.rom, "to_warp_id", warp_id)
 
     ### Debug View
+    """
     for target_level in target_levels:
       print(f" Warps found for {target_level.name}")
       if target_level in entrance_src_for_levels:
@@ -287,6 +319,7 @@ class WarpRandomizer:
         print(" No Exit Destinations")
       
       print("-" * 30)
+    """
 
 
   def shuffle_level_entries_old(self, painting_mode : str):

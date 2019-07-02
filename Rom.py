@@ -137,7 +137,7 @@ class ROM:
       self.rom_type = 'EXTENDED'
     else:
       self.rom_type = 'VANILLA'
-      
+    
   def try_extend(self, alignment=1):
     # make copy
     path = Path(self.path)
@@ -237,8 +237,8 @@ class ROM:
         segment_start = self.read_integer(defined_segment["start"], 4)
         segment_end = self.read_integer(defined_segment["end"], 4)
       else:
-        segment_start = self.read_integer(defined_segment["start"], 4)
-        segment_end = self.read_integer(defined_segment["end"], 4)
+        segment_start = defined_segment["start"]
+        segment_end = defined_segment["end"]
         
       self.set_segment(segment_id, segment_start, segment_end)
     
@@ -258,12 +258,18 @@ class ROM:
     Arguments:
         address {int} -- Address to find segment information for
     """
-    print(f"matching for {hex(address)}")
+    print(f"matching for {hex(address)} in {len(self.segments_sequentially)} segments")
+    found_at = []
     for segment_idx, (address_start, address_end) in enumerate(self.segments_sequentially):
       if address >= address_start and address < address_end:
         offset = address - address_start
         print(f'{hex(address)} found in segment index #{segment_idx}, offset: {hex(offset)}')
-        return (segment_idx, offset)
+        found_at.append((segment_idx, offset))
+    
+    if len(found_at):
+      print("\n".join([str(t) for t in found_at]))
+    else:
+      print("not found")
 
   def read_cmds_from_level_block(self, level: Level, filter=[]):
     (start_position, end_position) = level.address

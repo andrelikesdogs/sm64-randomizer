@@ -6,15 +6,16 @@ class Gameplay:
     self.tweaking = Tweaking(rom)
 
   def disable_all_cutscenes(self):
-    self.tweaking.add_asm_patch(
-      [
-        (0x6BD4, bytes([0x24, 0x00])), # Peach Cutscene
-        (0x6D90, bytes([0x24, 0x10, 0x00, 0x00])), # Lakitu Cutscene
-        (0x4B7C, bytes([0x24, 0x00])), # Level Intros #1
-        (0x4924, bytes([0x10, 0x00])), # Level Intros #2
-        (0x123F8, bytes([0x10, 0x00])), # Disable "Milestone" Messages
-      ]
-    )
+    if self.rom.region in ['NORTH_AMERICA', 'EUROPE']:
+      self.tweaking.add_asm_patch(
+        [
+          (0x6BD4, bytes([0x24, 0x00])), # Peach Cutscene
+          (0x6D90, bytes([0x24, 0x10, 0x00, 0x00])), # Lakitu Cutscene
+          (0x4B7C, bytes([0x24, 0x00])), # Level Intros #1
+          (0x4924, bytes([0x10, 0x00])), # Level Intros #2
+          (0x123F8, bytes([0x10, 0x00])), # Disable "Milestone" Messages
+        ]
+      )
   
   def disable_starwarp(self):
     self.tweaking.add_asm_patch(
