@@ -10,3 +10,7 @@ pyperclip==1.7.0
 Rtree==0.8.3
 scipy==1.3.0
 trimesh==2.38.26
+scikit-image==0.14.2
+imageio==2.0.1
+PyWavelets==0.4.0
+pillow==4.3.0

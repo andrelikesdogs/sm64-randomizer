@@ -147,7 +147,7 @@ BOWSER_STAGES=[LVL_BOWSER_1, LVL_BOWSER_2, LVL_BOWSER_3]
 SPECIAL_LEVELS=[LVL_MAIN, LVL_MAIN_MENU, LVL_GAME_OVER, LVL_MAIN_SCR]
 
 """ Mapping LEVEL-ID -> LEVEL """
-LEVEL_ID_MAPPING={level.level_id: level for level in ALL_LEVELS}
+LEVEL_ID_MAPPING={level.course_id: level for level in ALL_LEVELS}
 
 """ This is to ensure playability with key-doors """
 GROUND_FLOOR_LEVELS = [

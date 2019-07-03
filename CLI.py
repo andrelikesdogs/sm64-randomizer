@@ -133,7 +133,7 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       textures = TextureAtlas(rom)
       textures.add_dynamic_positions()
     
-    rom.match_segments(0xE16307)
+    rom.match_segments(0xE0BB07)
 
     music_random = MusicRandomizer(rom)
     if opt_args.shuffle_music:

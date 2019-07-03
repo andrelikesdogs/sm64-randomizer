@@ -10,7 +10,7 @@ import sys
 import binascii
 
 from randoutils import pretty_print_table, generate_debug_materials, generate_obj_for_level_geometry
-from Parsers.Level import Level
+from Level import Level
 from Parsers.LevelScript import LevelScriptParser
 from Constants import ALL_LEVELS, application_path
 from Config import Config
@@ -171,7 +171,32 @@ class ROM:
     self.require_checksum_fix = True
 
   def read_levels(self):
+    # sorted levels by course_id for reliable sequential segment reference
+    ow_levels = []
+    non_ow_levels = []
     for level in self.config.levels:
+      if "overworld" in level.properties:
+        ow_levels.append(level)
+      else:
+        non_ow_levels.append(level)
+
+    ow_levels.sort(key=lambda x: x.course_id)
+    non_ow_levels.sort(key=lambda x: x.course_id)
+
+    levels_to_process = [
+      # Hardcoded entries
+      Level(0x00, "Main Entry"),
+      Level(0x26, "Main Menu"),
+      *ow_levels,
+      *non_ow_levels
+    ]
+
+    # !!! attention: if you touch this all sequential references will be different !!!
+    # 0x0 level to read scripts first, idk if it makes sense actually
+    for level in levels_to_process:
+      #if level.offset is not None:
+      #  self.levelscripts[level] = LevelScriptParser.parse_from_offset(self, level.offset, None, 0, level=level)
+      #else:
       self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
       self.levelscripts[level].level_geometry.process()
 
@@ -266,12 +291,10 @@ class ROM:
         print(f'{hex(address)} found in segment index #{segment_idx}, offset: {hex(offset)}')
         found_at.append((segment_idx, offset))
     
-    if len(found_at):
-      print("\n".join([str(t) for t in found_at]))
-    else:
+    if not len(found_at):
       print("not found")
 
-  def read_cmds_from_level_block(self, level: Level, filter=[]):
+  def read_cmds_from_level_block(self, level, filter=[]):
     (start_position, end_position) = level.address
     self.file.seek(start_position, 0)
 

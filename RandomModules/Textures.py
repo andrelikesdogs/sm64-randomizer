@@ -1,4 +1,6 @@
 from typing import List, Union, NamedTuple
+import numpy as np
+from PIL import Image
 
 class Texture(NamedTuple):
   position: int
@@ -6,6 +8,9 @@ class Texture(NamedTuple):
   width: int
   height: int
   name: str
+
+class InMemoryTexture(Texture):
+  data: bytes
 
 class MultiTexture(NamedTuple):
   name: str
@@ -33,8 +38,10 @@ class TextureAtlas:
 
   def add_dynamic_positions(self):
     # castle paintings
-    (paintings_start, _) = self.rom.segments_sequentially[26]
+    # paintings start: 0xE0BB07
+    (paintings_start, _) = self.rom.segments_sequentially[23]
     for (lvl_name, upper, lower) in paintings:
+      # Paintings Start (USA, Extended): 0xE0BB07
       TextureAtlas.add_texture_definition(f'painting_{lvl_name}', MultiTexture(
         lvl_name,
         [
@@ -56,35 +63,86 @@ class TextureAtlas:
       ))
 
     # the "unknown" texture
-    (castle_ground_textures_start, _) = self.rom.segments_sequentially[39]
-    unknown_painting_start = castle_ground_textures_start + 0x1894
+    (unknown_painting_position, _) = self.rom.segments_sequentially[37]
     TextureAtlas.add_texture_definition('painting_unknown', MultiTexture(
       'unknown',
       [
         Texture(
-          unknown_painting_start + 0x6800,
+          unknown_painting_position + 0x1894 + 0x6800,
             int(32*64*16 / 8),
             64,
             32,
             f'painting_unknown_upper'
         ),
-          Texture(
-            unknown_painting_start + 0x6800,
-              int(32*64*16 / 8),
-              64,
-              32,
-              f'painting_unknown_lower'
-          )
+        Texture(
+          unknown_painting_position + 0x1894 + 0x6800,
+            int(32*64*16 / 8),
+            64,
+            32,
+            f'painting_unknown_lower'
+        )
       ]
     ))
 
+    """
+    (misc_textures_address_start, _) = self.rom.segments_sequentially[305]
+    question_mark_icon = misc_textures_address_start + 0x818
+    question_mark_texture = Texture(
+      question_mark_icon,
+      int(32*32*2),
+      32,
+      32,
+      'question_mark'
+    )
+    
+    image_bytes = TextureAtlas.add_texture_definition('question_mark', question_mark_texture)
+    
+
+    # load texture and resize
+    b = self.rom.read_bytes(question_mark_texture.position, question_mark_texture.size)
+    from_bytes = np.frombuffer(b, dtype=np.uint8)
+    colors_format = np.zeros(from_bytes.size * 2, dtype=np.uint8)
+    
+    for idx in range(0, from_bytes.size, 2):
+      c0 = from_bytes[idx]
+      c1 = from_bytes[idx+1]
+
+      new_idx = int(idx / 2)
+
+      r = (((c0 & 0xF8) >> 3) * 0xFF) / 0x1F
+      g = ((((c0 & 0x07) << 2) | ((c1 & 0xC0) >> 6)) * 0xFF) / 0x1F
+      b = (((c1 & 0x3E) >> 1) * 0xFF) / 0x1F
+      a = 255 if c1 & 0x1 > 0 else 0
+      colors_format[new_idx * 4] = r
+      colors_format[new_idx * 4 + 1] = g
+      colors_format[new_idx * 4 + 2] = b
+      colors_format[new_idx * 4 + 3] = a
+    
+    print(colors_format[0:100])
+    colors_format = colors_format.reshape(question_mark_texture.width, question_mark_texture.height, 4)
+    img = Image.fromarray(colors_format, 'RGBA')
+    img_resized = img.resize((64, 64))
+    img_upper = img_resized.crop((0, 0, 64, 32))
+    img_lower = img_resized.crop((0, 32, 64, 64))
+    
+    TextureAtlas.add_texture_definition('painting_unknown', MultiTexture(
+      'unknown',
+      [
+        InMemoryTexture(
+          None,
+          int(32*64*4)
+        )
+      ]
+    ))
+    (castle_ground_textures_start, _) = self.rom.segments_sequentially[20]
     TextureAtlas.add_texture_definition('castle_grounds_tree_shadow', Texture(
-      unknown_painting_start + 0xBC00,
+      castle_ground_textures_start + 0xBC00,
       int(32*32*16/8),
       32,
       32,
       f'castle_grounds_tree_shadow'
     ))
+    """
 
   @staticmethod
   def hide_texture(rom : "ROM", name):
