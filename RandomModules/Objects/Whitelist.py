@@ -18,158 +18,122 @@ import os
 # MIN-Y           | spawn above specific y          | int - Min Height
 # MAX-Y           | spawn under specific y          | int - Max Height
 
-VALID_RULE_NAMES = [
-  "DROP_TO_FLOOR", "UNDERWATER", "MAX_SLOPE", "DISABLED", "SPAWN_HEIGHT", "MIN_Y", "MAX_Y", "DISTANCE_TO", "DISABLE", "NO_FLOOR_REQUIRED", "BOUNDING_BOX"
-]
-
-HEX_VALUES = ["course_id", "area_id", "behaviour", "model_id", "bparam1", "bparam2", "bparam3", "bparam4"]
-
-VALID_MATCH_TYPES = [*HEX_VALUES, "source"]
-
-DEFAULT_RULES = dict(
-  DROP_TO_FLOOR=True,
-  MAX_SLOPE=0.8,
-  UNDERWATER="ALLOWED"
-)
-
 DEBUG_HIT_INDICES = {}
 
-class WhitelistEntry:
-  name: str = "Invalid Entry"
-  match: dict
-  rules: dict
-  priority: int = 1
-
-  def __init__(self, name : str, match : dict, rules : dict, priority : int):
-    self.name = name
-    self.match = match
-    self.rules = rules
-    self.priority = priority
-
-  def __str__(self):
-    return f"<Whitelist Entry: \"{self.name}\" Matching: {repr(self.rules)}>"
-
 class RandomizeObjectsWhitelist:
-  def __init__(self):
-    self.whitelist = []
+  def __init__(self, whitelist):
+    self.object_whitelist = whitelist
     
-    random_whitelist_dir = os.path.join(application_path, "Config", "randomizeObjects")
-    for filename in os.listdir(random_whitelist_dir):
-      file = Path(filename)
+  def matches_with(self, matching, object3d):
+    matches = 0
 
-      if file.suffix == '.json':
-        file_path = Path(os.path.join(random_whitelist_dir, file))
+    # don't match empty sets
+    if not len(matching.keys()):
+      return (matches, False)
 
-        with open(file_path, "r") as json_whitelist:
-          entries = json.loads(json_whitelist.read())
-
-          for entry_index, entry in enumerate(entries):
-            if "name" not in entry:
-              raise ValueError(f"Error in randomizeObjects.json: Please specify a (unique) name for entry #{entry_index}")
-            if "match" not in entry:
-              raise ValueError(f"Error in randomizeObjects.json: Please specify a matching property for \"{entry['name']}\"")
-            
-            normalized_match = {}
-            for key, value in entry["match"].items():
-              new_value = value
-              if key not in VALID_MATCH_TYPES:
-                raise ValueError(f"Error in randomizeObjects.json: Invalid matching type \"{key}\"")
-              if key in HEX_VALUES:
-                if str(value).startswith("0x"):
-                  new_value = int(str(value), base=16)
-                else:
-                  new_value = int(value)
-              normalized_match[key] = new_value
-            #print(normalized_match)
-            rules = {**DEFAULT_RULES}
-
-            if "rules" in entry:
-              rules = {
-                **rules,
-                **entry["rules"]
-              }
-
-            for rule in list(rules.keys()):
-              if rule not in VALID_RULE_NAMES:
-                raise ValueError(f"Error in randomizeObjects.json: Invalid rule \"{rule}\"")
-            
-            rule_priority = 1
-            if "priority" in entry:
-              rule_priority = int(entry["priority"])
-
-            whitelist_entry = WhitelistEntry(entry["name"], normalized_match, rules, rule_priority)
-            self.whitelist.append(whitelist_entry)
-    pass
-
-  def matches_with(self, object3d, entry : WhitelistEntry):
-    matching = entry.match
-
-    if "behaviour" in matching:
+    if "behaviours" in matching:
       if object3d.behaviour is None:
-        return False
-      if matching["behaviour"] != object3d.behaviour:
-        return False
+        return (matches, False)
+      elif object3d.behaviour not in matching["behaviours"]:
+        return (matches, False)
+      else:
+        matches += 1
+
 
     if "model_id" in matching:
       if object3d.model_id is None:
-        return False
-      if matching["model_id"] != object3d.model_id:
-        return False
+        return (matches, False)
+      elif matching["model_id"] != object3d.model_id:
+        return (matches, False)
+      else:
+        matches += 1
       
-    if "source" in matching and matching["source"] != object3d.source:
-      return False
+    if "source" in matching:
+      if matching["source"] != object3d.source:
+        return (matches, False)
+      else:
+        matches += 1
 
     if "course_id" in matching:
-      if object3d.level is None or object3d.level.level_id is None:
-        return False
-      if matching["course_id"] != object3d.level.level_id:
-        return False
+      if object3d.level is None or object3d.level.course_id is None:
+        return (matches, False)
+      elif matching["course_id"] != object3d.level.course_id:
+        return (matches, False)
+      else:
+        matches += 1
+
+    if "course_property" in matching:
+      # course property check for current area and for current level
+      found_in_level_or_area = False
+      matching_property = matching["course_property"]
+
+      # areas
+      if object3d.area_id in object3d.level.areas:
+        if matching_property in object3d.level.areas[object3d.area_id].properties:
+          found_in_level_or_area = True
+
+      # level
+      if matching_property in object3d.level.properties:
+        found_in_level_or_area = True
+
+      if not found_in_level_or_area:
+        return (matches, False)
+      else:
+        matches += 1
     
     if "bparam1" in matching:
       if object3d.bparams[0] != matching["bparam1"]:
-        return False
+        return (matches, False)
+      else:
+        matches += 1
 
     if "bparam2" in matching:
       if object3d.bparams[1] != matching["bparam2"]:
-        return False
+        return (matches, False)
+      else:
+        matches += 1
 
     if "bparam3" in matching:
       if object3d.bparams[2] != matching["bparam3"]:
-        return False
+        return (matches, False)
+      else:
+        matches += 1
 
     if "bparam4" in matching:
       if object3d.bparams[3] != matching["bparam4"]:
-        return False
+        return (matches, False)
+      else:
+        matches += 1
 
-    if "area_id" in matching and matching["area_id"] != object3d.area_id:
-      return False
+    if "area_id" in matching:
+      if matching["area_id"] != object3d.area_id:
+        return (matches, False)
+      else:
+        matches += 1
 
-    return True
+    return (matches, True)
   
   def get_shuffle_properties(self, object3d : Object3D):
-    possible_matches = []
-    for entry_index, entry in enumerate(self.whitelist):
-      if self.matches_with(object3d, entry):
-        if entry_index not in DEBUG_HIT_INDICES:
-          DEBUG_HIT_INDICES[entry_index] = 0
-        DEBUG_HIT_INDICES[entry_index] += 1
+    best_match = None
+    best_match_count = 0
+    for whitelist_entry in self.object_whitelist:
+      if whitelist_entry["match"] is None:
+        continue
 
-        possible_matches.append(entry)
-    
-    if not len(possible_matches):
-      return False
+      if whitelist_entry["exclude"] is not None:
+        _, match_exclude = self.matches_with(whitelist_entry["exclude"], object3d)
 
-    # matches without "behaviour", "source" or "model_id" don't work alone
-    without_extension_matches = list(filter(lambda entry: "model_id" in entry.match or "behaviour" in entry.match or "source" in entry.match, possible_matches))
-    if not len(without_extension_matches):
-      return False
-
-    # sort matches by prio
-    sorted_matches = list(sorted(possible_matches, key=lambda possible_match: possible_match.priority))
-
-    rules = {**sorted_matches[0].rules}
-
-    for entries in sorted_matches:
-      rules = {**rules, **entries.rules}
-
-    return rules
+        if match_exclude:
+          continue
+      
+      # the more precise the matching, the more priority it will have
+      matches, did_match = self.matches_with(whitelist_entry["match"], object3d)
+      if did_match and matches > best_match_count:
+        '''
+        if best_match is not None and object3d.behaviour == 0x13002aa4:
+          print("replacing rule ", best_match)
+          print("with rule ", whitelist_entry)
+        '''
+        best_match = whitelist_entry
+        best_match_count = matches
+    return best_match

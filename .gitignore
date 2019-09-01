@@ -5,9 +5,9 @@
 [Ii]nclude
 [Ll]ib/*
 !js/lib/*
-[Ll]ib64
-[Ll]ocal
-[Ss]cripts
+^[Ll]ib64
+^[Ll]ocal
+^[Ss]cripts
 [Ss]hare
 [Ee]tc
 pyvenv.cfg
@@ -51,3 +51,5 @@ web/design
 
 # js crap
 node_modules/
+
+.data

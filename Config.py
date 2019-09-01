@@ -21,6 +21,7 @@ LEVEL_PROPERTY_DEFINITIONS = {
   'end_game': ["bool"], # This level will end the game
   'shuffle_painting': ["str"], # Defines this levels painting to be shuffled
   'requires_key': ["int"],
+  'loading_zones': ["list"],
   'shuffle_warps': ["list"],
   'shuffle_warps[].to': ["list"],
   'shuffle_warps[].to[].course_id': ["int"],
@@ -39,6 +40,9 @@ RULE_DEFINITIONS = {
   'max_slope': ["float"], # Maximum Slope allowed
   'disabled': ["bool"], # Disable this object for randomization
   'spawn_height': ["list"], # Min/Max heights above floor
+  'distance_to': ["list"],
+  'bounding_box': ["list"], # length, width, height
+  'bounding_sphere': ["list"] # radius, (offset x, offset y, offset z)
 }
 
 # Which entries are allowed in objects[] (...) .match[]
@@ -60,10 +64,13 @@ NL = "\n"
 class Config:
   def __init__(self, filename, source):
     self.filename = filename
+    self.name = "Unknown ROM Config"
     self.rom_settings = None
     self.checksums = []
     self.levels = []
     self.levels_by_course_id = {}
+    self.object_entries = []
+    self.object_entries_by_name = {}
 
     self.validation_errors = []
     self.validation_warnings = []
@@ -334,7 +341,7 @@ class Config:
           (key, value) = self.parse_property(prop)
           properties[key] = value
 
-      areas = []
+      areas = {}
       if "areas" in level:
         for area in level["areas"]:
           area_name = area["name"] if "name" in area else f"{level['name']} Area {hex(area['id'])}"
@@ -346,17 +353,169 @@ class Config:
               area_properties[key] = value
 
           new_area = Area(area["id"], area_name, area_properties)
-          areas.append(new_area)
+          areas[area["id"]] = new_area
 
       new_level = Level(level["course_id"], level["name"], properties, areas)
 
       self.levels.append(new_level)
       self.levels_by_course_id[level["course_id"]] = new_level
   
-  def parse_objects(self, objects):
-    pass
+  def parse_object_table(self, table, rules = None, match = None, exclude = None):
+    if rules is not None:
+      rules = {**rules}
+    else:
+      rules = dict() # not as param default, to create a new dict
 
+    name = "Default"
+    exclude = None
+
+    # Object Name
+    if "name" in table:
+      name = table["name"]
+
+    # Object randomization rules
+    if "rules" in table:
+      for entry in table["rules"]:
+        (key, value) = self.parse_property(entry)
+        rules[key] = value
+
+    # Object matching rules
+    if "match" in table:
+      if match is not None:
+        match = {**match}
+      else:
+        match = dict()
+
+      if type(table["match"]) is int:
+        match["behaviours"] = [table["match"]]
+      else:
+        if type(table["match"]) is list:
+          for entry in table["match"]:
+            if type(entry) is int:
+              if "behaviours" not in match:
+                match["behaviours"] = []
+              
+              match["behaviours"].append(entry)
+            if type(entry) is dict:
+              prop_name = list(entry.keys())[0]
+              match[prop_name] = entry[prop_name]
+
+    # Exclude Matching
+    if "exclude" in table:
+      if exclude is not None:
+        exclude = {**exclude}
+      else:
+        exclude = dict()
+
+      if type(table["exclude"]) is int:
+        exclude["behaviours"] = [table["exclude"]]
+      else:
+        if type(table["exclude"]) is list:
+          for entry in table["exclude"]:
+            if type(entry) is int:
+              if "behaviours" not in exclude:
+                exclude["behaviours"] = []
+              
+              exclude["behaviours"].append(entry)
+            if type(entry) is dict:
+              prop_name = list(entry.keys())[0]
+              exclude[prop_name] = entry[prop_name]
+
+    # Object matching for existing objects
+    if "for" in table:
+      for obj_name in table["for"]:
+        if obj_name not in self.object_entries_by_name:
+          raise ValueError(f"The object '{obj_name}' is not known. Please ensure it is not referenced before it's declared. This is a current limitation.")
+        else:
+          target = self.object_entries_by_name[obj_name]
+          new_entries = []
+          target_match = target["match"] if "match" in target and target["match"] is not None else dict()
+          target_exclude = target["exclude"] if "exclude" in target and target["exclude"] is not None else dict()
+          target_rules = target["rules"] if "rules" in target and target["rules"] is not None else dict()
+
+          parent_match = (match or dict())
+          parent_exclude = (exclude or dict())
+
+          # print(target["name"], len(list(target_match.keys())))
+          # don't add nodes with no matching property, those are groups
+          if len(list(target_match.keys())) > 0:
+            # print(f"{name}: {target['name']}")
+            # add the entry itself
+            new_entries.append(dict(
+              match={
+                **target_match, # target, i.e. for-matches
+                **parent_match, # parent
+              },
+              exclude={
+                **target_exclude,
+                **parent_exclude,
+              },
+              rules={
+                **target_rules,
+                **rules,
+              },
+              name=f"{name}: {target['name']}"
+            ))
+
+          # add the entries children
+          if "children" in target:
+            children = target["children"]
+            for child in children:
+              child_match = child["match"] if "match" in child and child["match"] is not None else dict
+              child_exclude = child["exclude"] if "exclude" in child and child["exclude"] is not None else dict()
+
+              # print(child["name"], len(list(child_match.keys())))
+              # don't add children with no matching property, those are groups
+              if len(list(child_match.keys())) > 0:
+                new_entries.append(dict(
+                  match={
+                    **child_match,
+                    **parent_match
+                  },
+                  rules={
+                    **child["rules"],
+                    **rules,
+                  },
+                  exclude={
+                    **child_exclude,
+                    **parent_exclude
+                  },
+                  name=f"{name}: {child['name']}"
+                ))
+              
+            for new_entry in new_entries:
+              self.object_entries_by_name[new_entry["name"]] = new_entry
+              self.object_entries.append(new_entry)
+
+      # Discard this entry, do not add to the list without the items it matched with "for"
+      return
+
+    object_whitelist_entry = dict(
+      match=None,
+      name=name,
+      rules=rules,
+      exclude=exclude,
+      children=[]
+    )
+    if match is not None:
+      object_whitelist_entry["match"] = match
+
+    if name in self.object_entries_by_name:
+      raise ValueError(f"Duplicate name: '{name}'. Please use unique names for Object placement rules")
+    self.object_entries_by_name[name] = object_whitelist_entry
+    self.object_entries.append(object_whitelist_entry)
+
+    if "objects" in table:
+      for object_table in table["objects"]:
+        child = self.parse_object_table(object_table, rules, match, exclude)
+        object_whitelist_entry["children"].append(child)
+    
+    return object_whitelist_entry
+    
   def parse(self, source):
+    if "name" in source:
+      self.name = source["name"]
+    
     for rom_definition in source["rom"]:
       self.checksums.append(rom_definition)
     
@@ -364,7 +523,9 @@ class Config:
       self.parse_levels(source["levels"])
     
     if "object_randomization" in source:
-      self.parse_objects(source["object_randomization"])
+      self.parse_object_table(source["object_randomization"])
+    
+    print(f"Configuration '{self.name}' loaded {len(self.object_entries)} object-rule entries")
 
   def has_checksum_configuration(self, checksum):
     for rom_definition in self.checksums:
@@ -399,6 +560,11 @@ class Config:
       
     configurations = list(map(lambda tup: Config(*tup), config_files_found))
     return configurations
+
+  @staticmethod
+  def load_configuration_from_str(configuration: str):
+    parsed = yaml.safe_load(configuration)
+    return Config('str_config.yml', parsed)
 
   @staticmethod
   def find_configuration(checksum):

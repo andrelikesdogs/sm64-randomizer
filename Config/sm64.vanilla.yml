@@ -164,6 +164,10 @@ levels:
     properties:
       - shuffle_painting: painting_wdw
       - requires_key: 0x2
+      - disable_water_check
+      - loading_zones: # between area 1 and 2
+        - p1: [4616, -200, -1538]
+          p2: [-3800, -1670, -3958]
   - name: "Tall, Tall Mountain"
     course_id: 0x24
     areas:
@@ -171,10 +175,18 @@ levels:
         name: "TTM: Slide 1"
         properties:
           - slide
+          - loading_zones: # between 2 and 3
+            - p1: [-1968, 1313, -3212]
+              p2: [-9201, -2047, -4108]
       - id: 0x03
         name: "TTM: Slide 2"
         properties:
           - slide
+          - loading_zones:
+            - p1: [-1968, 1313, -3212] # between 2 and 3
+              p2: [-9201, -2047, -4108]
+            - p1: [-1968, 1313, -3212] # between 3 and 4
+              p2: [-9201, -2047, -4108]
       - id: 0x03
         name: "TTM: Slide 3"
         properties:
@@ -225,22 +237,22 @@ levels:
     course_id: 0x11
     properties:
       - continues_level: 0x1E
+      - key_receive: 0x1
   - name: "Bowser in the Dark World Battle"
     course_id: 0x1E
     properties:
       - disabled
-      - key_receive: 0x1
   
   - name: "Bowser in the Fire Sea"
     course_id: 0x13
     properties:
       - continues_level: 0x21
       - requires_key: 0x1
+      - key_receive: 0x2
   - name: "Bowser in the Dark World Battle"
     course_id: 0x21
     properties:
       - disabled
-      - key_receive: 0x2
   
   - name: "Bowser in the Sky"
     course_id: 0x15
@@ -286,6 +298,8 @@ object_randomization:
       objects:
         - name: Mr. I
           match: 0x13000054
+          rules:
+            - bounding_sphere: [500] # radius, origin x, origin y, origin z
         - name: Bob-Omb
           match: 0x13003174
         - name: Goomba
@@ -356,24 +370,38 @@ object_randomization:
         - name: Grounded Line Formation (5x)
           match:
             - bparam2: 0
+          rules:
+            - bounding_box: [1000, 100, 100] # length, width, height
         - name: Grounded Ring Formation (8x)
           match:
             - bparam2: 2
+          rules:
+            - bounding_box: [1000, 1000, 100] # length, width, height
         - name: Grounded Arrow (8x)
           match:
             - bparam2: 4
+          rules:
+            - bounding_box: [500, 500, 100] # length, width, height
         - name: Horizontal Floating Line (x5)
           match:
             - bparam2: 16
+          rules:
+            - bounding_box: [1000, 100, 100] # length, width, height
         - name: Vertical Floating Line (x5)
           match:
             - bparam2: 17
+          rules:
+            - bounding_box: [100, 1000, 100] # length, width, height
         - name: Horizontal Floating Ring (x8)
           match:
             - bparam2: 18
+          rules:
+            - bounding_box: [1000, 1000, 100] # length, width, height
         - name: Vertical Floating Ring (x8)
           match:
             - bparam2: 19
+          rules:
+            - bounding_box: [1000, 100, 1000] # length, width, height
     
     - name: "Coin"
       rules:
@@ -391,7 +419,7 @@ object_randomization:
           rules:
             - disabled
     
-    - name: "Star"
+    - name: "Stars"
       rules:
         - spawn_height: [100, 600]
       objects:
@@ -424,11 +452,11 @@ object_randomization:
     - name: "Tree"
       rules:
         - underwater: never
+      match: 0x13002AA4
       # GFX 0x17 = Castle Ground Trees
       # GFX 0x19 = Snowy Trees
       # GFX 0x18 = Courtyard Trees
       # GFX 0x1B = Shifting Sand Land Trees/Palm
-      match: 0x13002AA4
     
     - name: "Level Objects"
       rules:
@@ -504,23 +532,36 @@ object_randomization:
         - name: "Pink Bob-Omb (Canon)"
           match: 0x13003228
 
+    # These two entries are special "for" entries, that add rules to objects list by their name.
+    # This is to disable rules/matches for certain levels, special circumstances, etc
     - name: "Level Property Checks"  
       objects:
         - name: "Wingcap Level"
           match:
             - course_property: fly_stage
-          match_from: 
+          for: 
             - 'Coin'
             - 'Coin Formations'
           rules:
             - no_floor_required
-        
         - name: "Changeable-Water Levels"
           match:
             - course_property: disable_water_check
+          for:
+            - 'Tree'
+            - 'Enemies'
+            - 'Stars'
+            - 'Coin'
+            - 'Coin Formations'
+            - 'Level Objects'
           rules:
-            - underwater
+            - underwater: allowed
             - drop_to_floor: force
+        - name: "Slide Check disable Spawn Shuffle"
+          match:
+            - course_property: slide
+          for:
+            - "Warps"
 
     - name: "Level Special Cases"
       objects:
@@ -528,6 +569,8 @@ object_randomization:
           match:
             - course_id: 0x0C
             - area_id: 0x02
+          for:
+            - 'Stars'
           rules:
             - max_y: 1858
         - name: "THI: Red Coins / Red Coin Star below Boss Room"
@@ -536,3 +579,29 @@ object_randomization:
             - 0x13003E8C # Red Coin Star
           rules:
             - max_y: 1750
+        - name: "WC: Coins within Reach of Platform"
+          match:
+            - course_id: 0x1D
+          rules:
+            - distance_to:
+              - origin: [0, -2047, 0]
+                max_distance: 6000
+          for:
+            - 'Coin'
+            - 'Coin Formations'
+        - name: "WMotR: Coins within Reach"
+          match:
+            - course_id: 0x1F
+          rules:
+            - distance_to:
+              - origin: [0, 1900, 0]
+          for:
+            - 'Coin'
+            - 'Coin Formations'
+        - name: "WMotR: Disable Itembox Shuffle"
+          match:
+            - course_id: 0x1F
+            - behaviour: 0x13002250
+          rules:
+            - disabled
+            

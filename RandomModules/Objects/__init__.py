@@ -58,7 +58,7 @@ WALL_CHECK_DIRECTIONS_NORM = [
 class ObjectRandomizer:
   def __init__(self, rom : 'ROM'):
     self.rom = rom
-    self.whitelist = RandomizeObjectsWhitelist()
+    self.whitelist = RandomizeObjectsWhitelist(rom.config.object_entries)
     self.object_wall_traces = {}
     self.object_floor_traces = {}
     self.reject_reason_counts = {}
@@ -206,52 +206,57 @@ class ObjectRandomizer:
 
     floor_properties = self.check_floor(obj.area_id, levelscript, position, rules)
 
-    if "NO_FLOOR_REQUIRED" not in rules or rules["NO_FLOOR_REQUIRED"] != True:
+    if "no_floor_required" not in rules or rules["no_floor_required"] != True:
       if floor_properties is False:
         return False
 
-    if "MIN_Y" in rules:
-      if position[1] < rules["MIN_Y"]:
+    if "min_y" in rules:
+      if position[1] < rules["min_y"]:
         return False
 
-    if "MAX_Y" in rules:
-      if position[1] > rules["MAX_Y"]:
+    if "max_y" in rules:
+      if position[1] > rules["max_y"]:
         return False
 
-    if "DISTANCE_TO" in rules:
-      origin_position = rules["DISTANCE_TO"]["origin"]
-      distance = math.sqrt(
-        (position[0] - origin_position[0]) ** 2 +
-        (position[1] - origin_position[1]) ** 2 +
-        (position[2] - origin_position[2]) ** 2
-      )
+    if "distance" in rules:
+      for distance_rules in rules["distance"]:
+        origin = distance_rules["origin"]
+
+        distance = math.sqrt(
+          (position[0] - origin[0]) ** 2 +
+          (position[1] - origin[1]) ** 2 +
+          (position[2] - origin[2]) ** 2
+        )
+
+        if "max_distance" in distance_rules:
+          if distance > distance_rules["max_distance"]:
+            return False
+
+        if "min_distance" in distance_rules:
+          if distance > distance_rules["min_distance"]:
+            return False
       
-      if "max_distance" in rules["DISTANCE_TO"]:
-        if distance > rules["DISTANCE_TO"]["max_distance"]:
-          return False
-
-      if "min_distance" in rules["DISTANCE_TO"]:
-        if distance > rules["DISTANCE_TO"]["min_distance"]:
-          return False
-
-    if "MAX_SLOPE" in rules and floor_properties is not False:
+    if "max_slope" in rules and floor_properties is not False:
       floor_slope = floor_properties["triangle_normal"][1]
 
       # 1 = Floor. 0 = Wall.
-      if floor_slope < abs(float(rules["MAX_SLOPE"])):
+      if floor_slope < abs(float(rules["max_slope"])):
         return False
     
-    if "UNDERWATER" in rules:
-      underwater_status = rules["UNDERWATER"]
+    if "underwater" in rules:
+      underwater_status = rules["underwater"]
 
-      if underwater_status == "ONLY":
+      if underwater_status == "only":
         if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position):
           return False
-      elif underwater_status == "NEVER":
+      elif underwater_status == "never":
         if self.is_in_water_box(obj.area_id, levelscript.water_boxes, position):
           return False
-      elif underwater_status == "ALLOWED":
+      elif underwater_status == "allowed" or underwater_status == True:
         pass
+
+    if "bounding_box" in rules:
+      pass
 
     return True
 
@@ -268,16 +273,16 @@ class ObjectRandomizer:
         list -- new position, that needs to be validated for validity/sanity
     """
 
-    if "DROP_TO_FLOOR" in rules:
+    if "drop_to_floor" in rules:
       # this object is supposed to be dropped onto the floor
-      if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position) or rules["DROP_TO_FLOOR"] == "FORCE":
+      if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position) or rules["drop_to_floor"] == "force":
         # if objest is in water, don't modify the position, except when forced
         position = self.drop_position(obj.area_id, levelscript, position, rules)
       
-    if "SPAWN_HEIGHT" in rules:
+    if "spawn_height" in rules:
       # object can spawn in the air, decide on a height and validate
-      if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position) or rules["DROP_TO_FLOOR"] == "FORCE":
-        min_height, max_height = tuple(rules["SPAWN_HEIGHT"])
+      if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position) or rules["drop_to_floor"] == "force":
+        min_height, max_height = tuple(rules["spawn_height"])
 
         position[1] += random.randint(min_height, max_height)
 
@@ -295,13 +300,15 @@ class ObjectRandomizer:
         list -- position, that needs to be validated for validity/sanity
     """
     area_id = obj.area_id
+
+    if area_id not in levelscript.level_geometry.area_geometries:
+      print(obj)
+      print(rules)
+      raise ValueError(f"{area_id} not found in geometry. This probably means a rule is matching too many objects, like a star selector.")
     area_mesh = levelscript.level_geometry.area_geometries[area_id]
 
     (bounds_min, bounds_max) = area_mesh.bounds
     (x, y, z) = bounds_min
-
-    if levelscript.level == Constants.LVL_THI:
-      pass
 
     if abs(bounds_min[0] - bounds_max[0]) > 0:
       x = random.randrange(bounds_min[0] + 1000, bounds_max[0] - 1000)
@@ -316,21 +323,27 @@ class ObjectRandomizer:
 
   def shuffle_objects(self):
     object_randomization_count = 0
+
+
     for level, levelscript in self.rom.levelscripts.items():
+      if "disabled" in level.properties:
+        # level is disabeld
+        continue
+
       for object_idx, object3d in enumerate(levelscript.objects):
-        randomizing_rules = self.whitelist.get_shuffle_properties(object3d)
+        whitelist_entry = self.whitelist.get_shuffle_properties(object3d)
         
         if "SM64R_DEBUG" in os.environ and "PRINT" in os.environ["SM64R_DEBUG"].split(','):
-          pass
-          #print_progress_bar(object_idx, len(levelscript.objects), f'Placing Objects', f'{level.name}: ({object_idx} placed)')
+          print_progress_bar(object_idx, len(levelscript.objects), f'Placing Objects', f'{level.name}: ({object_idx} placed)')
           
         # randomization not defined, thus not allowed - continue to next one
-        if not randomizing_rules:
-          #print(object3d, 'not in whitelist')
+        if not whitelist_entry:
           continue
 
+        randomizing_rules = whitelist_entry["rules"]
+
         # randomization disabled - continue to next one
-        if "DISABLE" in randomizing_rules and randomizing_rules["DISABLE"] == True:
+        if "disabled" in randomizing_rules and randomizing_rules["disabled"] == True:
           continue
 
         found_valid_point = False
@@ -341,19 +354,20 @@ class ObjectRandomizer:
           tries += 1
 
           if tries > 1000:
-            print()
-            print(f"Warning: No valid position found for {object3d.behaviour_name} in {level.name} (Area: {hex(object3d.area_id)}) after 1000 tries, bailing.")
+            #print()
+            print(f"Used Rule: {whitelist_entry['name']}")
+            print(f"Warning: No valid position found for {object3d.behaviour_name} in {level.name} ({hex(level.course_id)}) (Area: {hex(object3d.area_id)}) after 1000 tries, bailing.")
             break
 
           # 1. Generate a random point
-          potential_position = self.generate_random_point_for(levelscript, object3d, randomizing_rules)
+          possible_position = self.generate_random_point_for(levelscript, object3d, randomizing_rules)
 
           # 2. Check for a valid "preposition" - basic checks to ensure some viability
-          if not self.is_valid_position(levelscript, object3d, potential_position, randomizing_rules):
+          if not self.is_valid_position(levelscript, object3d, possible_position, randomizing_rules):
             continue
 
           # 3. Modify the position - certain rules will adjust the final position of the object by ie dropping it to the floor
-          new_position = self.modify_position(levelscript, object3d, potential_position, randomizing_rules)
+          new_position = self.modify_position(levelscript, object3d, possible_position, randomizing_rules)
 
           # 4. Verify final position
           if not self.is_valid_position(levelscript, object3d, new_position, randomizing_rules):
@@ -366,6 +380,8 @@ class ObjectRandomizer:
     print(f"Randomized {object_randomization_count} objects")
 
     # unused whitelist entries
+    """
     for index, entry in enumerate(self.whitelist.whitelist):
       if index not in DEBUG_HIT_INDICES:
         print(f"WARNING: Whitelist Entry \"{entry.name}\" was never used.")
+    """

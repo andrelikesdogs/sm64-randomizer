@@ -84,6 +84,15 @@ class TextureAtlas:
       ]
     ))
 
+    (castle_ground_textures_start, _) = self.rom.segments_sequentially[37]
+    TextureAtlas.add_texture_definition('castle_grounds_tree_shadow', Texture(
+      castle_ground_textures_start + 0x1894 + 0xBC00,
+      int(32*32*16/8),
+      32,
+      32,
+      f'castle_grounds_tree_shadow'
+    ))
+
     """
     (misc_textures_address_start, _) = self.rom.segments_sequentially[305]
     question_mark_icon = misc_textures_address_start + 0x818
@@ -133,14 +142,6 @@ class TextureAtlas:
           int(32*64*4)
         )
       ]
-    ))
-    (castle_ground_textures_start, _) = self.rom.segments_sequentially[20]
-    TextureAtlas.add_texture_definition('castle_grounds_tree_shadow', Texture(
-      castle_ground_textures_start + 0xBC00,
-      int(32*32*16/8),
-      32,
-      32,
-      f'castle_grounds_tree_shadow'
     ))
     """
 
