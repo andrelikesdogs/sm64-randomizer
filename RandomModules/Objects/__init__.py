@@ -166,6 +166,30 @@ class ObjectRandomizer:
     
     return position
 
+  def inside_forbidden_boundary(self, area_id : int, levelscript : LevelScriptParser, position: list):
+    """ Check if a potential position is inside any of the levels forbidden boundary boxes.
+    
+    Arguments:
+        area_id {int} -- area_id to check
+        levelscript {LevelScriptParser} -- Levelscript for the Level that contains the position
+        position {list} -- position to check
+    
+    Returns:
+        [booleaan] -- True when inside any level or area boundary box.
+    """
+    for boundary in levelscript.level_geometry.level_forbidden_boundaries:
+      if boundary.contains([position]):
+        #print("Object position inside level loading zone")
+        return True
+    
+    if area_id in levelscript.level_geometry.area_forbidden_boundaries:
+      for boundary in levelscript.level_geometry.area_forbidden_boundaries[area_id]:
+        if boundary.contains([position]):
+          #print("Object position inside area loading zone")
+          return True
+    
+    return False
+
   def is_in_water_box(self, area_id : int, water_boxes : list, position : list):
     """ Check if a position is inside a waterbox for the given area.
     
@@ -202,6 +226,9 @@ class ObjectRandomizer:
     """
 
     if not self.check_walls(obj.area_id, levelscript, position, rules):
+      return False
+
+    if self.inside_forbidden_boundary(obj.area_id, levelscript, position):
       return False
 
     floor_properties = self.check_floor(obj.area_id, levelscript, position, rules)
@@ -326,11 +353,14 @@ class ObjectRandomizer:
 
 
     for level, levelscript in self.rom.levelscripts.items():
-      if "disabled" in level.properties:
-        # level is disabeld
-        continue
-
       for object_idx, object3d in enumerate(levelscript.objects):
+        object3d.meta["randomization"] = "UNTOUCHED"
+        levelscript.level_geometry.add_object_point_of_interest(object3d)
+
+        if "disabled" in level.properties:
+          # level is disabeld
+          continue
+
         whitelist_entry = self.whitelist.get_shuffle_properties(object3d)
         
         if "SM64R_DEBUG" in os.environ and "PRINT" in os.environ["SM64R_DEBUG"].split(','):
@@ -354,6 +384,7 @@ class ObjectRandomizer:
           tries += 1
 
           if tries > 1000:
+            object3d.meta["randomization"] = "SKIPPED"
             #print()
             print(f"Used Rule: {whitelist_entry['name']}")
             print(f"Warning: No valid position found for {object3d.behaviour_name} in {level.name} ({hex(level.course_id)}) (Area: {hex(object3d.area_id)}) after 1000 tries, bailing.")
@@ -376,7 +407,8 @@ class ObjectRandomizer:
           found_valid_point = True
           object_randomization_count += 1
           object3d.set(self.rom, "position", new_position)
-        
+          object3d.meta["randomization"] = "RANDOMIZED"
+
     print(f"Randomized {object_randomization_count} objects")
 
     # unused whitelist entries

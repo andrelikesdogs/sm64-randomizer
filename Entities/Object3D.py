@@ -4,7 +4,7 @@ from Constants import BEHAVIOUR_NAMES
 class Object3D(BaseMemoryRecord):
   source: str # SPECIAL_MACRO_OBJ, PLACE_OBJ, MACRO_OBJ, MARIO_SPAWN
   model_id: str
-  current_area: int
+  area_id: int
   level: "Level" = None
   position: tuple = (0, 0, 0) # (X, Y, Z)
   rotation: tuple = (0, 0, 0) # (X, Y, Z)
@@ -13,6 +13,7 @@ class Object3D(BaseMemoryRecord):
   bparams: list = []
   mem_address: int = None
   memory_mapping: dict = {}
+  meta: dict = {}
 
   def generate_name(self):
     if self.behaviour and hex(self.behaviour) in BEHAVIOUR_NAMES:
@@ -28,7 +29,6 @@ class Object3D(BaseMemoryRecord):
     return f'Unknown (Source: {self.source})'
 
   def remove(self, rom):
-
     if self.source == 'PLACE_OBJ':
       self.set(rom, 'model_id', 0x0)
       self.set(rom, 'behaviour', 0x0)
@@ -51,6 +51,7 @@ class Object3D(BaseMemoryRecord):
     self.behaviour_name = self.generate_name()
     self.bparams = bparams
     self.mem_address = mem_address
+    self.meta = {}
     
     if mem_address is not None:
       if source == 'PLACE_OBJ':

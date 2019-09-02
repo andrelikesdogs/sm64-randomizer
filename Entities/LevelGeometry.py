@@ -19,8 +19,9 @@ class LevelGeometry:
     self.area_vertices = {}
     self.area_faces = {}
 
-    self.bounding_boxes = []
-    self.area_bounding_boxes = {}
+    self.objects = []
+    self.level_forbidden_boundaries = []
+    self.area_forbidden_boundaries = {}
 
   def get_collision_type_for_triangle(self, area_id, triangle_index):
     if area_id not in self.area_geometry_triangle_collision_types:
@@ -39,6 +40,9 @@ class LevelGeometry:
 
     return list(triangle_center)
 
+  def add_object_point_of_interest(self, object3d):
+    self.objects.append(object3d)
+
   def add_area(self, area_id, vertices, triangles, collision_type):
     #geometry = trimesh.Trimesh(vertices=vertices, faces=triangles, metadata=dict(collision=collision_type))
     
@@ -51,8 +55,8 @@ class LevelGeometry:
     if area_id not in self.area_vertices:
       self.area_vertices[area_id] = []
 
-    if area_id not in self.area_bounding_boxes:
-      self.area_bounding_boxes[area_id] = []
+    if area_id not in self.area_forbidden_boundaries:
+      self.area_forbidden_boundaries[area_id] = []
 
     geometry_triangle_count = len(self.area_faces[area_id])
     self.area_faces[area_id].extend(triangles)
@@ -109,9 +113,9 @@ class LevelGeometry:
           ]
 
           bounding_box = trimesh.creation.box(extents=extents, transform=trimesh.transformations.translation_matrix(position))
-          if area_id not in self.area_bounding_boxes:
-            self.area_bounding_boxes[area_id] = []
-          self.area_bounding_boxes[area_id].append(bounding_box)
+          if area_id not in self.area_forbidden_boundaries:
+            self.area_forbidden_boundaries[area_id] = []
+          self.area_forbidden_boundaries[area_id].append(bounding_box)
 
     # add disabled bounding boxes for level and for areas
     if "loading_zones" in self.level.properties:
@@ -135,15 +139,16 @@ class LevelGeometry:
         ]
 
         bounding_box = trimesh.creation.box(extents=extents, transform=trimesh.transformations.translation_matrix(position))
-        self.bounding_boxes.append(bounding_box)
+        self.level_forbidden_boundaries.append(bounding_box)
 
 
   def plot(self):
     level_traces = []
-    for bb_index, bounding_box in enumerate(self.bounding_boxes):
+    for bb_index, bounding_box in enumerate(self.level_forbidden_boundaries):
       mesh_components = np.transpose(bounding_box.vertices)
       triangle_indices = np.transpose(bounding_box.faces)
 
+      # Level wide bounardies
       level_traces.append(
         go.Mesh3d(
           x=np.negative(mesh_components[0]), # x neg
@@ -168,6 +173,21 @@ class LevelGeometry:
       traces = [
         *level_traces,
       ]
+
+      x_components = []
+      y_components = []
+      z_components = []
+      texts = []
+      for object3d in self.objects:
+        x_components.append(-object3d.position[0]), # x neg
+        y_components.append(object3d.position[2]), # y and z swapped
+        z_components.append(object3d.position[1]),
+        texts.append(f'{object3d.meta["randomization"]}: {str(object3d.behaviour_name)}')
+
+      traces.append(
+        go.Scatter3d(x=x_components, y=y_components, z=z_components, mode="markers", text=texts)
+      )
+        
       for (start, end), collision_type in self.area_geometry_triangle_collision_types[area_id].items():
         mesh_components = np.transpose(area_geometry.vertices)
         triangle_indices = np.transpose(area_geometry.faces[start:end])
@@ -190,7 +210,7 @@ class LevelGeometry:
       for triangle_index, _ in enumerate(triangle_indices):
         collision_types.append(self.get_collision_type_for_triangle(area_id, triangle_index))
       
-      for bb_index, bounding_box in enumerate(self.area_bounding_boxes[area_id]):
+      for bb_index, bounding_box in enumerate(self.area_forbidden_boundaries[area_id]):
         mesh_components = np.transpose(bounding_box.vertices)
         triangle_indices = np.transpose(bounding_box.faces)
         print("adding mesh for level area bounding box")

@@ -3,7 +3,7 @@
 # Author: Andre Meyer
 
 # This file can be used as an example to build more configuration files for harder
-# difficulty, for ROM-hacks, or to adjust properties that might be subjective.
+# difficulty, for ROM-hacks or to adjust properties that might be subjective.
 
 # Name is used to display for debugging.
 name: "Super Mario 64 Vanilla"
@@ -154,6 +154,19 @@ levels:
     course_id: 0x17
     properties:
       - requires_key: 0x1
+    areas:
+      - id: 0x01
+        name: "DDD: Entry"
+        properties:
+          - loading_zones:
+            - p1: [3174, 1229, 500]
+              p2: [9037, -2756, -511]
+      - id: 0x02
+        name: "DDD: Bowsers Sub"
+        properties:
+          - loading_zones:
+            - p1: [-3173, 1229, -511]
+              p2: [-6041, -4607, 512]
   - name: "Snowman's Land"
     course_id: 0x0A
     properties:
@@ -176,18 +189,18 @@ levels:
         properties:
           - slide
           - loading_zones: # between 2 and 3
-            - p1: [-1968, 1313, -3212]
-              p2: [-9201, -2047, -4108]
+            - p1: [-2155, 1409, -3212]
+              p2: [-9201, -2047, -6381]
       - id: 0x03
         name: "TTM: Slide 2"
         properties:
           - slide
           - loading_zones:
-            - p1: [-1968, 1313, -3212] # between 2 and 3
-              p2: [-9201, -2047, -4108]
-            - p1: [-1968, 1313, -3212] # between 3 and 4
-              p2: [-9201, -2047, -4108]
-      - id: 0x03
+            - p1: [2969, -2968, 3072] # from 2 to 3
+              p2: [9200, -7269, -817]
+            - p1: [5026, 6000, 5316] # from 1 to 2
+              p2: [7400, 7680, 7200]
+      - id: 0x04
         name: "TTM: Slide 3"
         properties:
           - slide

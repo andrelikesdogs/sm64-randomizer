@@ -222,3 +222,20 @@ See [level properties](#level-properties)
 This is to match specific behaviour parameters. There is 4 in total from [1-4]. Only `0x20 (PLACE_OBJ)` objects will have all 4. Look up Behaviour Scripts for SM64 to find which behaviour parameters do what.
 
 
+## Misc. Information
+
+#### Debugging Mode
+Using the Environment variable "SM64R_DEBUG" you can select different debugging modes. The allowed modes are
+
+* `PRINT` - Enables more verbose output
+* `PLOT` - Plots level geometries using plot.ly. Install requirements-dev to use.
+
+#### Positioning of Objects, Bounds, etc.
+When taking the position from the plot.ly graphs, be sure to convert all positions from the labels like so:
+
+in Plotly: `[X, Y, Z]`
+in Config: `[-X, Z, Y]`
+
+i.e. when taking the position from `[100, 200, 300]` plot.ly use it in the config as `[-100, 300, 200]`
+
+This issue is occouring because plot.ly and sm64 use different conventions for the order and directions of vectors. :shrug:
