@@ -200,15 +200,15 @@ class ROM:
       self.levelscripts[level] = LevelScriptParser.parse_for_level(self, level)
       self.levelscripts[level].level_geometry.process()
 
-      if 'SM64R_DEBUG' in os.environ:
-        if os.environ['SM64R_DEBUG'] == 'EXPORT':
+      if 'SM64R' in os.environ:
+        if os.environ['SM64R'] == 'EXPORT':
           for (area_id, mesh) in self.levelscripts[level].level_geometry.area_geometries.items():
             with open(os.path.join("dumps", "level_geometry", f"{level.name}_{hex(area_id)}.stl"), "wb+") as obj_output:
               mesh.export(obj_output, 'stl')
-        if os.environ['SM64R_DEBUG'] == 'PLOT':
+        if os.environ['SM64R'] == 'PLOT':
           self.levelscripts[level].level_geometry.plot()
       
-      if 'SM64R_DEBUG' in os.environ and os.environ['SM64R_DEBUG'] == 'DUMP':
+      if 'SM64R' in os.environ and os.environ['SM64R'] == 'DUMP':
         if not os.path.exists(os.path.join("dumps", "level_scripts")):
           os.makedirs(os.path.join("dumps", "level_scripts"))
         

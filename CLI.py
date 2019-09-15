@@ -183,7 +183,7 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
 
       #stardoor_randomizer
 
-    if 'SM64R_DEBUG' in os.environ and os.environ['SM64R_DEBUG'] == 'PLOT':
+    if 'SM64R' in os.environ and os.environ['SM64R'] == 'PLOT':
       for (_, parsed) in rom.levelscripts.items():
         parsed.level_geometry.plot()
       #rom.levelscripts

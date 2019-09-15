@@ -312,7 +312,7 @@ object_randomization:
         - name: Mr. I
           match: 0x13000054
           rules:
-            - bounding_sphere: [500] # radius, origin x, origin y, origin z
+            - bounding_cylinder: [500, 200] # radius, height, origin x, origin y, origin z
         - name: Bob-Omb
           match: 0x13003174
         - name: Goomba
@@ -374,7 +374,7 @@ object_randomization:
           match:
             - 0x13004580
             - bparam2: 1
-    
+
     # Objects
     - name: "Coin Formations"
       match:

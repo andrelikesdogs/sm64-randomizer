@@ -6,8 +6,8 @@ class Object3D(BaseMemoryRecord):
   model_id: str
   area_id: int
   level: "Level" = None
-  position: tuple = (0, 0, 0) # (X, Y, Z)
-  rotation: tuple = (0, 0, 0) # (X, Y, Z)
+  position: tuple = (0, 0, 0) # (X, Y, Z) In Pyplot it's -X, Z, Y
+  rotation: tuple = (0, 0, 0) # (X, Y, Z) Degrees
   behaviour: int = None # addr
   behaviour_name: str = None
   bparams: list = []

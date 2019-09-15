@@ -15,6 +15,7 @@ addresses_checked = []
 
 MACRO_ROT_Y_MUL = 2.8125
 SPCL_MACRO_ROT_Y_MUL = 1.40625
+OBJ_ROT_MUL = 362.9722
 
 class LevelScriptParser:
   @staticmethod
@@ -205,7 +206,11 @@ class LevelScriptParser:
           # Example: 24 18 01 56  06 64 10 92  EA 41 00 00  FF 6D 00 00  00 00 00 00  13 00 01 F4
           model_id = self.rom.read_integer(cursor + 3)
           position = (self.rom.read_integer(cursor + 4, 2, True), self.rom.read_integer(cursor + 6, 2, True), self.rom.read_integer(cursor + 8, 2, True))
-          rotation = (self.rom.read_integer(cursor + 10, 2, True), self.rom.read_integer(cursor + 12, 2, True), self.rom.read_integer(cursor + 14, 2, True))
+          rotation = (
+            int(float(self.rom.read_integer(cursor + 10, 2, True)) / OBJ_ROT_MUL),
+            int(float(self.rom.read_integer(cursor + 12, 2, True)) / OBJ_ROT_MUL),
+            int(float(self.rom.read_integer(cursor + 14, 2, True)) / OBJ_ROT_MUL)
+          )
           (b1, b2, b3, b4) = tuple([self.rom.read_integer(cursor + 16 + n) for n in range(4)])
           b_script = self.rom.read_integer(cursor + 20, 4)
 
@@ -255,7 +260,7 @@ class LevelScriptParser:
         elif command.identifier == 0x2B:
           """ 0x2B SET_MARIOS_DEFAULT_POSITION """
           spawn_area_id = self.rom.read_integer(cursor + 2)
-          rotation_y = self.rom.read_integer(cursor + 4, 2, True)
+          rotation_y = int(float(self.rom.read_integer(cursor + 4, 2, True)) / OBJ_ROT_MUL)
           position = (self.rom.read_integer(cursor + 6, 2, True), self.rom.read_integer(cursor + 8, 2, True), self.rom.read_integer(cursor + 10, 2, True))
           self.objects.append(Object3D("MARIO_SPAWN", spawn_area_id, None, position, self.level, (None, rotation_y, None), mem_address = cursor + 2))
           #print(self.level.name, spawn_area_id, rotation_y, position)
@@ -375,7 +380,7 @@ class LevelScriptParser:
       #print("Macro", hex(start), hex(cursor), format_binary(self.rom.read_bytes(cursor, 10)))
 
       preset_id = preset_and_rot & 0x1FF # last 9 bit
-      rot_y = preset_and_rot & 0xFE00 # first 7 bit
+      rot_y = (preset_and_rot & 0xFE00) >> 8 # first 7 bit
       rot_y = rot_y * MACRO_ROT_Y_MUL
       
       if preset_id == 0 or preset_id == 0x1E:
@@ -644,7 +649,7 @@ class LevelScriptParser:
 
             if length >= 10:
               rot_y = self.rom.read_integer(None, 2, True)
-              rot_y = int(float(rot_y) * SPCL_MACRO_ROT_Y_MUL)
+              rot_y = int(float(rot_y) / 182.0)
               rotation = (None, rot_y, None)
             
             if length >= 12:

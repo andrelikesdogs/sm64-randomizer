@@ -6,7 +6,7 @@ import os
 import logging
 #trimesh.util.attach_to_log()
 
-if "SM64R_DEBUG" in os.environ and os.environ["SM64R_DEBUG"] == 'PLOT':
+if "SM64R" in os.environ and os.environ["SM64R"] == 'PLOT':
   import plotly.offline as py
   import plotly.graph_objs as go
 
@@ -22,6 +22,7 @@ class LevelGeometry:
     self.objects = []
     self.level_forbidden_boundaries = []
     self.area_forbidden_boundaries = {}
+    self.area_object_bounding_meshes = {}
 
   def get_collision_type_for_triangle(self, area_id, triangle_index):
     if area_id not in self.area_geometry_triangle_collision_types:
@@ -42,6 +43,17 @@ class LevelGeometry:
 
   def add_object_point_of_interest(self, object3d):
     self.objects.append(object3d)
+
+  def add_object_bounding_mesh(self, object3d, area_id, bounding_mesh):
+    if not object3d.mem_address:
+      raise Exception("Object encountered without memory address")
+
+    if area_id not in self.area_object_bounding_meshes:
+      self.area_object_bounding_meshes[area_id] = {}
+
+    #if object3d.mem_address not in self.area_object_bounding_meshes[area_id]:
+    self.area_object_bounding_meshes[area_id][object3d.mem_address] = bounding_mesh
+
 
   def add_area(self, area_id, vertices, triangles, collision_type):
     #geometry = trimesh.Trimesh(vertices=vertices, faces=triangles, metadata=dict(collision=collision_type))
@@ -144,11 +156,11 @@ class LevelGeometry:
 
   def plot(self):
     level_traces = []
+    # Plot level wide boundaries
     for bb_index, bounding_box in enumerate(self.level_forbidden_boundaries):
       mesh_components = np.transpose(bounding_box.vertices)
       triangle_indices = np.transpose(bounding_box.faces)
 
-      # Level wide bounardies
       level_traces.append(
         go.Mesh3d(
           x=np.negative(mesh_components[0]), # x neg
@@ -165,6 +177,7 @@ class LevelGeometry:
         )
       )
       
+    # Plot area meshes
     for (area_id, area_geometry) in self.area_geometries.items():
       mesh_components = np.transpose(area_geometry.vertices)
       triangle_indices = np.transpose(area_geometry.faces)
@@ -174,42 +187,52 @@ class LevelGeometry:
         *level_traces,
       ]
 
-      x_components = []
-      y_components = []
-      z_components = []
-      texts = []
+      state_groups = {}
+      
+      # Plot objects
       for object3d in self.objects:
-        x_components.append(-object3d.position[0]), # x neg
-        y_components.append(object3d.position[2]), # y and z swapped
-        z_components.append(object3d.position[1]),
-        texts.append(f'{object3d.meta["randomization"]}: {str(object3d.behaviour_name)}')
-
-      traces.append(
-        go.Scatter3d(x=x_components, y=y_components, z=z_components, mode="markers", text=texts)
-      )
+        if object3d.meta["randomization"] not in state_groups:
+          state_groups[object3d.meta["randomization"]] = {
+            "x": [],
+            "y": [],
+            "z": [],
+            "text": []
+          }
         
+        state_groups[object3d.meta["randomization"]]["x"].append(-object3d.position[0]), # x neg
+        state_groups[object3d.meta["randomization"]]["y"].append(object3d.position[2]), # y and z swapped
+        state_groups[object3d.meta["randomization"]]["z"].append(object3d.position[1]),
+        state_groups[object3d.meta["randomization"]]["text"].append(f'{object3d.meta["randomization"]}: {str(object3d.behaviour_name)}')
+
+      for group, objs in state_groups.items():
+        traces.append(
+          go.Scatter3d(x=objs["x"], y=objs["y"], z=objs["z"], mode="markers", text=objs["text"], name=f'Objects: {group}')
+        )
+      
+      # Plot geometry (with collision type)
       for (start, end), collision_type in self.area_geometry_triangle_collision_types[area_id].items():
         mesh_components = np.transpose(area_geometry.vertices)
         triangle_indices = np.transpose(area_geometry.faces[start:end])
         traces.append(
-        go.Mesh3d(
-          x=np.negative(mesh_components[0]), # x neg
-          y=mesh_components[2], # y and z swapped
-          z=mesh_components[1],
-          i=triangle_indices[0],
-          j=triangle_indices[1],
-          k=triangle_indices[2],
-          text=f"Collision Type: {hex(collision_type)} from ({start} to {end})",
-          #facecolor=(1, 0, 0, 1),
-          flatshading=True,
-          #color='#FFB6C1',
-          #hoverinfo="skip"
+          go.Mesh3d(
+            x=np.negative(mesh_components[0]), # x neg
+            y=mesh_components[2], # y and z swapped
+            z=mesh_components[1],
+            i=triangle_indices[0],
+            j=triangle_indices[1],
+            k=triangle_indices[2],
+            text=f"Collision Type: {hex(collision_type)} from ({start} to {end})",
+            #facecolor=(1, 0, 0, 1),
+            flatshading=True,
+            #color='#FFB6C1',
+            #hoverinfo="skip"
+          )
         )
-      )
 
       for triangle_index, _ in enumerate(triangle_indices):
         collision_types.append(self.get_collision_type_for_triangle(area_id, triangle_index))
       
+      # Plot Forbidden Boundaries
       for bb_index, bounding_box in enumerate(self.area_forbidden_boundaries[area_id]):
         mesh_components = np.transpose(bounding_box.vertices)
         triangle_indices = np.transpose(bounding_box.faces)
@@ -230,5 +253,25 @@ class LevelGeometry:
           )
         )
       
+      # Plot object boundaries
+      if area_id in self.area_object_bounding_meshes:
+        for bounding_mesh in self.area_object_bounding_meshes[area_id].values():
+          mesh_components = np.transpose(bounding_mesh.vertices)
+          triangle_indices = np.transpose(bounding_mesh.faces)
+          traces.append(
+            go.Mesh3d(
+              x=np.negative(mesh_components[0]), # x neg
+              y=mesh_components[2], # y and z swapped
+              z=mesh_components[1],
+              i=triangle_indices[0],
+              j=triangle_indices[1],
+              k=triangle_indices[2],
+              text=f"Object Boundary",
+              #facecolor=(1, 0, 0, 1),
+              flatshading=True,
+              #color='#FFB6C1',
+              #hoverinfo="skip"
+            )
+          )
 
       py.plot(traces, filename=f'dumps/level_plots/{self.level.name}_{hex(area_id)}.html', auto_open=False)

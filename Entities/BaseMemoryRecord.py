@@ -26,10 +26,13 @@ class BaseMemoryRecord:
 
     if memory_information.data_type == 'uint':
       rom.write_integer(memory_information.address_start, value, memory_information.size, False)
+      setattr(self, key, value)
     elif memory_information.data_type == 'int':
       rom.write_integer(memory_information.address_start, value, memory_information.size, True)
+      setattr(self, key, value)
     elif type(memory_information.data_type) == tuple:
       size = math.floor(memory_information.size / len(memory_information.data_type))
+      setattr(self, key, value)
       for index, value_type in enumerate(list(memory_information.data_type)):
         rom.write_integer(memory_information.address_start + index * size, value[index], size, value_type == 'int')
     else:

@@ -282,8 +282,29 @@ class ObjectRandomizer:
       elif underwater_status == "allowed" or underwater_status == True:
         pass
 
+
     if "bounding_box" in rules:
-      pass
+      extents = [ # x, z, y
+        rules["bounding_box"][0],
+        rules["bounding_box"][2],
+        rules["bounding_box"][1]
+      ]
+
+      y_rot = (obj.rotation[1] * math.pi / 180)
+      
+      t = trimesh.transformations.translation_matrix(position)
+      r = trimesh.transformations.rotation_matrix(y_rot, [0, 1, 0])
+      
+      bounding_pos = trimesh.transformations.concatenate_matrices(r, t)
+      
+      bounding_box = trimesh.creation.box(extents=extents, transform=bounding_pos)
+      levelscript.level_geometry.add_object_bounding_mesh(obj, obj.area_id, bounding_box)
+
+      # check if intersects
+
+
+      #return bounding_box
+      #pass
 
     return True
 
@@ -363,7 +384,7 @@ class ObjectRandomizer:
 
         whitelist_entry = self.whitelist.get_shuffle_properties(object3d)
         
-        if "SM64R_DEBUG" in os.environ and "PRINT" in os.environ["SM64R_DEBUG"].split(','):
+        if "SM64R" in os.environ and "PRINT" in os.environ["SM64R"].split(','):
           print_progress_bar(object_idx, len(levelscript.objects), f'Placing Objects', f'{level.name}: ({object_idx} placed)')
           
         # randomization not defined, thus not allowed - continue to next one

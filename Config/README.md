@@ -225,7 +225,7 @@ This is to match specific behaviour parameters. There is 4 in total from [1-4]. 
 ## Misc. Information
 
 #### Debugging Mode
-Using the Environment variable "SM64R_DEBUG" you can select different debugging modes. The allowed modes are
+Using the Environment variable "SM64R" you can select different debugging modes. The allowed modes are
 
 * `PRINT` - Enables more verbose output
 * `PLOT` - Plots level geometries using plot.ly. Install requirements-dev to use.
