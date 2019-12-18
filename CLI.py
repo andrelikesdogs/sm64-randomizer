@@ -23,6 +23,7 @@ from RandomModules.Warps import WarpRandomizer
 from RandomModules.Text import TextRandomizer
 from RandomModules.Textures import TextureAtlas
 from RandomModules.Stardoors import StardoorRandomizer
+from RandomModules.Instruments import InstrumentRandomizer
 from Enhancements.GameplayEnhancements import Gameplay
 from Enhancements.TextureChanges import TextureChanges
 
@@ -183,6 +184,9 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     if opt_args.keydoor_requirements != "vanilla":
       stardoor_randomizer.open_keydoors()
 
+    instrument_randomizer = InstrumentRandomizer(rom)
+    if opt_args.shuffle_instruments:
+      instrument_randomizer.shuffle_instruments()
       #stardoor_randomizer
 
     if 'SM64R' in os.environ and os.environ['SM64R'] == 'PLOT':

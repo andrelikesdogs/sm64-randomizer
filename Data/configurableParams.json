@@ -133,5 +133,16 @@
     ],
     "default": "vanilla",
     "help": "Changes how the locked keydoors in the castle work. Vanilla means you will require the usual keys from the Bowser fights. Open means they're simply open from the start."
+  },
+  {
+    "name": "shuffle-instruments",
+    "label": "Instrument-Set Shuffle",
+    "category": "aesthetics",
+    "type": "checkbox",
+    "default": {
+      "CLI": false,
+      "WEB": false
+    },
+    "help": "Shuffles instrument sounds around. Many different objects and songs use different instrument sets, as the N64 can't load all at once. This will shuffle them around. Might be wacky."
   }
 ]
