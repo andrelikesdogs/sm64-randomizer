@@ -1,7 +1,9 @@
 from Entities.BaseMemoryRecord import BaseMemoryRecord, MemoryMapping
 from Constants import BEHAVIOUR_NAMES
 
+
 class Object3D(BaseMemoryRecord):
+  iid: int # internal id
   source: str # SPECIAL_MACRO_OBJ, PLACE_OBJ, MACRO_OBJ, MARIO_SPAWN
   model_id: str
   area_id: int
@@ -41,6 +43,8 @@ class Object3D(BaseMemoryRecord):
   def __init__(self, source, area_id, model_id, position, level, rotation = None, behaviour = None, bparams = [], mem_address = None):
     super().__init__()
 
+    Object3D.current_id = Object3D.current_id + 1
+    self.iid = Object3D.current_id
     self.source = source
     self.area_id = area_id
     self.model_id = model_id
@@ -73,3 +77,5 @@ class Object3D(BaseMemoryRecord):
   def __str__(self):
     return self.generate_name() + '\n' + f'Source: {self.source}, In-Area: {self.area_id}, Model-ID: {self.model_id}, position: {repr(self.position)}, rotation: {repr(self.rotation)}, bparams: {repr(self.bparams)}, bscript: {hex(self.behaviour or 0)}, mem_pos: {hex(self.mem_address)}'
     #return f'Object3D: Source: {self.source}, Model-ID: {self.model_id}, position: {repr(self.position)}, rotation: {repr(self.rotation)}, bparams: {repr(self.bparams)}, bscript: {hex(self.behaviour or 0)}, mem_pos: {hex(self.mem_address)}'
+
+Object3D.current_id = 0

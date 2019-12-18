@@ -6,6 +6,9 @@ import os
 import logging
 #trimesh.util.attach_to_log()
 
+trimesh.util.attach_to_log(level=logging.CRITICAL)
+logging.getLogger().setLevel(level=logging.ERROR)
+
 if "SM64R" in os.environ and os.environ["SM64R"] == 'PLOT':
   import plotly.offline as py
   import plotly.graph_objs as go
@@ -51,9 +54,7 @@ class LevelGeometry:
     if area_id not in self.area_object_bounding_meshes:
       self.area_object_bounding_meshes[area_id] = {}
 
-    #if object3d.mem_address not in self.area_object_bounding_meshes[area_id]:
-    self.area_object_bounding_meshes[area_id][object3d.mem_address] = bounding_mesh
-
+    self.area_object_bounding_meshes[area_id][object3d.iid] = bounding_mesh
 
   def add_area(self, area_id, vertices, triangles, collision_type):
     #geometry = trimesh.Trimesh(vertices=vertices, faces=triangles, metadata=dict(collision=collision_type))
@@ -153,7 +154,6 @@ class LevelGeometry:
         bounding_box = trimesh.creation.box(extents=extents, transform=trimesh.transformations.translation_matrix(position))
         self.level_forbidden_boundaries.append(bounding_box)
 
-
   def plot(self):
     level_traces = []
     # Plot level wide boundaries
@@ -174,6 +174,7 @@ class LevelGeometry:
           flatshading=True,
           #color='#FFB6C1',
           #hoverinfo="skip"
+          opacity=0.5
         )
       )
       
@@ -191,6 +192,9 @@ class LevelGeometry:
       
       # Plot objects
       for object3d in self.objects:
+        if object3d.area_id != area_id:
+          continue
+
         if object3d.meta["randomization"] not in state_groups:
           state_groups[object3d.meta["randomization"]] = {
             "x": [],
@@ -229,6 +233,7 @@ class LevelGeometry:
           )
         )
 
+      # Plot geometry faces
       for triangle_index, _ in enumerate(triangle_indices):
         collision_types.append(self.get_collision_type_for_triangle(area_id, triangle_index))
       
@@ -271,6 +276,7 @@ class LevelGeometry:
               flatshading=True,
               #color='#FFB6C1',
               #hoverinfo="skip"
+              opacity=0.5
             )
           )
 

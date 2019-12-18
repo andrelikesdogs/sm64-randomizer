@@ -34,6 +34,7 @@ LEVEL_PROPERTY_DEFINITIONS = {
 RULE_DEFINITIONS = {
   'underwater': ["bool", "str"], # Underwater checks "allowed", "only" and "never". bool sets "underwater" to "allowed",
   'no_floor_required': ["bool"],
+  'floor_types_allowed': ["str"], # "restricted", "all"
   'drop_to_floor': ["bool", "str"], # Enable that objects drop to floor. True, False or "force" to apply this behaviour also when it would result in an underwater position
   'max_y': ["int"], # Maximum Y allowed
   'min_y': ["int"], # Minimum Y allowed
@@ -58,6 +59,18 @@ MATCH_DEFINITIONS = {
   'area_id': ["int", "list"],
 }
 
+ROOT_LEVEL_FIELDS = [
+  "name",
+  "rom",
+  "levels",
+  "object_randomization",
+  "constants_file",
+  "collision_groups"
+]
+
+CONSTANT_FILE_FIELDS = [
+  "collision_types"
+]
 
 NL = "\n"
 
@@ -71,6 +84,8 @@ class Config:
     self.levels_by_course_id = {}
     self.object_entries = []
     self.object_entries_by_name = {}
+    self.constants = {}
+    self.collision_groups = {}
 
     self.validation_errors = []
     self.validation_warnings = []
@@ -254,19 +269,82 @@ class Config:
       if "objects" in entry:
         self.validate_objects(entry, [*parents, entry_name])
 
+  def validate_collision_groups(self, groups):
+    if not len(self.constants.keys()):
+      return
+    
+    all_defined_collision_types = self.constants["collision_types"]
 
-    #print(json.dumps(entries, sort_keys=True, indent=4))
-    pass
+    for collision_group in groups:
+      has_white_or_blacklist = False
+
+      allowed_entry_names = []
+      if "blacklist" in groups[collision_group]:
+        has_white_or_blacklist = True
+
+        allowed_entry_names = set(all_defined_collision_types.keys()) - set(groups[collision_group]["blacklist"])
+
+      if "whitelist" in groups[collision_group]:
+        has_white_or_blacklist = True
+
+        allowed_entry_names = set(groups[collision_group]["whitelist"])
+
+      for entry_name in allowed_entry_names:
+        if entry_name not in all_defined_collision_types.keys():
+          self.validation_errors.append(f'Unknown collision type referenced "{entry_name}", please define this collision type in the constants file for this configuration.')
+          return False
+
+      allowed_entries = dict(map(lambda entry_name: (entry_name, all_defined_collision_types[entry_name]), allowed_entry_names))
+
+      if not has_white_or_blacklist:
+        self.validation_errors.append(f'Collisiongroup "{collision_group}" is not constrained - missing either "blacklist" or "whitelist" or both.')
+        return False
+      
+      self.collision_groups[collision_group] = allowed_entries
+
+  def validate_constants(self, source):
+    if "collision_types" not in source:
+      self.validation_errors.append(f'Missing "collision_type" field in constants file for this configuration')
+      return False
+    
+    unknown_fields = set(source.keys()) - set(CONSTANT_FILE_FIELDS)
+
+    for field in unknown_fields:
+      self.validation_warnings.append(f'Unknown constant file root-level field "{field}" - please check the documentation in Config/README.md')
+    
+    self.constants = source
+    return True
+
+  def read_and_validate_constants(self, filename):
+    constants_path = Path(os.path.join(application_path, 'Config', filename))
+
+    if not constants_path.exists():
+      self.validation_errors.append(f'Could not find constants file "{filename}"')
+      return False
+
+    with open(constants_path, 'r') as constants:
+      parsed = None
+      try:
+        parsed = yaml.safe_load(constants.read())
+      except Exception as parser_error:
+        print(f"Could not load constants file {filename}, parsing error:")
+        print(parser_error)
+
+      self.validate_constants(parsed)
+
 
   def validate(self, source):
     self.validation_errors = []
     self.validation_warnings = []
+
+    self.found_root_fields = []
+
     if "name" not in source:
       self.validation_errors.append('Missing "name" property in configuration file')
+
       
     if "rom" not in source:
       self.validation_errors.append('Missing "rom" property in configuration file')
-
     else:
       for entry_index, rom_def in enumerate(source["rom"]):
         if "name" not in rom_def:
@@ -292,6 +370,7 @@ class Config:
     if "levels" not in source:
       self.validation_warnings.append(f'Missing "levels" in configuration file - No Level Shuffle available / Object Shuffle')
     else:
+      self.found_root_fields.append("levels")
       for level_index, level in enumerate(source["levels"]):
         level_def_name = level["name"] if "name" in level else f"Entry #{level_index}"
         if "name" not in level:
@@ -315,7 +394,19 @@ class Config:
     
     if "object_randomization" in source:
       self.validate_objects(source["object_randomization"])
-    
+
+    if "constants_file" not in source:
+      self.validation_errors.append(f'Missing "constants" file - please define the "constants_file" key in the configuration')
+    else:
+      self.read_and_validate_constants(source["constants_file"])
+
+    if "collision_groups" in source:
+      self.validate_collision_groups(source["collision_groups"])
+
+    unknown_fields = set(source.keys()) - set(ROOT_LEVEL_FIELDS)
+    for field in unknown_fields:
+      self.validation_warnings.append(f'Unknown root-level field "{field}" - please read the documentation: Config/README.md"')
+
     if len(self.validation_errors) > 0:
       return False
     return True
@@ -550,6 +641,10 @@ class Config:
       config_file = Path(os.path.join(application_path, 'Config', file))
 
       if config_file.suffix == '.yml' or config_file.suffix == '.yaml':
+        if "constants.y" in config_file.name:
+          # ignore constants files
+          continue
+
         with open(config_file, 'r') as config:
           try:
             parsed = yaml.safe_load(config.read())

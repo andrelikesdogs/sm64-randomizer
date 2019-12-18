@@ -7,6 +7,7 @@ class Warp(BaseMemoryRecord):
   to_warp_id: int
   warp_id: int
   type: str = "NORMAL" # INSTANT, NORMAL, PAINTING
+  anim_type: str = None
   area_id: int
   has_checkpoint: bool = False
   memory_address: int = None

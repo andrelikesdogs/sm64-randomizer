@@ -280,14 +280,42 @@ levels:
       - disabled
       - end_game
 
+# File with constant variables that are not included in this Config
+constants_file: "sm64.vanilla.constants.yml"
+
+collision_groups:
+  # floor groups define various "collision types" into groups, to restrict placement
+  # "all" is hardcoded and includes all collision types defined in the constants file
+  restricted:
+    whitelist:
+      - ENV_DEFAULT
+      - DEFAULT_NOISE
+      - SLIPPERY_NOISE
+      - SLIPPERY_SLIGHTLY
+      - ANTI_SLIPPERY
+      - CLOSE_CAMERA
+      - HARD_FLOOR
+      - NOISY_TERRAIN
+      - SAND
+      - SLIPPERY_HARD
+      - SLIPPERY_HARD_CCM
+      - ANTI_ICE
+      - WIDE_CAMERA
+      - CAMERA_BOB
+      - CAMERA_CCM
+      - SURFACE_FLAGS
+      - WATER
+
+
 object_randomization:
   # default
   rules:
     - drop_to_floor
+    - floor_types_allowed: restricted
   
   objects:
     # Bosses
-    # - Generally shouldn't spawn on slopes, as that makes it heard to fight them
+    # - Generally shouldn't spawn on slopes, as that makes it hard to fight them
     - name: "Bosses"
       rules:
         - max_slope: 0.0
@@ -379,22 +407,29 @@ object_randomization:
     - name: "Coin Formations"
       match:
         - 0x130008EC
+      rules:
+        # otherwise slides would never be allowed, "restricted" excludes slippery floors
+        - floor_types_allowed: all
+        - underwater: allowed
       objects:
         - name: Grounded Line Formation (5x)
           match:
             - bparam2: 0
           rules:
             - bounding_box: [1000, 100, 100] # length, width, height
+            - spawn_height: [100, 600]
         - name: Grounded Ring Formation (8x)
           match:
             - bparam2: 2
           rules:
             - bounding_box: [1000, 1000, 100] # length, width, height
+            - spawn_height: [100, 600]
         - name: Grounded Arrow (8x)
           match:
             - bparam2: 4
           rules:
             - bounding_box: [500, 500, 100] # length, width, height
+            - spawn_height: [100, 600]
         - name: Horizontal Floating Line (x5)
           match:
             - bparam2: 16
@@ -404,17 +439,20 @@ object_randomization:
           match:
             - bparam2: 17
           rules:
-            - bounding_box: [100, 1000, 100] # length, width, height
+            - bounding_box: [100, 100, 1000] # length, width, height
+            - spawn_height: [300, 900]
         - name: Horizontal Floating Ring (x8)
           match:
             - bparam2: 18
           rules:
             - bounding_box: [1000, 1000, 100] # length, width, height
+            - spawn_height: [100, 600]
         - name: Vertical Floating Ring (x8)
           match:
             - bparam2: 19
           rules:
             - bounding_box: [1000, 100, 1000] # length, width, height
+            - spawn_height: [300, 900]
     
     - name: "Coin"
       rules:
@@ -546,6 +584,7 @@ object_randomization:
           match: 0x13003228
 
     # These two entries are special "for" entries, that add rules to objects list by their name.
+    # Imagine this like a copy/paste mechanism to add all listed rules inside this ruleset
     # This is to disable rules/matches for certain levels, special circumstances, etc
     - name: "Level Property Checks"  
       objects:

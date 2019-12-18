@@ -4,20 +4,6 @@ from pathlib import Path
 import json
 import os
 
-### Rules that are implemented
-#  Name           | Description                     | Properties
-# -------------------------------------------------------------------
-# DROP_TO_FLOOR   | Drop onto floor below?          | bool|string - True, "FORCE"
-# UNDERWATER      | Can this object be underwater?  | string - "ALLOWED", "ONLY", "NEVER"
-# MAX_SLOPE       | Max slope allowed benath        | float - Max Slope allowed
-#                 | (0 = wall, 1 = floor)           |
-# DISABLED        | Use to overwrite and            | bool - True
-#                 | disable a rule                  |
-# SPAWN_HEIGHT    | Sets range in which height      | [int, int] - List of min and max height
-#                 | this object can spawn           |
-# MIN-Y           | spawn above specific y          | int - Min Height
-# MAX-Y           | spawn under specific y          | int - Max Height
-
 DEBUG_HIT_INDICES = {}
 
 class RandomizeObjectsWhitelist:

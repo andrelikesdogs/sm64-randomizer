@@ -8,38 +8,13 @@ import logging
 import trimesh
 import os
 import math
+from time import time
 
 from RandomModules.Objects.Whitelist import RandomizeObjectsWhitelist, DEBUG_HIT_INDICES
 from Entities.Object3D import Object3D
 from Parsers.LevelScript import LevelScriptParser
 
 from random import shuffle
-
-# Walkable collision types on which to place objects
-WALKABLE_COLLISION_TYPES = [
-  0x00, # environment default
-  0x29, # default floor with noise
-  0x2A, # slippery floor with noise
-  0x14, # slightly slippery
-  0x15, # anti slippery
-  0x0B, # close camera
-  0x30, # hard floor (always fall damage)
-  0x1A, # varied noise
-  0x21, # sand
-  0x35, # hard and slippery
-  0x36, # slide
-  0x37, # non slippery in ice level
-  0x65, # wide cam
-  0x70, # BOB: camera thing
-  0x75, # CCM: camera thing
-  0x76, # surface with flags
-  0x79, # CCM: camera thing
-  
-  ## may be harder
-  #0x13, # slippery
-  #0x2A, # slippery with noise
-  0x0D, # water (stationary)
-]
 
 WALL_CHECK_DIRECTIONS = [
   [1000.0, 0.0, 0.0],
@@ -61,7 +36,52 @@ class ObjectRandomizer:
     self.whitelist = RandomizeObjectsWhitelist(rom.config.object_entries)
     self.object_wall_traces = {}
     self.object_floor_traces = {}
-    self.reject_reason_counts = {}
+    self.reject_reasons_by_module = {}
+    self.current_reject_log = None
+
+    if os.path.exists("sm64_rando_reject.log"):
+      os.unlink("sm64_rando_reject.log")
+  
+  def start_reject_log(self, for_object3d, in_level, area_id):
+    if self.current_reject_log is not None:
+      raise AssertionError("already started a reject-log - flush previous one")
+      
+    self.current_reject_log = dict(
+      object3d=for_object3d,
+      level=in_level,
+      area_id=area_id
+    )
+
+  def flush_last_reject_log(self):
+    if self.current_reject_log is None:
+      return
+    #  raise AssertionError("no reject log active - start reject log")
+    
+    if len(self.reject_reasons_by_module.keys()) > 0:
+      with open("sm64_rando_reject.log", "a") as reject_log:
+        level = self.current_reject_log["level"]
+        area_id = self.current_reject_log["area_id"]
+        obj = self.current_reject_log["object3d"]
+        reject_log.write(f"< Reject-Log for: {obj.behaviour_name} {level.name} ({hex(level.course_id)}) (Area: {hex(area_id)})>\n")
+
+        for module in self.reject_reasons_by_module:
+          reject_log.write(f"  {module} Module\n")
+
+          for reason in self.reject_reasons_by_module[module]:
+            reject_log.write(f"    {reason}: Occurred x{self.reject_reasons_by_module[module][reason]}\n")
+          reject_log.write("\n")
+    
+    self.current_reject_log = None
+    self.reject_reasons_by_module = {}
+    
+  def log_reason_for_reject(self, module, reason):
+    if module not in self.reject_reasons_by_module:
+      self.reject_reasons_by_module[module] = {}
+
+    if reason not in self.reject_reasons_by_module[module]:
+      self.reject_reasons_by_module[module][reason] = 1
+    else:
+      self.reject_reasons_by_module[module][reason] += 1
 
   def check_walls(self, area_id : int, levelscript : LevelScriptParser, position : list, rules : list):
     """ Check nearby walls from a position, trying to find "reverse normals" - walls facing away, indicating a position behind a wall.
@@ -117,6 +137,8 @@ class ObjectRandomizer:
         levelscript {LevelScriptParser} -- Levelscript for the Level that contains this object3d
         rules {list} -- The rules this object has to obey for placement
     """
+
+    # cache the check at this pos
     call_signature = hash(tuple(position)) + hash(repr(rules)) + hash(area_id)
 
     if call_signature in self.object_floor_traces:
@@ -139,13 +161,13 @@ class ObjectRandomizer:
       
       collision_type = levelscript.level_geometry.get_collision_type_for_triangle(area_id, triangle_index)
 
-      if collision_type in WALKABLE_COLLISION_TYPES:
-        result = dict(
-          position=location,
-          triangle_index=triangle_index,
-          triangle_normal=mesh.face_normals[triangle_index]
-        )
-        self.object_floor_traces[call_signature] = result
+      result = dict(
+        position=location,
+        collision_type=collision_type,
+        triangle_index=triangle_index,
+        triangle_normal=mesh.face_normals[triangle_index]
+      )
+      self.object_floor_traces[call_signature] = result
     
     return self.object_floor_traces[call_signature]
 
@@ -162,6 +184,7 @@ class ObjectRandomizer:
     floor_trace = self.check_floor(area_id, levelscript, position, rules)
     
     if floor_trace is not False:
+      self.log_reason_for_reject("drop_position", "no floor underneath object")
       return floor_trace["position"]
     
     return position
@@ -226,23 +249,44 @@ class ObjectRandomizer:
     """
 
     if not self.check_walls(obj.area_id, levelscript, position, rules):
+      self.log_reason_for_reject("is_valid_position", "object failed wall check")
       return False
 
     if self.inside_forbidden_boundary(obj.area_id, levelscript, position):
+      self.log_reason_for_reject("is_in_waterbox", "object found in forbidden boundary")
       return False
 
     floor_properties = self.check_floor(obj.area_id, levelscript, position, rules)
 
+    # check for floor if the rule is set and True
     if "no_floor_required" not in rules or rules["no_floor_required"] != True:
       if floor_properties is False:
+        self.log_reason_for_reject("is_valid_position", "object floor required but none found")
         return False
+
+    # check the floor type if the rule is set and the floor exists and the floor type isn't "all"
+    if "floor_types_allowed" in rules and floor_properties is not False:
+      if rules["floor_types_allowed"] == "all":
+        if floor_properties["collision_type"] not in self.rom.config.constants["collision_types"].values():
+          self.log_reason_for_reject("is_valid_position", f'object floor type is "all" but "{hex(floor_properties["collision_type"])}" is unknown')
+          return False
+
+      if rules["floor_types_allowed"] not in self.rom.config.collision_groups:
+        self.log_reason_for_reject("is_valid_position", f'unknown {rules["floor_types_allowed"]} floor type')
+      else:
+        if floor_properties["collision_type"] not in self.rom.config.collision_groups[rules["floor_types_allowed"]].values():
+          self.log_reason_for_reject("is_valid_position", 'object floor type was not allowed')
+
+
 
     if "min_y" in rules:
       if position[1] < rules["min_y"]:
+        self.log_reason_for_reject("is_valid_position", "object position below min_y")
         return False
 
     if "max_y" in rules:
       if position[1] > rules["max_y"]:
+        self.log_reason_for_reject("is_valid_position", "object position above min_y")
         return False
 
     if "distance" in rules:
@@ -257,10 +301,12 @@ class ObjectRandomizer:
 
         if "max_distance" in distance_rules:
           if distance > distance_rules["max_distance"]:
+            self.log_reason_for_reject("is_valid_position", "object too far away from origin")
             return False
 
         if "min_distance" in distance_rules:
           if distance > distance_rules["min_distance"]:
+            self.log_reason_for_reject("is_valid_position", "object too close to origin")
             return False
       
     if "max_slope" in rules and floor_properties is not False:
@@ -268,6 +314,7 @@ class ObjectRandomizer:
 
       # 1 = Floor. 0 = Wall.
       if floor_slope < abs(float(rules["max_slope"])):
+        self.log_reason_for_reject("is_valid_position", "floor too steep")
         return False
     
     if "underwater" in rules:
@@ -275,9 +322,11 @@ class ObjectRandomizer:
 
       if underwater_status == "only":
         if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position):
+          self.log_reason_for_reject("is_valid_position", "can only be in water but was not in waterbox")
           return False
       elif underwater_status == "never":
         if self.is_in_water_box(obj.area_id, levelscript.water_boxes, position):
+          self.log_reason_for_reject("is_valid_position", "can never be in water but was in waterbox")
           return False
       elif underwater_status == "allowed" or underwater_status == True:
         pass
@@ -285,7 +334,7 @@ class ObjectRandomizer:
 
     if "bounding_box" in rules:
       extents = [ # x, z, y
-        rules["bounding_box"][0],
+        -rules["bounding_box"][0],
         rules["bounding_box"][2],
         rules["bounding_box"][1]
       ]
@@ -295,13 +344,22 @@ class ObjectRandomizer:
       t = trimesh.transformations.translation_matrix(position)
       r = trimesh.transformations.rotation_matrix(y_rot, [0, 1, 0])
       
-      bounding_pos = trimesh.transformations.concatenate_matrices(r, t)
+      bounding_pos = trimesh.transformations.concatenate_matrices(t, r)
       
       bounding_box = trimesh.creation.box(extents=extents, transform=bounding_pos)
+
+      # this will overwrite existing bounding meshes for the same obj
       levelscript.level_geometry.add_object_bounding_mesh(obj, obj.area_id, bounding_box)
 
-      # check if intersects
+      # check if intersects with WORLD
+      intersections = levelscript.level_geometry.area_geometries[obj.area_id].intersection(
+        bounding_box
+      )
 
+      if not intersections.is_empty:
+        self.log_reason_for_reject("is_valid_position", "bounding box intersection encountered")
+        return False
+      
 
       #return bounding_box
       #pass
@@ -352,12 +410,16 @@ class ObjectRandomizer:
     if area_id not in levelscript.level_geometry.area_geometries:
       print(obj)
       print(rules)
-      raise ValueError(f"{area_id} not found in geometry. This probably means a rule is matching too many objects, like a star selector.")
+      raise ValueError(
+        f"""{area_id} not found in geometry but only in an excluded area, that means it is not a valid object and should not be selected.\n
+        This probably means a rule is matching too many objects, like a star selector object."""
+      )
     area_mesh = levelscript.level_geometry.area_geometries[area_id]
 
     (bounds_min, bounds_max) = area_mesh.bounds
     (x, y, z) = bounds_min
 
+    # position for boundary is slightly overshot, probably because of some shit i forgot to write here while it happened
     if abs(bounds_min[0] - bounds_max[0]) > 0:
       x = random.randrange(bounds_min[0] + 1000, bounds_max[0] - 1000)
     
@@ -372,63 +434,70 @@ class ObjectRandomizer:
   def shuffle_objects(self):
     object_randomization_count = 0
 
+    try:
+      for level, levelscript in self.rom.levelscripts.items():
+        for object_idx, object3d in enumerate(levelscript.objects):
+          self.start_reject_log(object3d, level, object3d.area_id)
+          object3d.meta["randomization"] = "UNTOUCHED"
+          levelscript.level_geometry.add_object_point_of_interest(object3d)
 
-    for level, levelscript in self.rom.levelscripts.items():
-      for object_idx, object3d in enumerate(levelscript.objects):
-        object3d.meta["randomization"] = "UNTOUCHED"
-        levelscript.level_geometry.add_object_point_of_interest(object3d)
-
-        if "disabled" in level.properties:
-          # level is disabeld
-          continue
-
-        whitelist_entry = self.whitelist.get_shuffle_properties(object3d)
-        
-        if "SM64R" in os.environ and "PRINT" in os.environ["SM64R"].split(','):
-          print_progress_bar(object_idx, len(levelscript.objects), f'Placing Objects', f'{level.name}: ({object_idx} placed)')
-          
-        # randomization not defined, thus not allowed - continue to next one
-        if not whitelist_entry:
-          continue
-
-        randomizing_rules = whitelist_entry["rules"]
-
-        # randomization disabled - continue to next one
-        if "disabled" in randomizing_rules and randomizing_rules["disabled"] == True:
-          continue
-
-        found_valid_point = False
-        tries = 0
-
-
-        while not found_valid_point:
-          tries += 1
-
-          if tries > 1000:
-            object3d.meta["randomization"] = "SKIPPED"
-            #print()
-            print(f"Used Rule: {whitelist_entry['name']}")
-            print(f"Warning: No valid position found for {object3d.behaviour_name} in {level.name} ({hex(level.course_id)}) (Area: {hex(object3d.area_id)}) after 1000 tries, bailing.")
-            break
-
-          # 1. Generate a random point
-          possible_position = self.generate_random_point_for(levelscript, object3d, randomizing_rules)
-
-          # 2. Check for a valid "preposition" - basic checks to ensure some viability
-          if not self.is_valid_position(levelscript, object3d, possible_position, randomizing_rules):
+          if "disabled" in level.properties:
+            # level is disabeld
+            self.flush_last_reject_log()
             continue
 
-          # 3. Modify the position - certain rules will adjust the final position of the object by ie dropping it to the floor
-          new_position = self.modify_position(levelscript, object3d, possible_position, randomizing_rules)
-
-          # 4. Verify final position
-          if not self.is_valid_position(levelscript, object3d, new_position, randomizing_rules):
-            continue
+          whitelist_entry = self.whitelist.get_shuffle_properties(object3d)
           
-          found_valid_point = True
-          object_randomization_count += 1
-          object3d.set(self.rom, "position", new_position)
-          object3d.meta["randomization"] = "RANDOMIZED"
+          if "SM64R" in os.environ and "PRINT" in os.environ["SM64R"].split(','):
+            print_progress_bar(object_idx, len(levelscript.objects), f'Placing Objects', f'{level.name}: ({object_idx} placed)')
+            
+          # randomization not defined, thus not allowed - continue to next one
+          if not whitelist_entry:
+            self.flush_last_reject_log()
+            continue
+
+          randomizing_rules = whitelist_entry["rules"]
+
+          # randomization disabled - continue to next one
+          if "disabled" in randomizing_rules and randomizing_rules["disabled"] == True:
+            self.flush_last_reject_log()
+            continue
+
+          found_valid_point = False
+          tries = 0
+
+          try_start = time()
+          while not found_valid_point:
+            if time() - try_start > 10:
+              object3d.meta["randomization"] = "SKIPPED"
+              #print()
+              print(f"Used Rule: {whitelist_entry['name']}")
+              print(f"Warning: No valid position found for {object3d.behaviour_name} in {level.name} ({hex(level.course_id)}) (Area: {hex(object3d.area_id)}) after 10s, bailing.")
+              self.flush_last_reject_log()
+              break
+            
+            # 1. Generate a random point inside the bounds of the current level(area)
+            possible_position = self.generate_random_point_for(levelscript, object3d, randomizing_rules)
+
+            # 2. Check for a valid "preposition" - basic checks to ensure some viability
+            if not self.is_valid_position(levelscript, object3d, possible_position, randomizing_rules):
+              continue
+
+            # 3. Modify the position - certain rules will adjust the final position of the object by ie dropping it to the floor
+            new_position = self.modify_position(levelscript, object3d, possible_position, randomizing_rules)
+
+            # 4. Verify final position
+            if not self.is_valid_position(levelscript, object3d, new_position, randomizing_rules):
+              continue
+            
+            found_valid_point = True
+            object_randomization_count += 1
+            object3d.set(self.rom, "position", new_position)
+            object3d.meta["randomization"] = "RANDOMIZED"
+            self.flush_last_reject_log()
+    except KeyboardInterrupt:
+      self.flush_last_reject_log()
+      print("Cancelled Object Randomization")
 
     print(f"Randomized {object_randomization_count} objects")
 

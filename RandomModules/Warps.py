@@ -18,6 +18,12 @@ WARP_BEHAVIOURS = {
   0x13002F84: ['RESTORE'], # Restore to Lobby
 }
 
+WARP_ID_MAPPING = {
+  0xf0: 'SUCCESS',
+  0xf1: 'FAILURE',
+  0xf3: 'RECOVERY'
+}
+
 # The levels listed in this section have warps to different areas, that need to lead back to the same warp. This is only the case in THI in vanilla SM64
 MUST_MATCH_AREA_LEVELS = [LVL_THI]
 
@@ -51,7 +57,7 @@ class WarpRandomizer:
     # these are not coded any differently, but they are important to find, to get a complete set of warps for any given "target level"
     # "entrances_src" - Found in Overworlds - Paintings, Holes in the floor
     # "entrances_dst" - Found in Target lvl - Entry positions into levels, mostly '0xa' for the beginning
-    # "exits_dst"     - Found in Overworlds - Lead to themselves handle animations somehow. Level exits (0xf0, 0xf1, 0xf3) also lead to them
+    # "exits_dst"     - Found in Overworlds - Lead to themselves handle animations somehow. Level exit_srcs (0xf0, 0xf1, 0xf3) also lead to them
     # "exits_src"     - Found in Target lvl - `0xf0`, `0xf1` and `0xf3` (Win, Lose, Recovery/Pause-Exit)
 
     # levels that contain entries to levels
@@ -117,6 +123,9 @@ class WarpRandomizer:
               exit_dst_for_levels[level] = []
 
             if exit_dst not in exit_dst_for_levels[level]:
+              # save anim type (success, failure or recovery) on exit_dst
+              exit_dst.anim_type = WARP_ID_MAPPING[warp.warp_id] if warp.warp_id in WARP_ID_MAPPING else None
+
               exit_dst_for_levels[level].append(exit_dst) # this was previously not matched to a level
 
             if level not in exit_src_for_levels:
@@ -278,11 +287,15 @@ class WarpRandomizer:
       # relink exits
       for idx in range(len(lvl_set["exits"])):
         src = lvl_set["exits"][idx]
+        src.anim_type = WARP_ID_MAPPING[src.warp_id] if src.warp_id in WARP_ID_MAPPING else None
         targets = []
-        target = choice(ow_set["exits"])
-
+        target = choice(ow_set["exits"]) # fallback: pick random if no fitting targets
+        
+        if not src.anim_type:
+          print('no source anim type - weird warp')
+        
         for dst in ow_set["exits"]:
-          if dst.warp_id == src.to_warp_id:
+          if dst.anim_type == src.anim_type:
             targets.append(dst)
         
         if len(targets):
@@ -303,7 +316,7 @@ class WarpRandomizer:
       target.set(self.rom, "to_warp_id", warp_id)
 
     ### Debug View
-    """
+    '''
     for target_level in target_levels:
       print(f" Warps found for {target_level.name}")
       if target_level in entrance_src_for_levels:
@@ -336,7 +349,7 @@ class WarpRandomizer:
         print(" No Exit Destinations")
       
       print("-" * 30)
-    """
+    '''
   
   def validate_path_for_keys(self, changelist):
     #print(changelist)

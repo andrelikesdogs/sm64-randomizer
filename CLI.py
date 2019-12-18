@@ -136,6 +136,8 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     # Segment Finder
     # rom.match_segments(0xD78271)
 
+    start_time = time.time()
+
     music_random = MusicRandomizer(rom)
     if opt_args.shuffle_music:
       music_random.shuffle_music(ALL_LEVELS)
@@ -189,6 +191,7 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       #rom.levelscripts
 
   SpoilerLog.output()
+  print(f'It took {round(time.time() - start_time)}s to complete')
   print(f'Completed! Your randomized ROM File can be found as "{str(Path(out_path).absolute())}"')
 
 #run_with_args()
