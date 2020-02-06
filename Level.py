@@ -11,4 +11,4 @@ class Level:
     self.areas = areas or []
 
   def __str__(self):
-    return f'<Level {hex(self.course_id)}: {self.name}>: {repr(self.properties)}, {[str(area) for area in self.areas]}'
+    return f'<Level {hex(self.course_id)}: {self.name}>' #: {repr(self.properties)}, {[str(area) for area in self.areas]}'

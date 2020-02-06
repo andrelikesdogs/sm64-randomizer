@@ -238,7 +238,7 @@ class ObjectRandomizer:
         return True
     return False
 
-  def is_valid_position(self, levelscript : LevelScriptParser, obj : Object3D,position, rules : list):
+  def is_valid_position(self, levelscript : LevelScriptParser, obj : Object3D,position, rules : list, is_pre_position : bool = False):
     """ Validate if this position is valid for the given object, position and for the rules that are given to this method.
     
     Arguments:
@@ -273,9 +273,11 @@ class ObjectRandomizer:
 
       if rules["floor_types_allowed"] not in self.rom.config.collision_groups:
         self.log_reason_for_reject("is_valid_position", f'unknown {rules["floor_types_allowed"]} floor type')
+        return False
       else:
         if floor_properties["collision_type"] not in self.rom.config.collision_groups[rules["floor_types_allowed"]].values():
           self.log_reason_for_reject("is_valid_position", 'object floor type was not allowed')
+          return False
 
 
 
@@ -332,33 +334,83 @@ class ObjectRandomizer:
         pass
 
 
-    if "bounding_box" in rules:
+    if not is_pre_position and "bounding_box" in rules:
       extents = [ # x, z, y
-        -rules["bounding_box"][0],
-        rules["bounding_box"][2],
+        -rules["bounding_box"][0], # x neg
+        rules["bounding_box"][2], # y and z swap
         rules["bounding_box"][1]
       ]
 
       y_rot = (obj.rotation[1] * math.pi / 180)
+
+      # rotate points
+      vertices = [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1,
+                  1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1]
+      vertices = np.array(vertices, order='C', dtype=np.float64).reshape((-1, 3))
       
-      t = trimesh.transformations.translation_matrix(position)
-      r = trimesh.transformations.rotation_matrix(y_rot, [0, 1, 0])
+      vertices -= 0.5
+      vertices *= extents
       
-      bounding_pos = trimesh.transformations.concatenate_matrices(t, r)
+      translation_matrix = trimesh.transformations.translation_matrix(position)
+      rotation_matrix = trimesh.transformations.rotation_matrix(y_rot, [0, 1, 0])
+
+      concat_matrix = trimesh.transformations.concatenate_matrices(translation_matrix, rotation_matrix)
+
+      translated_points = trimesh.transform_points(vertices, concat_matrix)
       
-      bounding_box = trimesh.creation.box(extents=extents, transform=bounding_pos)
+      #t = trimesh.transformations.translation_matrix(position)
+      #r = trimesh.transformations.rotation_matrix(y_rot, [0, 1, 0])
+      
+      #bounding_pos = trimesh.transformations.concatenate_matrices(t, r)
+      
+      #bounding_box = trimesh.creation.box(extents=extents, transform=bounding_pos)
 
       # this will overwrite existing bounding meshes for the same obj
-      levelscript.level_geometry.add_object_bounding_mesh(obj, obj.area_id, bounding_box)
+      #levelscript.level_geometry.add_object_bounding_mesh(obj, obj.area_id, bounding_box)
 
-      # check if intersects with WORLD
+      #levelscript.level_geometry.area_collision_managers[obj.area_id].in_collision(f'{obj.name} bounding box', bounding_box, bounding_pos)
+
+      # intersection check with world
+      for (start, end) in levelscript.level_geometry.area_face_aabbs[obj.area_id]:
+        for point in translated_points:
+          if (point[0] > start[0] and point[0] < end[0]) and (point[1] > start[1] and point[1] < end[1]) and (point[2] > start[2] and point[2] < end[2]):
+            self.log_reason_for_reject("is_valid_position", "bounding box intersection encountered")
+
+            if 'SM64R' in os.environ and 'PLOT' in os.environ['SM64R']:
+              t = trimesh.transformations.translation_matrix(position)
+              r = trimesh.transformations.rotation_matrix(y_rot, [0, 1, 0])
+              bounding_pos = trimesh.transformations.concatenate_matrices(t, r)
+              bounding_box = trimesh.creation.box(extents=extents, transform=bounding_pos)
+              #print(bounding_box.vertices)
+              #print(translated_points)
+
+              tri_extents = [
+                abs(start[0] - end[0]),
+                abs(start[1] - end[1]),
+                abs(start[2] - end[2])
+              ]
+              tri_position = [
+                (start[0] if start[0] > end[0] else end[0]) - (tri_extents[0]/2),
+                (start[1] if start[1] > end[1] else end[1]) - (tri_extents[1]/2),
+                (start[2] if start[2] > end[2] else end[2]) - (tri_extents[2]/2),
+              ]
+
+              tri_box = trimesh.creation.box(extents=tri_extents, transform=trimesh.transformations.translation_matrix(tri_position))
+
+              self.debug_placement(levelscript, obj, bounding_box, tri_box)
+            
+            return False
+
+      '''# check if intersects with WORLD
       intersections = levelscript.level_geometry.area_geometries[obj.area_id].intersection(
         bounding_box
       )
 
       if not intersections.is_empty:
         self.log_reason_for_reject("is_valid_position", "bounding box intersection encountered")
+        self.debug_placement(levelscript, obj, bounding_box)
         return False
+      '''
       
 
       #return bounding_box
@@ -393,6 +445,9 @@ class ObjectRandomizer:
         position[1] += random.randint(min_height, max_height)
 
     return position
+
+  def debug_placement(self, levelscript : LevelScriptParser, obj : Object3D, *boundary):
+    levelscript.level_geometry.plot_placement(obj, *boundary)
 
   def generate_random_point_for(self, levelscript : LevelScriptParser, obj : Object3D, rules : list):
     """ Generate a random point for the target object, within the bounding box of this objects area.
@@ -480,7 +535,7 @@ class ObjectRandomizer:
             possible_position = self.generate_random_point_for(levelscript, object3d, randomizing_rules)
 
             # 2. Check for a valid "preposition" - basic checks to ensure some viability
-            if not self.is_valid_position(levelscript, object3d, possible_position, randomizing_rules):
+            if not self.is_valid_position(levelscript, object3d, possible_position, randomizing_rules, True):
               continue
 
             # 3. Modify the position - certain rules will adjust the final position of the object by ie dropping it to the floor

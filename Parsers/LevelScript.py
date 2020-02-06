@@ -605,12 +605,12 @@ class LevelScriptParser:
         cursor += entry_length
 
         triangles.append(indices)
-      #print(self.level.name)
       #print(f'{len(triangles)} {hex(cd_type_int)} ({format_binary(cd_type)})')
-      self.level_geometry.add_area(self.current_area, vertices, triangles, cd_type_int)
+      self.level_geometry.add_area_mesh_for_collision_type(self.current_area, vertices, triangles, cd_type_int)
       collision_entry["triangle_bytes"] = triangle_bytes
       special_macro_table["collision_entries"].append(collision_entry)
     
+    #print(f'{self.level.name} ({hex(self.current_area)})')
     special_macro_table["vertices"] = vertices
 
     # read object definitions

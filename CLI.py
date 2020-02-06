@@ -151,14 +151,9 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     if opt_args.shuffle_entries:
       warp_random.shuffle_level_entries(vars(opt_args))
     
-    object_randomizer = ObjectRandomizer(rom)
-    if opt_args.shuffle_objects:
-      object_randomizer.shuffle_objects()
-
-      texture_changer = TextureChanges(rom)
-      texture_changer.remove_tree_shadows()
-
-      
+    instrument_randomizer = InstrumentRandomizer(rom)
+    if opt_args.shuffle_instruments:
+      instrument_randomizer.shuffle_instruments()  
 
     text_randomizer = TextRandomizer(rom)
     if opt_args.shuffle_text:
@@ -184,12 +179,14 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     if opt_args.keydoor_requirements != "vanilla":
       stardoor_randomizer.open_keydoors()
 
-    instrument_randomizer = InstrumentRandomizer(rom)
-    if opt_args.shuffle_instruments:
-      instrument_randomizer.shuffle_instruments()
-      #stardoor_randomizer
+    object_randomizer = ObjectRandomizer(rom)
+    if opt_args.shuffle_objects:
+      object_randomizer.shuffle_objects()
 
-    if 'SM64R' in os.environ and os.environ['SM64R'] == 'PLOT':
+      texture_changer = TextureChanges(rom)
+      texture_changer.remove_tree_shadows()
+
+    if 'SM64R' in os.environ and 'PLOT' in os.environ['SM64R']:
       for (_, parsed) in rom.levelscripts.items():
         parsed.level_geometry.plot()
       #rom.levelscripts

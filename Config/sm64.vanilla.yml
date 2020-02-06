@@ -70,13 +70,13 @@ levels:
       - overworld
       - shuffle_warps:
           - to: # which warps in this level should match? warps "to" metal cap
-              - course_id: 0x12
+              - course_id: 0x12 # VC
             with: # which warps can be here instead? shuffle "with" metal/vanish/wing cap
-              - course_id: 0x12
+              - course_id: 0x12 # VC
                 area_id: 0x1
-              - course_id: 0x1C
+              - course_id: 0x1C # WC
                 area_id: 0x1
-              - course_id: 0x1D
+              - course_id: 0x1D # MC
                 area_id: 0x1
   - name: "Castle Inside"
     course_id: 0x06
@@ -86,11 +86,11 @@ levels:
           - to: # which warps in this level should match? warps "to" metal cap
               - course_id: 0x1D
             with: # which warps can be here instead? shuffle "with" metal/vanish/wing cap
-              - course_id: 0x12
+              - course_id: 0x12 # VC
                 area_id: 0x1
-              - course_id: 0x1D
+              - course_id: 0x1D # WC
                 area_id: 0x1
-              - course_id: 0x1C
+              - course_id: 0x1C # MC
                 area_id: 0x1
   - name: "Castle Courtyard"
     course_id: 0x1A
@@ -132,13 +132,13 @@ levels:
       - requires_key: 0x1
       - shuffle_warps:
           - to: # which warps in this level should match? warps "to" metal cap
-              - course_id: 0x1C
+              - course_id: 0x1C # MC
             with: # which warps can be here instead? shuffle "with" metal/vanish/wing cap
-              - course_id: 0x12
+              - course_id: 0x12 # VC
                 area_id: 0x1
-              - course_id: 0x1D
+              - course_id: 0x1D # WC
                 area_id: 0x1
-              - course_id: 0x1C
+              - course_id: 0x1C # MC
                 area_id: 0x1
   - name: "Lethal Lava Land"
     course_id: 0x16
@@ -305,13 +305,34 @@ collision_groups:
       - CAMERA_CCM
       - SURFACE_FLAGS
       - WATER
+  with_slides:
+    whitelist:
+      - ENV_DEFAULT
+      - DEFAULT_NOISE
+      - SLIPPERY_NOISE
+      - SLIPPERY_SLIGHTLY
+      - ANTI_SLIPPERY
+      - CLOSE_CAMERA
+      - HARD_FLOOR
+      - NOISY_TERRAIN
+      - SAND
+      - SLIPPERY_HARD
+      - SLIPPERY_HARD_CCM
+      - ANTI_ICE
+      - WIDE_CAMERA
+      - CAMERA_BOB
+      - CAMERA_CCM
+      - SURFACE_FLAGS
+      - WATER
+      - SLIPPERY
+
 
 
 object_randomization:
   # default
   rules:
-    - drop_to_floor
-    - floor_types_allowed: restricted
+    - drop_to_floor # try to place this object on the floor
+    - floor_types_allowed: restricted # select above defined group as floor types allowed
   
   objects:
     # Bosses
@@ -408,8 +429,7 @@ object_randomization:
       match:
         - 0x130008EC
       rules:
-        # otherwise slides would never be allowed, "restricted" excludes slippery floors
-        - floor_types_allowed: all
+        - floor_types_allowed: with_slides
         - underwater: allowed
       objects:
         - name: Grounded Line Formation (5x)
@@ -434,7 +454,7 @@ object_randomization:
           match:
             - bparam2: 16
           rules:
-            - bounding_box: [1000, 100, 100] # length, width, height
+            - bounding_box: [600, 100, 100] # length, width, height
         - name: Vertical Floating Line (x5)
           match:
             - bparam2: 17
@@ -480,6 +500,8 @@ object_randomization:
             - 0x13003EFC # Hidden
         - name: Star in Box
           match: 0x13002250
+          rules:
+          - underwater: never # Boxes underwater are not breakable
           objects:
             - name: "Star #1"
               match:
@@ -569,6 +591,7 @@ object_randomization:
     - name: "Special"
       rules:
         - underwater: never
+        - max_slope: 0.0
       objects:
         - name: Toad
           match: 0x13002EF8

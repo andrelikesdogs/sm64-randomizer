@@ -4,6 +4,7 @@ from random import choice
 import Constants
 import os
 import logging
+from time import strftime
 #trimesh.util.attach_to_log()
 
 trimesh.util.attach_to_log(level=logging.CRITICAL)
@@ -18,9 +19,11 @@ class LevelGeometry:
     self.level = level
     self.area_geometries = {}
     self.area_geometry_triangle_collision_types = {}
+    self.area_collision_managers = {}
     self.area_face_types = {}
     self.area_vertices = {}
     self.area_faces = {}
+    self.area_face_aabbs = {}
 
     self.objects = []
     self.level_forbidden_boundaries = []
@@ -56,20 +59,26 @@ class LevelGeometry:
 
     self.area_object_bounding_meshes[area_id][object3d.iid] = bounding_mesh
 
-  def add_area(self, area_id, vertices, triangles, collision_type):
+  def add_area_mesh_for_collision_type(self, area_id, vertices, triangles, collision_type):
     #geometry = trimesh.Trimesh(vertices=vertices, faces=triangles, metadata=dict(collision=collision_type))
     
     if collision_type == 0x0 and len(triangles) == 2 and len(vertices) == 4:
-      logging.debug(f"Removing Default-Floor in {self.level.name} (Area: {hex(area_id)})")
+      # all levels have a collision-type 0x0 floor, which may or may not be the death floor
+      #logging.debug(f"Removing Default-Floor in {self.level.name} (Area: {hex(area_id)})")
       return
 
+    # initialize structures for new area_id
     if area_id not in self.area_faces:
       self.area_faces[area_id] = []
     if area_id not in self.area_vertices:
       self.area_vertices[area_id] = []
-
     if area_id not in self.area_forbidden_boundaries:
       self.area_forbidden_boundaries[area_id] = []
+    if area_id not in self.area_face_aabbs:
+      self.area_face_aabbs[area_id] = []
+
+    if area_id not in self.area_collision_managers:
+      self.area_collision_managers[area_id] = trimesh.collision.CollisionManager()
 
     geometry_triangle_count = len(self.area_faces[area_id])
     self.area_faces[area_id].extend(triangles)
@@ -82,6 +91,70 @@ class LevelGeometry:
       geometry_triangle_count, # start
       geometry_triangle_count + len(triangles) # end
     )] = collision_type
+
+    all_boxes_face_vertices = []
+    all_boxes_faces = []
+    all_boxes_face_normals = []
+    for face_index, [a_index, b_index, c_index] in enumerate(self.area_faces[area_id]):
+      # positions of the 3 vertices that make up the face
+      a = self.area_vertices[area_id][a_index]
+      b = self.area_vertices[area_id][b_index]
+      c = self.area_vertices[area_id][c_index]
+
+      # min corner
+      start = (
+        min(a[0], b[0], c[0]),
+        min(a[1], b[1], c[1]),
+        min(a[2], b[2], c[2]),
+      )
+      # max corner
+      end = (
+        max(a[0], b[0], c[0]),
+        max(a[1], b[1], c[1]),
+        max(a[2], b[2], c[2]),
+      )
+
+      # uncomment for plotting
+      self.area_face_aabbs[area_id].append((start, end))
+      '''
+      vertices = [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1,
+                  1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1]
+      vertices = np.array(vertices,
+                          order='C',
+                          dtype=np.float64).reshape((-1, 3))
+        
+      faces = [1, 3, 0, 4, 1, 0, 0, 3, 2, 2, 4, 0, 1, 7, 3, 5, 1, 4,
+              5, 7, 1, 3, 7, 2, 6, 4, 2, 2, 7, 6, 6, 5, 4, 7, 5, 6]
+      faces = np.array(faces,
+                      order='C', dtype=np.int64).reshape((-1, 3))
+      
+      face_normals = [-1, 0, 0, 0, -1, 0, -1, 0, 0, 0, 0, -1, 0, 0, 1, 0, -1,
+                      0, 0, 0, 1, 0, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0, 1, 0, 0]
+      face_normals = np.asanyarray(face_normals,
+                                  order='C',
+                                  dtype=np.float64).reshape(-1, 3)
+
+      extents = [
+        abs(start[0] - end[0]),
+        abs(start[1] - end[1]),
+        abs(start[2] - end[2])
+      ]
+
+      vertices *= extents
+
+      position = [
+        (start[0] if start[0] > end[0] else end[0]) - (extents[0]/2),
+        (start[1] if start[1] > end[1] else end[1]) - (extents[1]/2),
+        (start[2] if start[2] > end[2] else end[2]) - (extents[2]/2),
+      ]
+
+      transform = trimesh.transformations.translation_matrix(position)
+      box = trimesh.base.Trimesh(vertices, faces, face_normals, process=False, validate=False)
+      box.apply_transform(transform)
+      #print(box, box.faces)
+      print(f'{(face_index / (len(self.area_faces[area_id]))) * 100}%       ', end="\r")
+      self.area_collision_managers[area_id].add_object(f'face_{face_index}', box, transform)
+      '''
 
   def process(self):
     # sort by triangle type, creating a new dict of WALL, FLOOR and CEILING
@@ -153,6 +226,123 @@ class LevelGeometry:
 
         bounding_box = trimesh.creation.box(extents=extents, transform=trimesh.transformations.translation_matrix(position))
         self.level_forbidden_boundaries.append(bounding_box)
+
+  def plot_placement(self, obj, *targets):
+    print("plotting debug placement")
+    level_traces = []
+
+    # Plot level wide boundaries
+    for bb_index, bounding_box in enumerate(self.level_forbidden_boundaries):
+      mesh_components = np.transpose(bounding_box.vertices)
+      triangle_indices = np.transpose(bounding_box.faces)
+
+      level_traces.append(
+        go.Mesh3d(
+          x=np.negative(mesh_components[0]), # x neg
+          y=mesh_components[2], # y and z swapped
+          z=mesh_components[1],
+          i=triangle_indices[0],
+          j=triangle_indices[1],
+          k=triangle_indices[2],
+          text=f"Level Loading Zone #{hex(bb_index)}",
+          #facecolor=(1, 0, 0, 1),
+          flatshading=True,
+          #color='#FFB6C1',
+          #hoverinfo="skip"
+          opacity=0.5
+        )
+      )
+      
+    # Plot area meshes
+    for (area_id, area_geometry) in self.area_geometries.items():
+      mesh_components = np.transpose(area_geometry.vertices)
+      triangle_indices = np.transpose(area_geometry.faces)
+      collision_types = []
+
+      traces = [
+        *level_traces,
+      ]
+
+      # Plot geometry (with collision type)
+      for (start, end), collision_type in self.area_geometry_triangle_collision_types[area_id].items():
+        mesh_components = np.transpose(area_geometry.vertices)
+        triangle_indices = np.transpose(area_geometry.faces[start:end])
+        traces.append(
+          go.Mesh3d(
+            x=np.negative(mesh_components[0]), # x neg
+            y=mesh_components[2], # y and z swapped
+            z=mesh_components[1],
+            i=triangle_indices[0],
+            j=triangle_indices[1],
+            k=triangle_indices[2],
+            text=f"Collision Type: {hex(collision_type)} from ({start} to {end})",
+            #facecolor=(1, 0, 0, 1),
+            flatshading=True,
+            #color='#FFB6C1',
+            #hoverinfo="skip"
+          )
+        )
+
+      # Plot geometry faces
+      for triangle_index, _ in enumerate(triangle_indices):
+        collision_types.append(self.get_collision_type_for_triangle(area_id, triangle_index))
+      
+      # Plot Target
+      for target_index, target in enumerate(targets):
+        mesh_components = np.transpose(target.vertices)
+        triangle_indices = np.transpose(target.faces)
+        traces.append(
+          go.Mesh3d(
+            x=np.negative(mesh_components[0]), # x neg
+            y=mesh_components[2], # y and z swapped
+            z=mesh_components[1],
+            i=triangle_indices[0],
+            j=triangle_indices[1],
+            k=triangle_indices[2],
+            text=f"Target Geometry #{target_index+1}",
+            #facecolor=(1, 0, 0, 1),
+            flatshading=True,
+            #color='#FFB6C1',
+            #hoverinfo="skip"
+            opacity=0.5
+          )
+        )
+        
+      
+      # Plot face AABBs
+      # takes fucking *forever*
+
+      if 'SM64R' in os.environ and 'TRI_AABB' in os.environ['SM64R']:
+        for index, (c1, c2) in enumerate(self.area_face_aabbs[area_id]):
+          # print progress
+          print(str(index / len(self.area_face_aabbs[area_id]) * 100) + "%" + (" " * 10), end="\r")
+          if index > 500: break # too many too display :(
+          extent = (c2[0] - c1[0], c2[1] - c1[1], c2[2] - c1[2])
+          tri_aabb = trimesh.creation.box(
+            extents=extent,
+            transform=trimesh.transformations.translation_matrix(
+              (c1[0] + extent[0]/2, c1[1] + extent[1]/2, c1[2] + extent[2]/2)
+            )
+          )
+          aabb_mesh_components = np.transpose(tri_aabb.vertices)
+          aabb_triangle_indices = np.transpose(tri_aabb.faces)
+          traces.append(
+            go.Mesh3d(
+              x=np.negative(aabb_mesh_components[0]), # x neg
+              y=aabb_mesh_components[2], # y and z swapped
+              z=aabb_mesh_components[1],
+              i=aabb_triangle_indices[0],
+              j=aabb_triangle_indices[1],
+              k=aabb_triangle_indices[2],
+              color='rgb(0, 0, 255)',
+              opacity=0.3,
+              hoverinfo="skip"
+            )
+          )
+        
+      if not os.path.exists("dumps/level_plots/placement_debug"):
+        os.makedirs("dumps/level_plots/placement_debug")
+      py.plot(traces, filename=f'dumps/level_plots/placement_debug/{self.level.name}_{hex(area_id)}_{strftime("%Y%m%d-%H%M%S")}.html', auto_open=False)
 
   def plot(self):
     level_traces = []
@@ -241,7 +431,7 @@ class LevelGeometry:
       for bb_index, bounding_box in enumerate(self.area_forbidden_boundaries[area_id]):
         mesh_components = np.transpose(bounding_box.vertices)
         triangle_indices = np.transpose(bounding_box.faces)
-        print("adding mesh for level area bounding box")
+        #print("adding mesh for level area bounding box")
         traces.append(
           go.Mesh3d(
             x=np.negative(mesh_components[0]), # x neg
@@ -258,6 +448,37 @@ class LevelGeometry:
           )
         )
       
+      # Plot face AABBs
+      # takes fucking *forever*
+      '''
+      for index, (c1, c2) in enumerate(self.area_face_aabbs[area_id]):
+        # print progress
+        print(str(index / len(self.area_face_aabbs[area_id]) * 100) + "%" + (" " * 10), end="\r")
+        if index > 500: break # too many too display :(
+        extent = (c2[0] - c1[0], c2[1] - c1[1], c2[2] - c1[2])
+        tri_aabb = trimesh.creation.box(
+          extents=extent,
+          transform=trimesh.transformations.translation_matrix(
+            (c1[0] + extent[0]/2, c1[1] + extent[1]/2, c1[2] + extent[2]/2)
+          )
+        )
+        aabb_mesh_components = np.transpose(tri_aabb.vertices)
+        aabb_triangle_indices = np.transpose(tri_aabb.faces)
+        traces.append(
+          go.Mesh3d(
+            x=np.negative(aabb_mesh_components[0]), # x neg
+            y=aabb_mesh_components[2], # y and z swapped
+            z=aabb_mesh_components[1],
+            i=aabb_triangle_indices[0],
+            j=aabb_triangle_indices[1],
+            k=aabb_triangle_indices[2],
+            color='rgb(0, 0, 255)',
+            opacity=0.3,
+            hoverinfo="skip"
+          )
+        )
+      '''
+
       # Plot object boundaries
       if area_id in self.area_object_bounding_meshes:
         for bounding_mesh in self.area_object_bounding_meshes[area_id].values():
@@ -280,4 +501,6 @@ class LevelGeometry:
             )
           )
 
+      print(f'plotting {self.level.name} {hex(area_id)}')
       py.plot(traces, filename=f'dumps/level_plots/{self.level.name}_{hex(area_id)}.html', auto_open=False)
+      print('done')

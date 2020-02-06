@@ -83,6 +83,7 @@ class InstrumentRandomizer:
       
       if not identical and sfx_type_match and inst_lengths_gte:
         # use old inst for #0 and new one for #1 because #0 is not really changing much
+        print(f'instrument change: [{hex(old_inst_set[0])} {hex(old_inst_set[1])}] to [{hex(old_inst_set[0])} {hex(new_inst_set[1])}]')
         self.rom.write_byte(0x7cc674 + current_idx, bytes([old_inst_set[0] | new_inst_set[1]]))
         current_idx = current_idx + 1
         tries = 0

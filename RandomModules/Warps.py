@@ -5,40 +5,10 @@ from RandomModules.Textures import TextureAtlas
 from random import shuffle, choice
 import logging
 
-# Rainbow Clouds, Wing Cap, Vanish Cap, Rainbow Bonus, Secret Aquarium, Peach Slide
-COURSES_WITH_NO_PAINTING = [0x12, 0x1D, 0x1B, 0x1F, 0x14, 0x11, 0x13, 0x04]
-
-WARP_BEHAVIOURS = {
-  0x13002F80: ['FAILURE'], # Painting Exit Failure
-  0x13002F7C: ['SUCCESS'], # Painting Exit Success
-  0x13002F70: ['RESTORE'], # Painting Exit Restore
-  0x13002F88: ['FAILURE', 'SUCCESS'], # Ceiling Exit
-  0x13002F90: ['FAILURE'], # Hole Exit
-  0x13002F8C: ['SUCCESS'], # Hole Exit
-  0x13002F84: ['RESTORE'], # Restore to Lobby
-}
-
 WARP_ID_MAPPING = {
   0xf0: 'SUCCESS',
   0xf1: 'FAILURE',
   0xf3: 'RECOVERY'
-}
-
-# The levels listed in this section have warps to different areas, that need to lead back to the same warp. This is only the case in THI in vanilla SM64
-MUST_MATCH_AREA_LEVELS = [LVL_THI]
-
-# These levels have sub-levels, that need to be exited/left through the same warp. This is only the case in bowser levels in vanilla SM64
-LEVEL_CONNECTED_WARPS = {
-  LVL_BOWSER_1: [LVL_BOWSER_1_BATTLE],
-  LVL_BOWSER_2: [LVL_BOWSER_2_BATTLE],
-  LVL_BOWSER_3: [LVL_BOWSER_3_BATTLE],
-}
-
-# This list enforces that certain levels come before other levels, in the order of which rooms are accessible. Obviously only works for SM64
-ENFORCE_ORDER = {
-  # Bowser 1 must be before SSL, DDD, BITFS
-  LVL_BOWSER_1: Constants.BASEMENT_LEVELS,
-  LVL_BOWSER_2: [*Constants.FIRST_FLOOR_LEVELS, *Constants.SECOND_FLOOR_LEVELS],
 }
 
 class WarpRandomizer:
@@ -56,9 +26,11 @@ class WarpRandomizer:
     # For different levels of SM64, we can assume there are 4 different types of warps we need to consider
     # these are not coded any differently, but they are important to find, to get a complete set of warps for any given "target level"
     # "entrances_src" - Found in Overworlds - Paintings, Holes in the floor
-    # "entrances_dst" - Found in Target lvl - Entry positions into levels, mostly '0xa' for the beginning
+    # "entrances_dst" - Found in Target lvl - Entry positions into levels, mostly '0xa' for the beginning, marios spawn
     # "exits_dst"     - Found in Overworlds - Lead to themselves handle animations somehow. Level exit_srcs (0xf0, 0xf1, 0xf3) also lead to them
     # "exits_src"     - Found in Target lvl - `0xf0`, `0xf1` and `0xf3` (Win, Lose, Recovery/Pause-Exit)
+    # 
+
 
     # levels that contain entries to levels
     overworld_levels = list(filter(lambda level: "overworld" in level.properties, self.rom.config.levels))
@@ -78,7 +50,7 @@ class WarpRandomizer:
     exit_dst_for_levels = {}
     exit_src_for_levels = {}
 
-    # all levels that may contain entrance warps, this will find:
+    # all levels that may contain entrance warps, this will find, e.g. overworld and HMC (to Metal Cap):
     # - entrance_srcs to levels
     # - exit_dsts from levels, not matched yet
     # 
@@ -183,6 +155,7 @@ class WarpRandomizer:
         warp_set["exit_dsts"] = exit_dst_for_levels[target_level]
 
       if "shuffle_warps" in source_level.properties:
+        # create whitelist for allowed shuffles
         satisfies_all_rules = None
         matching_ruleset = []
         
@@ -216,6 +189,11 @@ class WarpRandomizer:
 
     # This part will generate new warp connections until one is "valid" aka in logic
     while len(new_level_warps) == 0 or not self.validate_path_for_keys(new_level_warps):
+      # because warps are grouped by the connections that are allowed, shuffling inside
+      # these groups will always follow the rules
+      # FIXME: one-way connections (i.e. wing-cap could be vanish cap but not the other way around)
+      #        will not work and always result in unshuffled levels
+
       new_level_warps = []
       # go through pools, shuffle within those pools and assign warps
       for ruleset, warpsets in warp_pools.items():
@@ -292,7 +270,7 @@ class WarpRandomizer:
         target = choice(ow_set["exits"]) # fallback: pick random if no fitting targets
         
         if not src.anim_type:
-          print('no source anim type - weird warp')
+          print('no source anim type - weird warp', hex(src.warp_id))
         
         for dst in ow_set["exits"]:
           if dst.anim_type == src.anim_type:

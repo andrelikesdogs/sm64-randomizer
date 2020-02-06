@@ -155,6 +155,9 @@ class TextureAtlas:
     print(f"deleting texture {name}: {len(empty_data)} bytes")
     rom.write_bytes(definition.position + 0x13, empty_data) # 0x13: header
 
+  @staticmethod
+  def convert_file_to_texture(name):
+    pass
 
   @staticmethod
   def add_texture_definition(name, texture : Union[Texture, MultiTexture]):
