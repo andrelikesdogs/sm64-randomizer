@@ -77,9 +77,6 @@ class LevelGeometry:
     if area_id not in self.area_face_aabbs:
       self.area_face_aabbs[area_id] = []
 
-    if area_id not in self.area_collision_managers:
-      self.area_collision_managers[area_id] = trimesh.collision.CollisionManager()
-
     geometry_triangle_count = len(self.area_faces[area_id])
     self.area_faces[area_id].extend(triangles)
     self.area_vertices[area_id].extend(vertices)
@@ -92,10 +89,7 @@ class LevelGeometry:
       geometry_triangle_count + len(triangles) # end
     )] = collision_type
 
-    all_boxes_face_vertices = []
-    all_boxes_faces = []
-    all_boxes_face_normals = []
-    for face_index, [a_index, b_index, c_index] in enumerate(self.area_faces[area_id]):
+    for [a_index, b_index, c_index] in self.area_faces[area_id]:
       # positions of the 3 vertices that make up the face
       a = self.area_vertices[area_id][a_index]
       b = self.area_vertices[area_id][b_index]
@@ -114,47 +108,7 @@ class LevelGeometry:
         max(a[2], b[2], c[2]),
       )
 
-      # uncomment for plotting
       self.area_face_aabbs[area_id].append((start, end))
-      '''
-      vertices = [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1,
-                  1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1]
-      vertices = np.array(vertices,
-                          order='C',
-                          dtype=np.float64).reshape((-1, 3))
-        
-      faces = [1, 3, 0, 4, 1, 0, 0, 3, 2, 2, 4, 0, 1, 7, 3, 5, 1, 4,
-              5, 7, 1, 3, 7, 2, 6, 4, 2, 2, 7, 6, 6, 5, 4, 7, 5, 6]
-      faces = np.array(faces,
-                      order='C', dtype=np.int64).reshape((-1, 3))
-      
-      face_normals = [-1, 0, 0, 0, -1, 0, -1, 0, 0, 0, 0, -1, 0, 0, 1, 0, -1,
-                      0, 0, 0, 1, 0, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0, 1, 0, 0]
-      face_normals = np.asanyarray(face_normals,
-                                  order='C',
-                                  dtype=np.float64).reshape(-1, 3)
-
-      extents = [
-        abs(start[0] - end[0]),
-        abs(start[1] - end[1]),
-        abs(start[2] - end[2])
-      ]
-
-      vertices *= extents
-
-      position = [
-        (start[0] if start[0] > end[0] else end[0]) - (extents[0]/2),
-        (start[1] if start[1] > end[1] else end[1]) - (extents[1]/2),
-        (start[2] if start[2] > end[2] else end[2]) - (extents[2]/2),
-      ]
-
-      transform = trimesh.transformations.translation_matrix(position)
-      box = trimesh.base.Trimesh(vertices, faces, face_normals, process=False, validate=False)
-      box.apply_transform(transform)
-      #print(box, box.faces)
-      print(f'{(face_index / (len(self.area_faces[area_id]))) * 100}%       ', end="\r")
-      self.area_collision_managers[area_id].add_object(f'face_{face_index}', box, transform)
-      '''
 
   def process(self):
     # sort by triangle type, creating a new dict of WALL, FLOOR and CEILING

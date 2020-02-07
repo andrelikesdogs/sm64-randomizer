@@ -72,7 +72,7 @@ class ROM:
         raise err
 
   def swap_mixed_to_big(self):
-    print("Converting from Mixed to Big Endianess")
+    #print("Converting from Mixed to Big Endianess")
 
     self.file.seek(0)
     data = self.file.read()

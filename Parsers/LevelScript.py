@@ -315,7 +315,7 @@ class LevelScriptParser:
       self.rom.write_byte(cursor, entry["bytes"])
 
       if index > macro_table["entry_count_original"]:
-        print("about to overwrite...:")
+        print("Warning: about to overwrite...:")
         print(format_binary(self.rom.read_bytes(cursor, 10)))
       cursor += 10
     
@@ -631,7 +631,7 @@ class LevelScriptParser:
           preset = preset_table[preset_id] if preset_id in preset_table else None
 
           if preset is None:
-            print("preset not found")
+            print("Warning: Macro preset not found")
 
           length = 8
           entry_bytes = None

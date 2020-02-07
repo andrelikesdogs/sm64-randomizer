@@ -256,7 +256,7 @@ class WarpRandomizer:
     # actually link together warps
     for (ow_set, lvl_set) in new_level_warps:
       SpoilerLog.add_entry('warps', f'{ow_set["level"].name} leads to {lvl_set["level"].name}')
-      print(f'{ow_set["level"].name} now goes to {lvl_set["level"].name}')
+      #print(f'{ow_set["level"].name} now goes to {lvl_set["level"].name}')
 
       # link overworld entrances to new level
       for idx in range(len(ow_set["entrances"])):
@@ -271,8 +271,8 @@ class WarpRandomizer:
         targets = []
         target = choice(ow_set["exits"]) # fallback: pick random if no fitting targets
         
-        if not src.anim_type:
-          print('no source anim type - weird warp', hex(src.warp_id))
+        #if not src.anim_type:
+          #print('no source anim type - weird warp', hex(src.warp_id))
         
         for dst in ow_set["exits"]:
           if dst.anim_type == src.anim_type:
@@ -344,21 +344,21 @@ class WarpRandomizer:
       key_groups[key_required].append(to_warps)
     
     for key, key_group in key_groups.items():
-      print(f"Requires Key: {str(key)}")
+      #print(f"Requires Key: {str(key)}")
       for warp_set in key_group:
         if "key_receive" in warp_set["level"].properties:
           key_received = warp_set["level"].properties["key_receive"]
 
-          print(warp_set["level"].name, f"(Rewards {hex(key_received)})")
+          #print(warp_set["level"].name, f"(Rewards {hex(key_received)})")
           if key is not None and key_received == key:
             # Invalid
-            print()
-            print(f"{warp_set['level'].name} requires key {hex(key)} but beating this level rewards {hex(key_received)}. Retrying")
-            print()
+            #print()
+            #print(f"{warp_set['level'].name} requires key {hex(key)} but beating this level rewards {hex(key_received)}. Retrying")
+            #print()
             return False
 
-        print(warp_set["level"].name)
-      print('-' * 30)
+        #print(warp_set["level"].name)
+      #print('-' * 30)
     return True
 
 '''

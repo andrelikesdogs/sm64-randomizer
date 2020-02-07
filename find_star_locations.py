@@ -37,15 +37,6 @@ known_star_locations = {
   'DDD: Water Rings': (3400.0, -3200.0, -500.0),
 }
 
-def get_half_shift_bytes(bytes_in):
-  str_bytes = bytes_in.hex()
-  str_bytes = "0" + str_bytes + "0"
-
-  print(str_bytes)
-
-  return bytes.fromhex(str_bytes)
-
-
 # 00 00 00 07 D0 
 # 00 00 00 7D 00
 with ROM(rom_path, rom_out) as rom_orig:

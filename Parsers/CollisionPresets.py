@@ -55,7 +55,6 @@ class CollisionPresetParser:
       raise ValueError(f"Preset-ID is out of range for macro objects ({hex(preset_id)})")
 
     preset_position = self.preset_id_offset + (preset_id - 31) * 8
-    print(preset_position)
     self.rom.write_integer(preset_position, behaviour, 4)
     self.rom.write_integer(preset_position + 4, model_id, 2)
     self.rom.write_integer(preset_position + 6, default_b1)

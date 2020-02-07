@@ -19,7 +19,7 @@ class N64Image:
     px = self.img.load()
 
     n64_img_bytes = bytearray(len(self.bytes_original))
-    print(len(n64_img_bytes))
+    
     for y in range(0, width):
       for x in range(0, height):
         idx = (y * width + x) * 2
@@ -33,7 +33,6 @@ class N64Image:
         n64_img_bytes[idx] = int((r_5 << 3) | (g_5 >> 2))
         n64_img_bytes[idx+1] = int(((g & 0x03) << 6) | (b_5 << 1) | (1 if a > 0 else 0))
     
-    print(len(self.bytes_original))
     return bytes(n64_img_bytes)
 
 class Imaging:

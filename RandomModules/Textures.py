@@ -198,7 +198,7 @@ class TextureAtlas:
     
     definition = TextureAtlas.definitions[name]
     empty_data = bytes([0x0 for i in range(definition.size)])
-    print(f"deleting texture {name}: {len(empty_data)} bytes")
+    #print(f"deleting texture {name}: {len(empty_data)} bytes")
     rom.write_bytes(definition.position + 0x13, empty_data) # 0x13: header
 
   @staticmethod

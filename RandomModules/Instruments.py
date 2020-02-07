@@ -66,7 +66,7 @@ class InstrumentRandomizer:
     tries = 0
     while current_idx < len(instruments_tuples):
       if tries > 1000:
-        print(f'couldnt find new inst set for seq index ${hex(current_idx)}')
+        #print(f'couldnt find new inst set for seq index ${hex(current_idx)}')
         break
       new_inst_set = choice(instruments_tuples) # pick one at a time, allowing duplicates
       old_inst_set = instruments_tuples[current_idx]
@@ -83,7 +83,7 @@ class InstrumentRandomizer:
       
       if not identical and sfx_type_match and inst_lengths_gte:
         # use old inst for #0 and new one for #1 because #0 is not really changing much
-        print(f'instrument change: [{hex(old_inst_set[0])} {hex(old_inst_set[1])}] to [{hex(old_inst_set[0])} {hex(new_inst_set[1])}]')
+        #print(f'instrument change: [{hex(old_inst_set[0])} {hex(old_inst_set[1])}] to [{hex(old_inst_set[0])} {hex(new_inst_set[1])}]')
         self.rom.write_byte(0x7cc674 + current_idx, bytes([old_inst_set[0] | new_inst_set[1]]))
         current_idx = current_idx + 1
         tries = 0
