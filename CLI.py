@@ -128,6 +128,7 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     seed(opt_args.seed)
 
     rom.read_levels()
+    textures = None
 
     if rom.rom_type == 'EXTENDED':
       # initialize texture atlas and dynamic positions
@@ -150,6 +151,13 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     warp_random = WarpRandomizer(rom)
     if opt_args.shuffle_entries:
       warp_random.shuffle_level_entries(vars(opt_args))
+
+      if opt_args.shuffle_paintings and opt_args.shuffle_paintings == 'replace-unknown':
+        if not textures:
+          print("Sorry, please use an extended ROM to utilize custom paintings.")
+        else:
+          textures.add_vanilla_portrait_custom_paintings()
+
     
     instrument_randomizer = InstrumentRandomizer(rom)
     if opt_args.shuffle_instruments:

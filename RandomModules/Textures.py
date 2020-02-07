@@ -1,6 +1,11 @@
 from typing import List, Union, NamedTuple
 import numpy as np
+from Parsers.Imaging import Imaging
 from PIL import Image
+from pathlib import Path
+import os
+
+from Constants import application_path
 
 class Texture(NamedTuple):
   position: int
@@ -9,7 +14,12 @@ class Texture(NamedTuple):
   height: int
   name: str
 
-class InMemoryTexture(Texture):
+class InMemoryTexture(NamedTuple):
+  position: int
+  size: int
+  width: int
+  height: int
+  name: str
   data: bytes
 
 class MultiTexture(NamedTuple):
@@ -35,6 +45,42 @@ class TextureAtlas:
 
   def __init__(self, rom : 'ROM'):
     self.rom = rom
+
+  def add_vanilla_portrait_custom_paintings(self):
+    """ Loads the custom-made painting for levels that don't have a painting in the original game.
+    """
+    '''
+    bbh_painting = Imaging.parse_image(os.path.join(application_path, "Assets/img/custom_portraits/distressedphilosopher/BBH.png"))
+    full_img_bytes = bbh_painting.read_rgba16()
+
+    bbh_painting_upper = full_img_bytes[0:4096] # upper part
+    bbh_painting_lower = full_img_bytes[4096:8192] # lower part
+
+    TextureAtlas.add_texture_definition('painting_bbh', MultiTexture(
+      'bbh',
+      [
+        InMemoryTexture(
+          None,
+          int(32 * 64 * 16 / 8),
+          64,
+          32,
+          'painting_bbh_upper',
+          bbh_painting_upper
+        ),
+        InMemoryTexture(
+          None,
+          int(32 * 64 * 16 / 8),
+          64,
+          32,
+          'painting_bbh_lower',
+          bbh_painting_lower
+        )
+      ]
+    ))
+
+    self.copy_texture_from_to(self.rom, "painting_bbh", "painting_bob")
+    '''
+
 
   def add_dynamic_positions(self):
     # castle paintings
@@ -156,10 +202,6 @@ class TextureAtlas:
     rom.write_bytes(definition.position + 0x13, empty_data) # 0x13: header
 
   @staticmethod
-  def convert_file_to_texture(name):
-    pass
-
-  @staticmethod
   def add_texture_definition(name, texture : Union[Texture, MultiTexture]):
     TextureAtlas.definitions[name] = texture
 
@@ -168,31 +210,45 @@ class TextureAtlas:
     return name in TextureAtlas.definitions
 
   @staticmethod
-  def copy_texture_from_to(rom : "ROM", name_a : str, name_b : str):
-    if name_a not in TextureAtlas.definitions:
-      raise ValueError(f'{name_a} not found as a defined texture')
+  def copy_texture_from_to(rom : "ROM", name_from : str, name_to : str):
+    if name_from not in TextureAtlas.definitions:
+      raise ValueError(f'{name_from} not found as a defined texture')
 
-    if name_b not in TextureAtlas.definitions:
-      raise ValueError(f'{name_b} not found as a defined texture')
+    if name_to not in TextureAtlas.definitions:
+      raise ValueError(f'{name_to} not found as a defined texture')
 
     if rom.rom_type != 'EXTENDED':
       raise ValueError(f'This ROM file is not extended, and thus can\'t modify textures (atleast right now)')
 
-    texture_a = TextureAtlas.definitions[name_a]
-    texture_b = TextureAtlas.definitions[name_b]
-    if len(texture_a.textures) != len(texture_b.textures):
+    texture_from = TextureAtlas.definitions[name_from]
+    texture_to = TextureAtlas.definitions[name_to]
+    if len(texture_from.textures) != len(texture_to.textures):
       raise ValueError('Can only swap textures between two texture groups with the same length right now')
 
-    texs_a = []
-    texs_b = []
+    if type(texture_to.textures[0]) is InMemoryTexture:
+      raise ValueError(f'{name_to} is an in memory texture and can not be replaced')
 
-    for texture in texture_a.textures:
-      texs_a.append(rom.read_bytes(texture.position, texture.size))
-    for texture in texture_b.textures:
-      texs_b.append(rom.read_bytes(texture.position, texture.size))
-    
-    for idx in range(len(texs_a)):
-      bytes_from = texs_b[idx]
-      tex_to = texture_a.textures[idx]
+    texs_from = []
+    texs_to = []
+
+    for texture in texture_from.textures:
+      if type(texture) is InMemoryTexture:
+        # read from var
+        texs_from.append(texture.data)
+      elif type(texture) is Texture:
+        # read from rom
+        texs_from.append(rom.read_bytes(texture.position, texture.size))
+
+    for texture in texture_to.textures:
+      if type(texture) is InMemoryTexture:
+        # read from var
+        texs_to.append(texture.data)
+      elif type(texture) is Texture:
+        # read from rom
+        texs_to.append(rom.read_bytes(texture.position, texture.size))
+        
+    for idx in range(len(texs_from)):
+      bytes_from = texs_from[idx]
+      tex_to = texture_to.textures[idx]
 
       rom.write_byte(tex_to.position, bytes_from)

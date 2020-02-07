@@ -246,7 +246,9 @@ class WarpRandomizer:
         shuffle(shuffled_keys)
         for key in keys:
           lvl_paintings[key] = lvl_paintings[shuffled_keys]
-  
+      if settings["shuffle_paintings"] == "replace_unknown":
+        # use new paintings
+        pass
     
     # list of changes that will be done
     change_list = []
@@ -359,6 +361,7 @@ class WarpRandomizer:
       print('-' * 30)
     return True
 
+'''
 
   def shuffle_level_entries_old(self, painting_mode : str):
     # levels that contain entries to levels
@@ -509,7 +512,6 @@ class WarpRandomizer:
 
       idx += 1
 
-'''
     original_warps = list(warp_connections.items())
     target_warps = list(warp_connections.items())
     shuffle(target_warps)

@@ -15,9 +15,18 @@
     "options": [
       { "value": "vanilla", "label": "Off" },
       { "value": "match", "label": "Match Levels" },
+      { "value": "replace-unknown", "label": "Use Custom Paintings for Unknown Paintings"},
       { "value": "random", "label": "Randomized" }
     ],
     "help": "Change the behaviour of how the paintings in the castle are shuffled (\"match\" - matches randomized levels, i.e. painting = level, \"random\" - independently randomize paintings, \"off\" - leave paintings untouched)"
+  },
+  {
+    "name": "shuffle-skybox",
+    "label": "Sky randomization",
+    "category": "aesthetics",
+    "type": "checkbox",
+    "default": false,
+    "help": "Randomizes the sky-texture between different levels. The black skybox is excluded."
   },
   {
     "name": "shuffle-entries",
