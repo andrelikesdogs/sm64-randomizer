@@ -14,6 +14,7 @@ from Level import Level
 from Parsers.LevelScript import LevelScriptParser
 from Constants import ALL_LEVELS, application_path
 from Config import Config
+from RandomModules.Textures import TextureAtlas
 import Constants
 
 
@@ -175,6 +176,7 @@ class ROM:
     ow_levels = []
     non_ow_levels = []
     for level in self.config.levels:
+      # split overworld and non-overworld for warp gathering
       if "overworld" in level.properties:
         ow_levels.append(level)
       else:
@@ -283,7 +285,7 @@ class ROM:
     Arguments:
         address {int} -- Address to find segment information for
     """
-    print(f"matching for {hex(address)} in {len(self.segments_sequentially)} segments")
+    #print(f"matching for {hex(address)} in {len(self.segments_sequentially)} segments")
     found_at = []
     for segment_idx, (address_start, address_end) in enumerate(self.segments_sequentially):
       if address >= address_start and address < address_end:

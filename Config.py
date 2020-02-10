@@ -19,7 +19,12 @@ LEVEL_PROPERTY_DEFINITIONS = {
   'disable_water_check': ["bool"], # This level should act as if no water existed (for water that can be disabled/lowered/raised)
   'overworld': ["bool"], # This level is an overworld, and contains level entries
   'end_game': ["bool"], # This level will end the game
-  'shuffle_painting': ["str"], # Defines this levels painting to be shuffled
+  'shuffle_painting': ["list"], # Defines this levels painting to be shuffled
+  'shuffle_painting[].sections': ["list"],
+  'shuffle_painting[].sections[].segment_index': ["int"],
+  'shuffle_painting[].sections[].segment_offset': ["int"],
+  'shuffle_painting[].sections[].size': ["list"],
+  'shuffle_painting[].sections[].name': ["str"],
   'requires_key': ["int"],
   'loading_zones': ["list"],
   'shuffle_warps': ["list"],
@@ -65,7 +70,8 @@ ROOT_LEVEL_FIELDS = [
   "levels",
   "object_randomization",
   "constants_file",
-  "collision_groups"
+  "collision_groups",
+  "custom_paintings"
 ]
 
 CONSTANT_FILE_FIELDS = [
@@ -84,6 +90,7 @@ class Config:
     self.levels_by_course_id = {}
     self.object_entries = []
     self.object_entries_by_name = {}
+    self.custom_paintings = None
     self.constants = {}
     self.collision_groups = {}
 
@@ -302,6 +309,23 @@ class Config:
       
       self.collision_groups[collision_group] = allowed_entries
 
+  def validate_custom_paintings(self, source):
+    authors = source.keys()
+
+    for author in authors:
+      for painting_definition in source[author]:
+        if "name" not in painting_definition:
+          self.validation_errors.append(f'Missing "name" field for custom painting')
+          return False
+
+        if "file" not in painting_definition:
+          self.validation_errors.append(f'Missing "file" field for custom painting')
+          return False
+        else:
+          if not os.path.exists(os.path.join(application_path, painting_definition["file"])):
+            self.validation_errors.append(f'File not found for custom painting "{painting_definition["name"]}": "{painting_definition["file"]}"')
+            return False
+
   def validate_constants(self, source):
     if "collision_types" not in source:
       self.validation_errors.append(f'Missing "collision_type" field in constants file for this configuration')
@@ -402,6 +426,9 @@ class Config:
 
     if "collision_groups" in source:
       self.validate_collision_groups(source["collision_groups"])
+
+    if "custom_paintings" in source:
+      self.validate_custom_paintings(source["custom_paintings"])
 
     unknown_fields = set(source.keys()) - set(ROOT_LEVEL_FIELDS)
     for field in unknown_fields:
@@ -610,6 +637,9 @@ class Config:
     for rom_definition in source["rom"]:
       self.checksums.append(rom_definition)
     
+    if "custom_paintings" in source:
+      self.custom_paintings = source["custom_paintings"]
+
     if "levels" in source:
       self.parse_levels(source["levels"])
     

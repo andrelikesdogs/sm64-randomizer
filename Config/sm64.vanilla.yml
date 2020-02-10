@@ -57,6 +57,7 @@ rom:
         start: 0x298AE0
         end: 0x2994F0
 
+# This section defines the various levels contained within this ROM
 levels:
   # Level definings serve multiple purposes:
   # - Define course-ids to find them in matchings
@@ -101,11 +102,35 @@ levels:
   - name: "Bob-Omb's Battlefield"
     course_id: 0x09
     properties:
-      - shuffle_painting: painting_bob
+      - shuffle_painting:
+          - game_painting: 'painting_bob'
+            sections:
+              - name: 'painting_bob_upper'
+                segment_index: 23
+                segment_offset: 0xA800
+                format: 'rgba16'
+                size: [64, 32] # width, height
+              - name: 'painting_bob_lower'
+                segment_index: 23
+                segment_offset: 0xB800
+                format: 'rgba16'
+                size: [64, 32] # width, height
   - name: "Whomp's Fortress"
     course_id: 0x18
     properties:
-      - shuffle_painting: painting_wf
+      - shuffle_painting:
+        - game_painting: 'painting_wf'
+          sections:
+            - name: 'painting_wf_lower'
+              segment_index: 23
+              segment_offset: 0xE800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_wf_lower'
+              segment_index: 23
+              segment_offset: 0xF800
+              format: 'rgba16'
+              size: [64, 32] # width, height
   - name: "Jolly Roger Bay"
     course_id: 0x0C
     areas:
@@ -114,11 +139,35 @@ levels:
         properties:
           - disable_water_check
     properties:
-      - shuffle_painting: painting_jrb
+      - shuffle_painting:
+        - game_painting: 'painting_jrb'
+          sections:
+            - name: 'painting_jrb_upper'
+              segment_index: 23
+              segment_offset: 0x10800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_jrb_lower'
+              segment_index: 23
+              segment_offset: 0x11800
+              format: 'rgba16'
+              size: [64, 32] # width, height
   - name: "Cool, Cool Mountain"
     course_id: 0x05
     properties:
-      - shuffle_painting: painting_ccm
+      - shuffle_painting:
+        - game_painting: 'painting_ccm'
+          sections:
+            - name: 'painting_ccm_upper'
+              segment_index: 23
+              segment_offset: 0xC800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_ccm_lower'
+              segment_index: 23
+              segment_offset: 0xD800
+              format: 'rgba16'
+              size: [64, 32] # width, height
     areas:
       - id: 0x02
         name: "CCM Slide"
@@ -126,6 +175,9 @@ levels:
           - slide
   - name: "Big Boo's Haunt"
     course_id: 0x04
+    properties:
+      - shuffle_painting:
+        - custom_painting: 'painting_bbh'
   - name: "Hazy Maze Cave"
     course_id: 0x07
     properties:
@@ -140,20 +192,46 @@ levels:
                 area_id: 0x1
               - course_id: 0x1C # MC
                 area_id: 0x1
+      - shuffle_painting:
+        - custom_painting: 'painting_hmc'
   - name: "Lethal Lava Land"
     course_id: 0x16
     properties:
-      - shuffle_painting: painting_lll
+      - shuffle_painting:
+        - game_painting: 'painting_lll'
+          sections:
+            - name: 'painting_lll_upper'
+              segment_index: 23
+              segment_offset: 0x13800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_lll_lower'
+              segment_index: 23
+              segment_offset: 0x12800
+              size: [64, 32] # width, height
       - requires_key: 0x1
   - name: "Shifting Sand Land"
     course_id: 0x08
     properties:
-      - shuffle_painting: painting_ssl
+      - shuffle_painting:
+        - game_painting: 'painting_ssl'
+          sections:
+            - name: 'painting_ssl_upper'
+              segment_index: 23
+              segment_offset: 0x14800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_ssl_lower'
+              segment_index: 23
+              segment_offset: 0x15800
+              size: [64, 32] # width, height
       - requires_key: 0x1
   - name: "Dire, Dire Docks"
     course_id: 0x17
     properties:
       - requires_key: 0x1
+      - shuffle_painting:
+        - custom_painting: 'painting_ddd'
     areas:
       - id: 0x01
         name: "DDD: Entry"
@@ -170,12 +248,36 @@ levels:
   - name: "Snowman's Land"
     course_id: 0x0A
     properties:
-      - shuffle_painting: painting_sl
+      - shuffle_painting:
+        - game_painting: 'painting_sl'
+          sections:
+            - name: 'painting_sl_upper'
+              segment_index: 23
+              segment_offset: 0x1F800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_sl_lower'
+              segment_index: 23
+              segment_offset: 0x20800
+              format: 'rgba16'
+              size: [64, 32] # width, height
       - requires_key: 0x2
   - name: "Wet-Dry World"
     course_id: 0x0B
     properties:
-      - shuffle_painting: painting_wdw
+      - shuffle_painting:
+        - game_painting: 'painting_wdw'
+          sections:
+            - name: 'painting_wdw_upper'
+              segment_index: 23
+              segment_offset: 0x17800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_wdw_lower'
+              segment_index: 23
+              segment_offset: 0x18800
+              format: 'rgba16'
+              size: [64, 32] # width, height
       - requires_key: 0x2
       - disable_water_check
       - loading_zones: # between area 1 and 2
@@ -205,50 +307,105 @@ levels:
         properties:
           - slide
     properties:
-      - shuffle_painting: painting_ttm
+      - shuffle_painting:
+        - game_painting: 'painting_ttm'
+          sections:
+          - name: 'painting_ttm_upper'
+            segment_index: 23
+            segment_offset: 0x1B800
+            format: 'rgba16'
+            size: [64, 32] # width, height
+          - name: 'painting_ttm_lower'
+            segment_index: 23
+            segment_offset: 0x1C800
+            format: 'rgba16'
+            size: [64, 32] # width, height
       - requires_key: 0x2
   - name: "Tiny-Huge Island"
     course_id: 0x0D
     properties:
-      - shuffle_painting: painting_thi
+      - shuffle_painting:
+        - game_painting: 'painting_ttm'
+          sections:
+          - name: 'painting_thi_upper'
+            segment_index: 23
+            segment_offset: 0x19800
+            format: 'rgba16'
+            size: [64, 32] # width, height
+          - name: 'painting_thi_lower'
+            segment_index: 23
+            segment_offset: 0x1A800
+            format: 'rgba16'
+            size: [64, 32] # width, height
       - requires_key: 0x2
   - name: "Tick Tock Clock"
     course_id: 0x0E
     properties:
-      - shuffle_painting: painting_ttc
+      - shuffle_painting:
+        - game_painting: 'painting_thi'
+          sections:
+          - name: 'painting_thi_upper'
+            segment_index: 23
+            segment_offset: 0x1D800
+            format: 'rgba16'
+            size: [64, 32] # width, height
+          - name: 'painting_thi_lower'
+            segment_index: 23
+            segment_offset: 0x1E800
+            format: 'rgba16'
+            size: [64, 32] # width, height
       - requires_key: 0x2
   - name: "Rainbow Ride"
     course_id: 0x0F
     properties:
       - requires_key: 0x2
+      - shuffle_painting:
+        - custom_painting: 'painting_rr'
   
   # Cap Levels
   - name: "Vanish Cap"
     course_id: 0x12
+    properties:
+      - shuffle_painting:
+        - custom_painting: 'painting_vc'
   - name: "Metal Cap"
     course_id: 0x1C
     properties:
       - requires_key: 0x1
+      - shuffle_painting:
+        - custom_painting: 'painting_mc'
   - name: "Wing Cap"
     course_id: 0x1D
+    properties:
+      - shuffle_painting:
+        - custom_painting: 'painting_wc'
 
   # Bonus Levels
   - name: "Secret Aquarium"
     course_id: 0x14
+    properties:
+    - shuffle_painting:
+      - custom_painting: 'painting_aquarium'
   - name: "Peach's Slide"
     course_id: 0x1B
     properties:
       - slide
+      - shuffle_painting:
+        - custom_painting: 'painting_pss'
   - name: "Winged Mario over the Rainbow"
     course_id: 0x1F
     properties:
       - fly_stage
+      - shuffle_painting:
+        - custom_painting: 'painting_wmotr'
       - requires_key: 0x2
   
   # Bowser Levels
   - name: "Bowser in the Dark World"
     course_id: 0x11
     properties:
+      - shuffle_painting:
+        - custom_painting: 'painting_bidw'
       - continues_level: 0x1E
       - key_receive: 0x1
   - name: "Bowser in the Dark World Battle"
@@ -262,6 +419,8 @@ levels:
       - continues_level: 0x21
       - requires_key: 0x1
       - key_receive: 0x2
+      - shuffle_painting:
+        - custom_painting: 'painting_bifs'
   - name: "Bowser in the Dark World Battle"
     course_id: 0x21
     properties:
@@ -274,6 +433,8 @@ levels:
         - entry_shuffle
       - continues_level: 0x22
       - requires_key: 0x2
+      - shuffle_painting:
+        - custom_painting: 'painting_bits' # doesnt make sense right now, bits does not get shuffled
   - name: "Bowser in the Sky Battle"
     course_id: 0x22
     properties:
@@ -283,6 +444,7 @@ levels:
 # File with constant variables that are not included in this Config
 constants_file: "sm64.vanilla.constants.yml"
 
+# Define collision groups, to use with object randomization rules
 collision_groups:
   # floor groups define various "collision types" into groups, to restrict placement
   # "all" is hardcoded and includes all collision types defined in the constants file
@@ -326,8 +488,7 @@ collision_groups:
       - WATER
       - SLIPPERY
 
-
-
+# Start object randomization section. Can be deeply nested with groups, sub-group, etc
 object_randomization:
   # default
   rules:
@@ -679,4 +840,35 @@ object_randomization:
             - behaviour: 0x13002250
           rules:
             - disabled
-            
+
+# Define custom painting authors/names
+custom_paintings:
+  mika:
+    - name: painting_bbh
+      file: "Assets/img/custom_paintings/mika/BBH.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_ddd
+      file: "Assets/img/custom_paintings/mika/DDD.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_hmc
+      file: "Assets/img/custom_paintings/mika/HMC.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_mc
+      file: "Assets/img/custom_paintings/mika/MC.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_rr
+      file: "Assets/img/custom_paintings/mika/RR.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_vc
+      file: "Assets/img/custom_paintings/mika/VC.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_wc
+      file: "Assets/img/custom_paintings/mika/WC.png"
+      transform:
+        - type: split-horizontal

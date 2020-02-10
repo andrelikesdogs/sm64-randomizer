@@ -150,14 +150,16 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
 
     warp_random = WarpRandomizer(rom)
     if opt_args.shuffle_entries:
+      if opt_args.shuffle_paintings:
+        textures.add_level_paintings()
+
+        if opt_args.shuffle_paintings == 'replace-unknown':
+          if not textures:
+            print("Sorry, please use an extended ROM to utilize custom paintings.")
+          else:
+            textures.add_vanilla_portrait_custom_paintings()
+
       warp_random.shuffle_level_entries(vars(opt_args))
-
-      if opt_args.shuffle_paintings and opt_args.shuffle_paintings == 'replace-unknown':
-        if not textures:
-          print("Sorry, please use an extended ROM to utilize custom paintings.")
-        else:
-          textures.add_vanilla_portrait_custom_paintings()
-
     
     instrument_randomizer = InstrumentRandomizer(rom)
     if opt_args.shuffle_instruments:

@@ -26,6 +26,7 @@ class MultiTexture(NamedTuple):
   name: str
   textures: List[Texture]
 
+'''
 paintings = [
   ('bob', 0xA800, 0xB800),
   ('ccm', 0xC800, 0xD800),
@@ -39,6 +40,7 @@ paintings = [
   ('ttc', 0x1D800, 0x1E800),
   ('sl', 0x1F800, 0x20800)
 ]
+'''
 
 class TextureAtlas:
   definitions : dict = {}
@@ -46,9 +48,32 @@ class TextureAtlas:
   def __init__(self, rom : 'ROM'):
     self.rom = rom
 
+  def add_level_paintings(self):
+    """ Adds all in-game paintings from the configuration to the TextureAtlas
+    """
+    for level in self.rom.config.levels:
+      # load paintings
+      if "shuffle_painting" in level.properties:
+        for painting_shuffle in level.properties["shuffle_painting"]:
+          # custom paintings get loaded on rom read
+          # game paintings get loaded here
+          if "game_painting" in painting_shuffle.keys():
+            print(f"added {level.name} painting")
+            self.add_segmented_position_texture(painting_shuffle["game_painting"], painting_shuffle["sections"])
+      
+
   def add_vanilla_portrait_custom_paintings(self):
     """ Loads the custom-made painting for levels that don't have a painting in the original game.
     """
+    opts = self.rom.config
+
+    # read custom paintings
+    if opts.custom_paintings:
+      for author in opts.custom_paintings.keys():
+        for painting_definition in opts.custom_paintings[author]:
+          TextureAtlas.import_texture(painting_definition['name'], painting_definition['file'], painting_definition['transform'])
+
+
     '''
     bbh_painting = Imaging.parse_image(os.path.join(application_path, "Assets/img/custom_portraits/distressedphilosopher/BBH.png"))
     full_img_bytes = bbh_painting.read_rgba16()
@@ -81,10 +106,92 @@ class TextureAtlas:
     self.copy_texture_from_to(self.rom, "painting_bbh", "painting_bob")
     '''
 
+  @staticmethod
+  def get_byte_size_for_format(texture_format, size):
+    if texture_format == 'rgba16':
+      return int(size[0] * size[1] * 16 / 8)
+    else:
+      raise ValueError(f'unknown format or not implemented: {texture_format}')
+
+  def add_segmented_position_texture(self, name : str, sections):
+    textures = []
+
+    for section in sections:
+      segment_start = self.rom.segments_sequentially[section["segment_index"]][0]
+      position = segment_start + section["segment_offset"]
+
+      textures.append(Texture(
+        position,
+        TextureAtlas.get_byte_size_for_format(section["format"] if "format" in section else "rgba16", section["size"]),
+        section["size"][0],
+        section["size"][1],
+        section["name"]
+      ))
+
+    if not len(textures):
+      raise ValueError("no sections parsed")
+
+    if len(sections) > 1:
+      TextureAtlas.add_texture_definition(name, MultiTexture(name, textures))
+    else:
+      TextureAtlas.add_texture_definition(name, textures[0])
+    
+  @staticmethod
+  def import_texture(name, filepath, transforms = dict()):
+    full_path = os.path.join(application_path, filepath)
+    if not os.path.exists(full_path):
+      raise ValueError(f'custom texture {name} could not be found: {filepath}')
+
+    parsed_img = Imaging.parse_image(full_path)
+    rgba_img = parsed_img.read_rgba16()
+
+    sections = [InMemoryTexture(
+      None,
+      TextureAtlas.get_byte_size_for_format('rgba16', parsed_img.img.size),
+      parsed_img.img.size[0],
+      parsed_img.img.size[1],
+      name,
+      rgba_img,
+    )]
+
+    if transforms:
+      for transform in transforms:
+        if transform["type"] == "split-horizontal":
+          full_size = int(parsed_img.img.size[0] * parsed_img.img.size[1] * 2)
+          half_size = int(full_size / 2)
+          print(full_size, half_size)
+
+          part_a = rgba_img[0:half_size]
+          part_b = rgba_img[half_size+1:full_size]
+
+          sections = [
+            InMemoryTexture(
+              f'{name}_a',
+              TextureAtlas.get_byte_size_for_format('rgba16', parsed_img.img.size)/2,
+              parsed_img.img.size[0],
+              parsed_img.img.size[1]/2,
+              f'{name}_a',
+              part_a
+            ),
+            InMemoryTexture(
+              f'{name}_b',
+              TextureAtlas.get_byte_size_for_format('rgba16', parsed_img.img.size)/2,
+              parsed_img.img.size[0],
+              parsed_img.img.size[1]/2,
+              f'{name}_b',
+              part_b
+            )
+          ]
+
+    if len(sections) > 1:
+      TextureAtlas.add_texture_definition(name, MultiTexture(name, sections))
+    else:
+      TextureAtlas.add_texture_definition(name, sections[0])
 
   def add_dynamic_positions(self):
     # castle paintings
     # paintings start: 0xE0BB07
+    '''
     (paintings_start, _) = self.rom.segments_sequentially[23]
     for (lvl_name, upper, lower) in paintings:
       # Paintings Start (USA, Extended): 0xE0BB07
@@ -107,38 +214,37 @@ class TextureAtlas:
           ),
         ]
       ))
+    '''
 
-    # the "unknown" texture
-    (unknown_painting_position, _) = self.rom.segments_sequentially[37]
-    TextureAtlas.add_texture_definition('painting_unknown', MultiTexture(
-      'unknown',
+    self.add_segmented_position_texture(
+      'painting_unknown',
       [
-        Texture(
-          unknown_painting_position + 0x1894 + 0x6800,
-            int(32*64*16 / 8),
-            64,
-            32,
-            f'painting_unknown_upper'
-        ),
-        Texture(
-          unknown_painting_position + 0x1894 + 0x6800,
-            int(32*64*16 / 8),
-            64,
-            32,
-            f'painting_unknown_lower'
+        dict(
+          segment_index = 37,
+          segment_offset = 0x8094,
+          size = [64, 32],
+          name = 'painting_unknown_upper'
+        ),dict(
+          segment_index = 37,
+          segment_offset = 0x8094,
+          size = [64, 32],
+          name = 'painting_unknown_lower'
         )
       ]
-    ))
+    )
 
-    (castle_ground_textures_start, _) = self.rom.segments_sequentially[37]
-    TextureAtlas.add_texture_definition('castle_grounds_tree_shadow', Texture(
-      castle_ground_textures_start + 0x1894 + 0xBC00,
-      int(32*32*16/8),
-      32,
-      32,
-      f'castle_grounds_tree_shadow'
-    ))
-
+    self.add_segmented_position_texture(
+      'castle_grounds_tree_shadow',
+      [
+        dict(
+          segment_index = 37,
+          segment_offset = 0xD494,
+          size = [32, 32],
+          name = 'castle_grounds_tree_shadow'
+        )
+      ]
+    )
+    
     """
     (misc_textures_address_start, _) = self.rom.segments_sequentially[305]
     question_mark_icon = misc_textures_address_start + 0x818
@@ -210,6 +316,21 @@ class TextureAtlas:
     return name in TextureAtlas.definitions
 
   @staticmethod
+  def is_replacable(name):
+    if name not in TextureAtlas.definitions:
+      return False
+      
+    if type(TextureAtlas.definitions[name]) is MultiTexture:
+      for defintion in TextureAtlas.definitions[name].textures:
+        if type(defintion) is InMemoryTexture:
+          return False
+    
+    if type(TextureAtlas.definitions[name]) is InMemoryTexture:
+      return False
+    
+    return True
+
+  @staticmethod
   def copy_texture_from_to(rom : "ROM", name_from : str, name_to : str):
     if name_from not in TextureAtlas.definitions:
       raise ValueError(f'{name_from} not found as a defined texture')
@@ -232,6 +353,7 @@ class TextureAtlas:
     texs_to = []
 
     for texture in texture_from.textures:
+      print(texture)
       if type(texture) is InMemoryTexture:
         # read from var
         texs_from.append(texture.data)

@@ -115,6 +115,8 @@ it will use the whole set of `course_id` and `area_id`
 ## `shuffle_painting`: `object`
 This will enable painting shuffling. The paintings are hardcoded right now. This will soon be altered to include the texture positions that need to be exchanged. For now, the valid values are:
 
+The painting of a level can be defined, if the level can be associated to one. This will allow the randomizer to shuffle the various defined paintings in the game, to either: randomize them unrelated to the current randomized level entries, change them according to the randomized level entries, or fully replace them with a custom painting, if applicable. See [paintings](#paintings)
+
 - `painting_bob`
 - `painting_ccm`
 - `painting_wf`

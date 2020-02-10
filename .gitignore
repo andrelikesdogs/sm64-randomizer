@@ -17,11 +17,24 @@ __pycache__
 .history
 .DS_Store
 .vscode
+env/
+.eggs/
+egg/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
 # Windows Crap
 Thumbs.db
 ehthumbs.db
 ehthumbs_vista.db
 *.stackdump
+
+# Serverless directories
+.serverless
 
 # Mac Crap
 .DS_Store

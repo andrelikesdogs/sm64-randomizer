@@ -21,6 +21,18 @@
     "help": "Change the behaviour of how the paintings in the castle are shuffled (\"match\" - matches randomized levels, i.e. painting = level, \"random\" - independently randomize paintings, \"off\" - leave paintings untouched)"
   },
   {
+    "name": "custom-painting-author",
+    "label": "Custom Painting (Art) Author",
+    "category": "aesthetics",
+    "type": "select",
+    "default": "mika",
+    "options": [
+      { "value": "disable", "label": "Disabled" },
+      { "value": "mika", "label": "Mika" }
+    ],
+    "help": "This property allows changing the custom paintings to a different author, if you want to add your own, see the sm64.vanilla.yml"
+  },
+  {
     "name": "shuffle-skybox",
     "label": "Sky randomization",
     "category": "aesthetics",

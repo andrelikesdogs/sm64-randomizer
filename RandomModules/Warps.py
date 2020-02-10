@@ -184,7 +184,7 @@ class WarpRandomizer:
       #print("Appending", warp_set["target_level"].name, pool)
 
     # Existing level paintings
-    lvl_paintings = {}
+    lvl_painting_names = {}
     new_level_warps = []
 
     # This part will generate new warp connections until one is "valid" aka in logic
@@ -212,8 +212,22 @@ class WarpRandomizer:
         pool_warpset_lvl = [] # to
 
         for warpset in warpsets:
-          painting = warpset["target_level"].properties["shuffle_painting"] if "shuffle_painting" in warpset["target_level"].properties else "painting_unknown"
-          lvl_paintings[warpset["target_level"]] = painting
+          # add painting to shuffle-able list of paintings
+          if "shuffle_painting" in warpset["target_level"].properties:
+            shuffle_painting_properties = warpset["target_level"].properties["shuffle_painting"]
+
+            if len(shuffle_painting_properties) > 1:
+              print(f'Warning: Only one painting shuffle is allowed per level. Please check properties of "{warpset["target_level"]}".')
+            else:
+              shuffle_painting_definiton = shuffle_painting_properties[0]
+              # add in-game painting to shuffle-able list
+              if "game_painting" in shuffle_painting_definiton.keys():
+                lvl_painting_names[warpset["target_level"]] = shuffle_painting_definiton["game_painting"]
+
+              # add custom painting to shuffle-able list
+              if "custom_painting" in shuffle_painting_definiton.keys():
+                lvl_painting_names[warpset["target_level"]] = shuffle_painting_definiton["custom_painting"]
+            
           pool_warpset_ow.append(dict(
             level=warpset["target_level"],
             entrances=warpset["entrance_srcs"],
@@ -245,10 +259,7 @@ class WarpRandomizer:
         shuffled_keys = [*keys]
         shuffle(shuffled_keys)
         for key in keys:
-          lvl_paintings[key] = lvl_paintings[shuffled_keys]
-      if settings["shuffle_paintings"] == "replace_unknown":
-        # use new paintings
-        pass
+          lvl_painting_names[key] = lvl_painting_names[shuffled_keys]
     
     # list of changes that will be done
     change_list = []
@@ -285,10 +296,24 @@ class WarpRandomizer:
       
       if "shuffle_paintings" in settings and settings["shuffle_paintings"] != "off":
         if "shuffle_painting" in ow_set["level"].properties:
-          #print(ow_set["level"].name, ": set new painting to ", lvl_set["level"].name)
-          source_painting = ow_set["level"].properties["shuffle_painting"]
-          #print(lvl_paintings[lvl_set["level"]], source_painting)
-          TextureAtlas.copy_texture_from_to(self.rom, source_painting, lvl_paintings[lvl_set["level"]])
+          if len(ow_set["level"].properties["shuffle_painting"]) > 1:
+            print(f'Warning: Only one painting shuffle is allowed per level. Please check properties of "{warpset["target_level"]}".')
+          else:
+            source_painting_definition = ow_set["level"].properties["shuffle_painting"][0]          
+            
+            source_painting_name = source_painting_definition["game_painting"] if "game_painting" in source_painting_definition else source_painting_definition["custom_painting"]
+            target_painting_name = lvl_painting_names[lvl_set["level"]]
+            print(source_painting_name, target_painting_name)
+
+            # don't copy if it's the same
+            if source_painting_name != target_painting_name:
+              # ensure we have a copy-able texture
+              if not TextureAtlas.has_texture(source_painting_name):
+                source_painting_name = "painting_unknown" # use replacement texture
+
+              # ensure target is replaceable, textures loaded externally are not
+              if TextureAtlas.is_replacable(target_painting_name):
+                TextureAtlas.copy_texture_from_to(self.rom, source_painting_name, target_painting_name)
 
     for (target, course_id, area_id, warp_id) in change_list:
       target.set(self.rom, "to_course_id", course_id)
