@@ -833,7 +833,7 @@ object_randomization:
           for:
             - 'Stars'
           rules:
-            - max_y: 1800
+            - disabled
         - name: "THI: Red Coins / Red Coin Star below Boss Room"
           match:
             - 0x13003EAC # Red Coin

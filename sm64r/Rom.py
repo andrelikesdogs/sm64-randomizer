@@ -251,8 +251,10 @@ class ROM:
     configuration = Config.find_configuration(self.checksum)
 
     if not configuration:
-      raise TypeError(f"Could not find a configuration for the loaded rom. Checksum: {hex(self.checksum)}")
-
+      print(f"Could not find configuration for the loaded ROM. Checksum: {hex(self.checksum)}")
+      print("Fallback to Default")
+      configuration = Config.find_configuration(0x635a42c5) # try US, BE, Extended
+      
     print("Loaded Configuration")
     print(configuration)
 

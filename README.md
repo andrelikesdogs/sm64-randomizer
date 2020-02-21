@@ -11,22 +11,26 @@
 
 # Super Mario 64 ROM Randomizer Generator
 
-This is a work in progress project to build an [OoT-Randomizer](https://www.ootrandomizer.com/)-style randomizer for Super Mario 64, that is highly configurable and easy to use.
+This is a work in progress project to build an [OoT-Randomizer](https://www.ootrandomizer.com/)-style randomizer for Super Mario 64, that is highly configurable but easy to use.
 
 # Features
 
 - Works on all endianess' (`.z64`, `.n64`, `.v64`) and all regions (America, Europe, China, Japan, Japan Shindou).
 - Works on ROMhacks (**Please note:** Romhacks can be vastly different. Please contact us in the discord if you have any trouble.)
 - Randomizes Level Entries - Every Level will be a different one
-- Randomizes Castle Paintings - To visually match the entrance of the level it now leads to. (*Levels without a castle painting will show as a brick wall.*)
+- Randomizes Castle Paintings - To visually match the entrance of the level it now leads to.
+  - _New_: Levels without a castle painting will show a painting visually matching the original style, by the talented [Mika](https://not-very-artistic.tumblr.com/)
+- Byte alignment for running on real hardware. Default is `8`
 - Randomizes Dialog
 - Randomizes Music
 - Randomizes Mario's Outfit
 - Randomizes Coin Colors
 - Randomizes Objects in Level
+- Randomizes Music Instruments
+- ~~Randomizes Skybox~~ (Currently disabled)
 - Disables Cutscenes
 - Disables Level Intros
-- Disable Keydoors
+- ~~Disable Keydoors~~ (Currently disabled)
 - ...many more to come
 
 
@@ -55,7 +59,7 @@ The randomizer includes a simple GUI for easy setup without any knowledge about 
 
 ### Usage
 1. Select an Input ROM
-2. Select an Output (will be automatically guessed to <rom>.out.<ending>)
+2. Select an Output (will be automatically determined to <rom-name>.out.<file-extension>)
 3. Select your settings
 - Choose a custom seed to share with friends who use the same tool
 - Copy the settings string to copy your current settings to share with friends. Does not include seed.
@@ -80,16 +84,17 @@ _Note: Works on all versions of the game, as well as **ROM Hacks** (with some tw
 Output will be a file with the same name, ending in `.out.z64`. Run this on your emulator/console.
 
 ```
-  Super Mario 64 Randomizer  (Version: 0.7.0)
+  Super Mario 64 Randomizer  (Version: 0.8.0)
 
 usage: main.py [-h] [--no-extend] [--alignment ALIGNMENT] [--out OUT]
                [--version] [--seed SEED]
-               [--shuffle-paintings {vanilla,match,random}]
+               [--shuffle-paintings {vanilla,match,replace-unknown,random}]
+               [--custom-painting-author {disable,mika}] [--shuffle-skybox]
                [--shuffle-entries] [--shuffle-mario-outfit] [--shuffle-music]
                [--shuffle-objects] [--shuffle-colors] [--shuffle-text]
                [--disable-cutscenes] [--disable-starwarp]
                [--stardoor-requirements {vanilla,random,open}]
-               [--keydoor-requirements {vanilla,open}]
+               [--keydoor-requirements {vanilla,open}] [--shuffle-instruments]
                rom
 
 positional arguments:
@@ -108,12 +113,18 @@ optional arguments:
   --seed SEED           Allows you to play the same version as a friend,
                         simply enter the same seed as them and you will be
                         playing the exact same ROM.
-  --shuffle-paintings {vanilla,match,random}
+  --shuffle-paintings {vanilla,match,replace-unknown,random}
                         Change the behaviour of how the paintings in the
                         castle are shuffled ("match" - matches randomized
                         levels, i.e. painting = level, "random" -
                         independently randomize paintings, "off" - leave
                         paintings untouched)
+  --custom-painting-author {disable,mika}
+                        This property allows changing the custom paintings to
+                        a different author, if you want to add your own, see
+                        the sm64.vanilla.yml
+  --shuffle-skybox      Randomizes the sky-texture between different levels.
+                        The black skybox is excluded.
   --shuffle-entries     Shuffles the levelentries. When you enter a level, you
                         will end up at a random one.
   --shuffle-mario-outfit
@@ -125,11 +136,25 @@ optional arguments:
                         dialog and prompts.
   --disable-cutscenes   Disables some of the games cutscenes. (Peach Intro,
                         Lakitu Intro, Bowser-Text on Entry)
+  --disable-starwarp    Disables automatically leaving the level when you
+                        collect a star. This way, all stars act like a
+                        100-Coin star or a Bowser 8-Reds Star
+  --stardoor-requirements {vanilla,random,open}
+                        Changes how the doors to levels require different
+                        amounts of stars to be collected beforehand. Random
+                        means all doors require stars, but the amount will be
+                        random. Open simply means all doors are open from the
+                        start.
   --keydoor-requirements {vanilla,open}
                         Changes how the locked keydoors in the castle work.
                         Vanilla means you will require the usual keys from the
                         Bowser fights. Open means they're simply open from the
                         start.
+  --shuffle-instruments
+                        Shuffles instrument sounds around. Many different
+                        objects and songs use different instrument sets, as
+                        the N64 can't load all at once. This will shuffle them
+                        around. Might be wacky.
 ```
 
 # Contributing: Getting Started
@@ -145,4 +170,5 @@ To work on this repository, follow the following steps. Please also definitely j
 - Durkhaz for the amazing logo
 - CJay for server hosting of the generator
 - Beta Testers and people from the [discord](https://discord.gg/2ZYfhcB)
+- Special thanks to 2003041 for beating the game countless times so I can find bugs!
 - [smwcentral](https://www.smwcentral.net/)'s community and forum
