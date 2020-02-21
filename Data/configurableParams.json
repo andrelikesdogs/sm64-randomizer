@@ -15,9 +15,31 @@
     "options": [
       { "value": "vanilla", "label": "Off" },
       { "value": "match", "label": "Match Levels" },
+      { "value": "replace-unknown", "label": "Use Custom Paintings for Unknown Paintings"},
       { "value": "random", "label": "Randomized" }
     ],
     "help": "Change the behaviour of how the paintings in the castle are shuffled (\"match\" - matches randomized levels, i.e. painting = level, \"random\" - independently randomize paintings, \"off\" - leave paintings untouched)"
+  },
+  {
+    "name": "custom-painting-author",
+    "label": "Custom Painting (Art) Author",
+    "category": "aesthetics",
+    "type": "select",
+    "default": "mika",
+    "options": [
+      { "value": "disable", "label": "Disabled" },
+      { "value": "mika", "label": "Mika" }
+    ],
+    "help": "This property allows changing the custom paintings to a different author, if you want to add your own, see the sm64.vanilla.yml"
+  },
+  {
+    "name": "shuffle-skybox",
+    "label": "Sky randomization",
+    "category": "aesthetics",
+    "type": "checkbox",
+    "disabled": "work-in-progress",
+    "default": false,
+    "help": "Randomizes the sky-texture between different levels. The black skybox is excluded."
   },
   {
     "name": "shuffle-entries",
@@ -133,5 +155,16 @@
     ],
     "default": "vanilla",
     "help": "Changes how the locked keydoors in the castle work. Vanilla means you will require the usual keys from the Bowser fights. Open means they're simply open from the start."
+  },
+  {
+    "name": "shuffle-instruments",
+    "label": "Instrument-Set Shuffle",
+    "category": "aesthetics",
+    "type": "checkbox",
+    "default": {
+      "CLI": false,
+      "WEB": false
+    },
+    "help": "Shuffles instrument sounds around. Many different objects and songs use different instrument sets, as the N64 can't load all at once. This will shuffle them around. Might be wacky."
   }
 ]

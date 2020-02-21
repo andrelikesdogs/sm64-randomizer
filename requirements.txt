@@ -1,12 +1,5 @@
-altgraph==0.16.1
-decorator==4.4.0
-future==0.17.1
-macholib==1.11
-networkx==2.3
-numpy==1.16.4
-pefile==2019.4.18
-PyInstaller==3.4
-pyperclip==1.7.0
-Rtree==0.8.3
-scipy==1.3.0
-trimesh==2.38.26
+numpy==1.18.1
+Pillow==7.0.0
+PyYAML==5.3
+Rtree==0.9.3
+trimesh==3.5.19

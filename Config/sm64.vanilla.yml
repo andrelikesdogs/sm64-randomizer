@@ -1,0 +1,919 @@
+# SM64 Randomizer Generator Configuration File
+# Game Versions: All Regions, Vanilla SM64
+# Author: Andre Meyer
+
+# This file can be used as an example to build more configuration files for harder
+# difficulty, for ROM-hacks or to adjust properties that might be subjective.
+
+# Name is used to display for debugging.
+name: "Super Mario 64 Vanilla"
+
+# ROM section defines different offsets, segments and specific names, depending on checksums.
+rom:
+  # Checksum is taken from the SM64 ROM Header
+  - checksum: 0x635a42c5
+    name: "Super Mario 64 [U] (BE) Extended"
+    # Start of Macro Table for Objects placed via Macro
+    macro_table_address: 0xEC7E0
+    # Start of Special Macro Object Table for Objects placed via Special Macro
+    special_macro_table_address: 0xED350
+    # Segment 0x15 loads automatically. This section describes this segment and others, if desired
+    defined_segments:
+      - segment: 0x15
+        # read_address specifies that this property should be read from the start and end addresses
+        read_addresses: true
+        start: 0x2A622C
+        end: 0x2A6230
+  - checksum: 0x4eaacdbc
+    name: "Super Mario 64 [E] (BE) Extended"
+    macro_table_address: 0xBD590
+    special_macro_table_address: 0xBE100
+    defined_segments:
+      - segment: 0x15
+        start: 0x28CEE0
+        end: 0x2AAC50
+  - checksum: 0x4eaacdbc
+    name: "Super Mario 64 [J] (BE) Extended"
+    macro_table_address: 0xEB6D0
+    special_macro_table_address: 0xEC240
+    defined_segments:
+      - segment: 0x15
+        start: 0x2AA240
+        end: 0x2AAC50
+  - checksum: 0xd6fa4456
+    name: "Super Mario 64 [SHINDOU] (BE) Extended"
+    macro_table_address: 0xC8D60
+    special_macro_table_address: 0xC98D0
+    defined_segments:
+      - segment: 0x15
+        start: 0x286AC0
+        end: 0x2874D0
+  - checksum: 0x00000000 # Missing - iQue doesn't have a checksum :thinking:
+    name: "Super Mario 64 [CHINA] (BE) Extended"
+    macro_table_address: 0xCB220
+    special_macro_table_address: 0xCBD90
+    defined_segments:
+      - segment: 0x15
+        start: 0x298AE0
+        end: 0x2994F0
+
+# This section defines the various levels contained within this ROM
+levels:
+  # Level definings serve multiple purposes:
+  # - Define course-ids to find them in matchings
+  # - Define their paintings, this is so they can be shuffled
+  # - Define their order, this is to ensure playability after shuffle
+
+  # Overworld Levels
+  - name: "Castle Grounds"
+    course_id: 0x10
+    properties:
+      - overworld
+      - shuffle_warps:
+          - to: # which warps in this level should match? warps "to" metal cap
+              - course_id: 0x12 # VC
+            with: # which warps can be here instead? shuffle "with" metal/vanish/wing cap
+              - course_id: 0x12 # VC
+                area_id: 0x1
+              - course_id: 0x1C # WC
+                area_id: 0x1
+              - course_id: 0x1D # MC
+                area_id: 0x1
+  - name: "Castle Inside"
+    course_id: 0x06
+    properties:
+      - overworld
+      - shuffle_warps:
+          - to: # which warps in this level should match? warps "to" metal cap
+              - course_id: 0x1D
+            with: # which warps can be here instead? shuffle "with" metal/vanish/wing cap
+              - course_id: 0x12 # VC
+                area_id: 0x1
+              - course_id: 0x1D # WC
+                area_id: 0x1
+              - course_id: 0x1C # MC
+                area_id: 0x1
+  - name: "Castle Courtyard"
+    course_id: 0x1A
+    properties:
+      - overworld
+  
+  # Normal Levels
+  - name: "Bob-Omb's Battlefield"
+    course_id: 0x09
+    properties:
+      - shuffle_painting:
+          - game_painting: 'painting_bob'
+            sections:
+              - name: 'painting_bob_upper'
+                segment_index: 23
+                segment_offset: 0xA800
+                format: 'rgba16'
+                size: [64, 32] # width, height
+              - name: 'painting_bob_lower'
+                segment_index: 23
+                segment_offset: 0xB800
+                format: 'rgba16'
+                size: [64, 32] # width, height
+  - name: "Whomp's Fortress"
+    course_id: 0x18
+    properties:
+      - shuffle_painting:
+        - game_painting: 'painting_wf'
+          sections:
+            - name: 'painting_wf_lower'
+              segment_index: 23
+              segment_offset: 0xE800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_wf_lower'
+              segment_index: 23
+              segment_offset: 0xF800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+  - name: "Jolly Roger Bay"
+    course_id: 0x0C
+    areas:
+      - id: 0x02
+        name: "JRB: Ship"
+        properties:
+          - disable_water_check
+    properties:
+      - shuffle_painting:
+        - game_painting: 'painting_jrb'
+          sections:
+            - name: 'painting_jrb_upper'
+              segment_index: 23
+              segment_offset: 0x10800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_jrb_lower'
+              segment_index: 23
+              segment_offset: 0x11800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+  - name: "Cool, Cool Mountain"
+    course_id: 0x05
+    properties:
+      - shuffle_painting:
+        - game_painting: 'painting_ccm'
+          sections:
+            - name: 'painting_ccm_upper'
+              segment_index: 23
+              segment_offset: 0xC800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_ccm_lower'
+              segment_index: 23
+              segment_offset: 0xD800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+    areas:
+      - id: 0x02
+        name: "CCM Slide"
+        properties:
+          - slide
+  - name: "Big Boo's Haunt"
+    course_id: 0x04
+    properties:
+      - disable_planes: # the middle layer in BBH will make objects unaccessible
+        - y_range: [-1428, -206]
+      - shuffle_painting:
+        - custom_painting: 'painting_bbh'
+  - name: "Hazy Maze Cave"
+    course_id: 0x07
+    properties:
+      - requires_key: 0x1
+      - shuffle_warps:
+          - to: # which warps in this level should match? warps "to" metal cap
+              - course_id: 0x1C # MC
+            with: # which warps can be here instead? shuffle "with" metal/vanish/wing cap
+              - course_id: 0x12 # VC
+                area_id: 0x1
+              - course_id: 0x1D # WC
+                area_id: 0x1
+              - course_id: 0x1C # MC
+                area_id: 0x1
+      - shuffle_painting:
+        - custom_painting: 'painting_hmc'
+  - name: "Lethal Lava Land"
+    course_id: 0x16
+    properties:
+      - shuffle_painting:
+        - game_painting: 'painting_lll'
+          sections:
+            - name: 'painting_lll_upper'
+              segment_index: 23
+              segment_offset: 0x13800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_lll_lower'
+              segment_index: 23
+              segment_offset: 0x12800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+      - requires_key: 0x1
+  - name: "Shifting Sand Land"
+    course_id: 0x08
+    properties:
+      - shuffle_painting:
+        - game_painting: 'painting_ssl'
+          sections:
+            - name: 'painting_ssl_upper'
+              segment_index: 23
+              segment_offset: 0x14800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_ssl_lower'
+              segment_index: 23
+              segment_offset: 0x15800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+      - requires_key: 0x1
+  - name: "Dire, Dire Docks"
+    course_id: 0x17
+    properties:
+      - requires_key: 0x1
+      - shuffle_painting:
+        - custom_painting: 'painting_ddd'
+    areas:
+      - id: 0x01
+        name: "DDD: Entry"
+        properties:
+          - loading_zones:
+            - p1: [3174, 1229, 500]
+              p2: [9037, -2756, -511]
+      - id: 0x02
+        name: "DDD: Bowsers Sub"
+        properties:
+          - loading_zones:
+            - p1: [-3173, 1229, -511]
+              p2: [-6041, -4607, 512]
+  - name: "Snowman's Land"
+    course_id: 0x0A
+    properties:
+      - shuffle_painting:
+        - game_painting: 'painting_sl'
+          sections:
+            - name: 'painting_sl_upper'
+              segment_index: 23
+              segment_offset: 0x1F800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_sl_lower'
+              segment_index: 23
+              segment_offset: 0x20800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+      - requires_key: 0x2
+  - name: "Wet-Dry World"
+    course_id: 0x0B
+    properties:
+      - shuffle_painting:
+        - game_painting: 'painting_wdw'
+          sections:
+            - name: 'painting_wdw_upper'
+              segment_index: 23
+              segment_offset: 0x17800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+            - name: 'painting_wdw_lower'
+              segment_index: 23
+              segment_offset: 0x18800
+              format: 'rgba16'
+              size: [64, 32] # width, height
+      - requires_key: 0x2
+      - disable_water_check
+      - loading_zones: # between area 1 and 2
+        - p1: [4616, -200, -1538]
+          p2: [-3800, -1670, -3958]
+  - name: "Tall, Tall Mountain"
+    course_id: 0x24
+    areas:
+      - id: 0x02
+        name: "TTM: Slide 1"
+        properties:
+          - slide
+          - loading_zones: # between 2 and 3
+            - p1: [-2155, 1409, -3212]
+              p2: [-9201, -2047, -6381]
+      - id: 0x03
+        name: "TTM: Slide 2"
+        properties:
+          - slide
+          - loading_zones:
+            - p1: [2969, -2968, 3072] # from 2 to 3
+              p2: [9200, -7269, -817]
+            - p1: [5026, 6000, 5316] # from 1 to 2
+              p2: [7400, 7680, 7200]
+      - id: 0x04
+        name: "TTM: Slide 3"
+        properties:
+          - slide
+    properties:
+      - shuffle_painting:
+        - game_painting: 'painting_ttm'
+          sections:
+          - name: 'painting_ttm_upper'
+            segment_index: 23
+            segment_offset: 0x1B800
+            format: 'rgba16'
+            size: [64, 32] # width, height
+          - name: 'painting_ttm_lower'
+            segment_index: 23
+            segment_offset: 0x1C800
+            format: 'rgba16'
+            size: [64, 32] # width, height
+      - requires_key: 0x2
+  - name: "Tiny-Huge Island"
+    course_id: 0x0D
+    properties:
+      - shuffle_painting:
+        - game_painting: 'painting_thi'
+          sections:
+          - name: 'painting_thi_upper'
+            segment_index: 23
+            segment_offset: 0x19800
+            format: 'rgba16'
+            size: [64, 32] # width, height
+          - name: 'painting_thi_lower'
+            segment_index: 23
+            segment_offset: 0x1A800
+            format: 'rgba16'
+            size: [64, 32] # width, height
+      - requires_key: 0x2
+  - name: "Tick Tock Clock"
+    course_id: 0x0E
+    properties:
+      - shuffle_painting:
+        - game_painting: 'painting_ttc'
+          sections:
+          - name: 'painting_ttc_upper'
+            segment_index: 23
+            segment_offset: 0x1D800
+            format: 'rgba16'
+            size: [64, 32] # width, height
+          - name: 'painting_ttc_lower'
+            segment_index: 23
+            segment_offset: 0x1E800
+            format: 'rgba16'
+            size: [64, 32] # width, height
+      - requires_key: 0x2
+  - name: "Rainbow Ride"
+    course_id: 0x0F
+    properties:
+      - requires_key: 0x2
+      - shuffle_painting:
+        - custom_painting: 'painting_rr'
+  
+  # Cap Levels
+  - name: "Vanish Cap"
+    course_id: 0x12
+    properties:
+      - shuffle_painting:
+        - custom_painting: 'painting_vc'
+  - name: "Metal Cap"
+    course_id: 0x1C
+    properties:
+      - requires_key: 0x1
+      - shuffle_painting:
+        - custom_painting: 'painting_mc'
+  - name: "Wing Cap"
+    course_id: 0x1D
+    properties:
+      - fly_stage
+      - shuffle_painting:
+        - custom_painting: 'painting_wc'
+
+  # Bonus Levels
+  - name: "Secret Aquarium"
+    course_id: 0x14
+    properties:
+    - shuffle_painting:
+      - custom_painting: 'painting_aquarium'
+  - name: "Peach's Slide"
+    course_id: 0x1B
+    properties:
+      - slide
+      - shuffle_painting:
+        - custom_painting: 'painting_pss'
+  - name: "Winged Mario over the Rainbow"
+    course_id: 0x1F
+    properties:
+      - fly_stage
+      - shuffle_painting:
+        - custom_painting: 'painting_wmotr'
+      - requires_key: 0x2
+  
+  # Bowser Levels
+  - name: "Bowser in the Dark World"
+    course_id: 0x11
+    properties:
+      - shuffle_painting:
+        - custom_painting: 'painting_bidw'
+      - continues_level: 0x1E
+      - key_receive: 0x1
+  - name: "Bowser in the Dark World Battle"
+    course_id: 0x1E
+    properties:
+      - disabled
+  
+  - name: "Bowser in the Fire Sea"
+    course_id: 0x13
+    properties:
+      - continues_level: 0x21
+      - requires_key: 0x1
+      - key_receive: 0x2
+      - shuffle_painting:
+        - custom_painting: 'painting_bifs'
+  - name: "Bowser in the Dark World Battle"
+    course_id: 0x21
+    properties:
+      - disabled
+  
+  - name: "Bowser in the Sky"
+    course_id: 0x15
+    properties:
+      - disabled:
+        - entry_shuffle
+      - continues_level: 0x22
+      - requires_key: 0x2
+      - shuffle_painting:
+        - custom_painting: 'painting_bits' # doesnt make sense right now, bits does not get shuffled
+  - name: "Bowser in the Sky Battle"
+    course_id: 0x22
+    properties:
+      - disabled
+      - end_game
+
+# File with constant variables that are not included in this Config
+constants_file: "sm64.vanilla.constants.yml"
+
+# Define collision groups, to use with object randomization rules
+collision_groups:
+  # floor groups define various "collision types" into groups, to restrict placement
+  # "all" is hardcoded and includes all collision types defined in the constants file
+  restricted:
+    whitelist:
+      - ENV_DEFAULT
+      - DEFAULT_NOISE
+      - SLIPPERY_NOISE
+      - SLIPPERY_SLIGHTLY
+      - ANTI_SLIPPERY
+      - CLOSE_CAMERA
+      - HARD_FLOOR
+      - NOISY_TERRAIN
+      - SAND
+      - SLIPPERY_HARD
+      - SLIPPERY_HARD_CCM
+      - ANTI_ICE
+      - WIDE_CAMERA
+      - CAMERA_BOB
+      - CAMERA_CCM
+      - SURFACE_FLAGS
+      - WATER
+  with_slides:
+    whitelist:
+      - ENV_DEFAULT
+      - DEFAULT_NOISE
+      - SLIPPERY_NOISE
+      - SLIPPERY_SLIGHTLY
+      - ANTI_SLIPPERY
+      - CLOSE_CAMERA
+      - HARD_FLOOR
+      - NOISY_TERRAIN
+      - SAND
+      - SLIPPERY_HARD
+      - SLIPPERY_HARD_CCM
+      - ANTI_ICE
+      - WIDE_CAMERA
+      - CAMERA_BOB
+      - CAMERA_CCM
+      - SURFACE_FLAGS
+      - WATER
+      - SLIPPERY
+
+# Start object randomization section. Can be deeply nested with groups, sub-group, etc
+object_randomization:
+  # default
+  rules:
+    - drop_to_floor # try to place this object on the floor
+    - floor_types_allowed: restricted # select above defined group as floor types allowed
+    - max_slope: 0.75
+  
+  objects:
+    # Bosses
+    # - Generally shouldn't spawn on slopes, as that makes it hard to fight them
+    - name: "Bosses"
+      rules:
+        - max_slope: 0.0
+        - underwater: never
+      objects:
+        - name: King Bob-Omb
+          match: 0x130001F4
+        - name: Whomp King
+          match: 0x13002BB8
+        - name: Ice Bully (Big)
+          match: 0x13003700
+          rules:
+            - min_y: 1300 # Ice Bully in SL dies under a specific height
+        - name: Bully (Big)
+          match: 0x13003660
+    # Enemies
+    # - Generally shouldn't spawn underwater
+    - name: "Enemies"
+      rules:
+        - underwater: never
+      objects:
+        - name: Mr. I
+          match: 0x13000054
+          rules:
+            - bounding_cylinder: [500, 200] # radius, height, origin x, origin y, origin z
+        - name: Bob-Omb
+          match: 0x13003174
+        - name: Goomba
+          match: 0x1300472C
+        - name: Goomba Triplet
+          match: 0x13004770
+        - name: Thwomp
+          match:
+            - 0x13000BC8
+            - 0x13000B8C
+        - name: Grindel
+          match: 0x1300525C
+        - name: Piranha Plant
+          match: 0x13001FBC
+        - name: Chuck-Ya
+          match: 0x13000528
+        - name: Bat
+          match: 0x13004698
+          # todo: bats should spawn on ceilings
+        - name: Fly-Guy
+          match: 0x130046DC
+        - name: Lakitu
+          match: 0x13004954
+          # match: 0x13004918 # Friendly Lakitu?
+        - name: Bully (Group + Boss)
+          match: 0x13003694
+        - name: Bully (Small)
+          match: 0x1300362C
+        - name: Boo
+          match: 0x130027E4
+        - name: Boo (x3)
+          match: 0x130027D0
+        - name: Boo Secret (Kill 5)
+          match:
+            - 0x130027E4 # 3
+            - 0x13002804 # 2
+            - 0x13002768 # 1
+        - name: Moneybag
+          match: 0x130039D4
+        - name: Amp
+          match: 0x13003354
+        - name: Heave-Ho
+          match: 0x13001548
+        - name: Skeeter
+          match: 0x13005468
+        - name: Scuttlebug
+          match: 0x13002B5C
+        - name: "BBH: Book"
+          match: 0x1300506C
+        - name: "BBH: Nightmare Piano"
+          match: 0x13005024
+        - name: "SSL: Pokey"
+          match: 0x13004634
+        - name: Spindrift
+          match: 0x130012B4
+        - name: "BOB: Chain Chomp"
+          match: 0x1300478C
+        - name: "Koopa (not KtQ)"
+          match:
+            - 0x13004580
+            - bparam2: 1
+
+    # Objects
+    - name: "Coin Formations"
+      match:
+        - 0x130008EC
+      rules:
+        - floor_types_allowed: with_slides
+        - underwater: allowed
+      objects:
+        - name: Grounded Line Formation (5x)
+          match:
+            - bparam2: 0
+          rules:
+            - bounding_box: [1000, 100, 100] # length, width, height
+            - spawn_height: [200, 600]
+        - name: Grounded Ring Formation (8x)
+          match:
+            - bparam2: 2
+          rules:
+            - bounding_box: [1000, 1000, 100] # length, width, height
+            - spawn_height: [200, 600]
+        - name: Grounded Arrow (8x)
+          match:
+            - bparam2: 4
+          rules:
+            - bounding_box: [500, 500, 100] # length, width, height
+            - spawn_height: [200, 600]
+        - name: Horizontal Floating Line (x5)
+          match:
+            - bparam2: 16
+          rules:
+            - bounding_box: [600, 100, 100] # length, width, height
+            - spawn_height: [200, 500]
+        - name: Vertical Floating Line (x5)
+          match:
+            - bparam2: 17
+          rules:
+            - bounding_box: [100, 100, 1000] # length, width, height
+            - spawn_height: [300, 900]
+        - name: Horizontal Floating Ring (x8)
+          match:
+            - bparam2: 18
+          rules:
+            - bounding_box: [1000, 1000, 100] # length, width, height
+            - spawn_height: [100, 600]
+        - name: Vertical Floating Ring (x8)
+          match:
+            - bparam2: 19
+          rules:
+            - bounding_box: [1000, 100, 1000] # length, width, height
+            - spawn_height: [300, 900]
+    
+    - name: "Coin"
+      rules:
+        - spawn_height: [50, 200]
+      objects:
+        - name: Yellow Coin
+          match:
+            - 0x1300090C
+            - 0x1300091C # For Triggers?
+        - name: Red Coin
+          match: 0x13003EAC
+        - name: Blue Coin
+          match: 0x13002588
+          # TODO: Tie to corresponding button
+          rules:
+            - disabled
+    
+    - name: "Stars"
+      rules:
+        - spawn_height: [100, 600]
+      objects:
+        - name: Star
+          match:
+            - 0x13003E3C
+            - 0x13003EFC # Hidden
+            - 0x13003E8C # Red Coin Star
+          rules:
+            - underwater: allowed
+        - name: Star in Box
+          match: 0x13002250
+          rules:
+            - underwater: never # Boxes underwater are not breakable
+          objects:
+            - name: "Star #1"
+              match:
+                - bparam2: 0x8
+            - name: "Star #2"
+              match:
+                - bparam2: 0xA
+            - name: "Star #3"
+              match:
+                - bparam2: 0xB
+            - name: "Star #4"
+              match:
+                - bparam2: 0xC
+            - name: "Star #5"
+              match:
+                - bparam2: 0xD
+            - name: "Star #6"
+              match:
+                - bparam2: 0xE
+    
+    - name: "Tree"
+      rules:
+        - underwater: never
+      match: 0x13002AA4
+      # GFX 0x17 = Castle Ground Trees
+      # GFX 0x19 = Snowy Trees
+      # GFX 0x18 = Courtyard Trees
+      # GFX 0x1B = Shifting Sand Land Trees/Palm
+    
+    - name: "Level Objects"
+      rules:
+        - underwater: never
+      objects:
+        - name: "Fire Spewer"
+          match: 0x1300518C
+        - name: "Flamethrower"
+          match: 0x13001108
+        - name: "BOB: Water Bubble Dropper"
+          match: 0x13004B8C
+          rules:
+            - spawn_height: [2400, 3000]
+        - name: "Poundable Log"
+          match: 0x1300481C
+        - name: "Breakable Box (Small)"
+          match: 0x13004218
+        - name: "Breakable Box (Big)"
+          match: 0x130014E0
+        - name: "Sign"
+          match: 0x130032E0
+        - name: "JRB: Clam"
+          match: 0x13005440
+          rules:
+            - underwater: only
+            - drop_to_floor: force
+        - name: 1-UP
+          match:
+            - 0x1300407C # Static
+        - name: Butterflies
+          match: 0x130033BC
+          rules:
+            - spawn_height: [30, 200]
+        - name: Recovery Heart
+          match: 0x13004EF8
+        - name: Item Box
+          match: 0x13002250
+          rules:
+            - spawn_height: [200, 500]
+
+    - name: "Warps"
+      exclude:
+        - course_property: overworld
+      rules:
+        - underwater: allowed
+        - spawn_height: [100, 900]
+        - max_slope: 0.0
+      objects:
+        - name: "Mario Level Spawn"
+          match:
+            - source: 'MARIO_SPAWN'
+        - name: "Warp (Mario Start #1)" # In Air?
+          match: 0x13002F74
+        - name: "Warp (Mario Start #2)" # On Ground?
+          match: 0x13002F64
+        - name: "Warp (Mario Start #3)" # In Water
+          match: 0x13002F94
+
+    - name: "Special"
+      rules:
+        - underwater: never
+        - max_slope: 0.0
+      objects:
+        - name: Toad
+          match: 0x13002EF8
+        - name: "CCM: Lost Penguin"
+          match: 0x130020E8
+        - name: "CCM/SL: Wandering Penguin"
+          match: 0x13002E58
+        - name: "Pink Bob-Omb (Message)"
+          match: 0x130031DC
+        - name: "Pink Bob-Omb (Canon)"
+          match: 0x13003228
+
+    # These two entries are special "for" entries, that add rules to objects list by their name.
+    # Imagine this like a copy/paste mechanism to add all listed rules inside this ruleset
+    # This is to disable rules/matches for certain levels, special circumstances, etc
+    - name: "Level Property Checks"  
+      objects:
+        - name: "Wingcap Level"
+          match:
+            - course_property: fly_stage
+          for: 
+            - 'Coin'
+            - 'Coin Formations'
+          rules:
+            - no_floor_required
+        - name: "Changeable-Water Levels"
+          match:
+            - course_property: disable_water_check
+          for:
+            - 'Tree'
+            - 'Enemies'
+            - 'Stars'
+            - 'Coin'
+            - 'Coin Formations'
+            - 'Level Objects'
+          rules:
+            - underwater: allowed
+            - drop_to_floor: force
+        - name: "Slide Check disable Spawn Shuffle"
+          match:
+            - course_property: slide
+          for:
+            - "Warps"
+          rules:
+            - disabled
+
+    - name: "Level Special Cases"
+      objects:
+        - name: "DDD: Limit max height in second area"
+          match:
+            - course_id: 0x17
+            - area_id: 0x02
+          for:
+            - "*"
+          rules:
+            - max_y: 1500
+        #- name: "WF: Limit slopes"
+        #  match:
+        #    - course_id: 0x18
+        #  for:
+        #    - "*"
+        #  rules:
+        #    - max_slope: 0
+        - name: "JRB: Limit max height in Ship"
+          match:
+            - course_id: 0x0C
+            - area_id: 0x02
+          for:
+            - 'Stars'
+          rules:
+            - max_y: 1800
+        - name: "THI: Red Coins / Red Coin Star below Boss Room"
+          match:
+            - 0x13003EAC # Red Coin
+            - 0x13003E8C # Red Coin Star
+            - course_id: 0x0D
+            - area_id: 0x03
+          rules:
+            - max_y: 1750
+        - name: "WC: Coins within Reach of Platform"
+          match:
+            - course_property: fly_stage
+            - course_id: 0x1D
+          rules:
+            - no_floor_required
+            - min_y: -2000
+            - max_y: 3500
+            - distance_to:
+              - origin: [0, -2047, 0]
+                max_distance: 3000
+          for:
+            - 'Coin'
+            - 'Coin Formations'
+        - name: "WMotR: Coins within Reach"
+          match:
+            - course_id: 0x1F
+          rules:
+            - distance_to:
+              - origin: [0, 1900, 0]
+                max_distance: 5000
+          for:
+            - 'Coin'
+            - 'Coin Formations'
+        - name: "WMotR: Disable Itembox Shuffle"
+          match:
+            - course_id: 0x1F
+            - behaviours: 0x13002250
+          rules:
+            - disabled
+        - name: "BOB: Disable coin ring shuffle"
+          match:
+            - course_id: 0x09
+            - area_id: 0x01
+            - behaviours: 0x130008EC
+            - bparam2: 19
+          rules:
+            - disabled
+            
+
+# Define custom painting authors/names
+custom_paintings:
+  mika:
+    - name: painting_bbh
+      file: "Assets/img/custom_paintings/mika/BBH.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_ddd
+      file: "Assets/img/custom_paintings/mika/DDD.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_hmc
+      file: "Assets/img/custom_paintings/mika/HMC.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_mc
+      file: "Assets/img/custom_paintings/mika/MC.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_rr
+      file: "Assets/img/custom_paintings/mika/RR.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_vc
+      file: "Assets/img/custom_paintings/mika/VC.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_wc
+      file: "Assets/img/custom_paintings/mika/WC.png"
+      transform:
+        - type: split-horizontal
+    - name: painting_pss
+      file: "Assets/img/custom_paintings/mika/PSS.png"
+      transform:
+        - type: split-horizontal
