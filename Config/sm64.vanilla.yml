@@ -499,6 +499,7 @@ object_randomization:
   rules:
     - drop_to_floor # try to place this object on the floor
     - floor_types_allowed: restricted # select above defined group as floor types allowed
+    - max_slope: 0.75
   
   objects:
     # Bosses
@@ -647,9 +648,8 @@ object_randomization:
       objects:
         - name: Yellow Coin
           match:
-            - behaviours:
-              - 0x1300090C
-              - 0x1300091C # For Triggers?
+            - 0x1300090C
+            - 0x1300091C # For Triggers?
         - name: Red Coin
           match: 0x13003EAC
         - name: Blue Coin
@@ -664,14 +664,15 @@ object_randomization:
       objects:
         - name: Star
           match:
-            - behaviours:
-              - 0x13003E3C
-              - 0x13003EFC # Hidden
-              - 0x13003E8C # Red Coin Star
+            - 0x13003E3C
+            - 0x13003EFC # Hidden
+            - 0x13003E8C # Red Coin Star
+          rules:
+            - underwater: allowed
         - name: Star in Box
           match: 0x13002250
           rules:
-          - underwater: never # Boxes underwater are not breakable
+            - underwater: never # Boxes underwater are not breakable
           objects:
             - name: "Star #1"
               match:
@@ -746,7 +747,7 @@ object_randomization:
       rules:
         - underwater: allowed
         - spawn_height: [100, 900]
-        - max_slope: 0.99
+        - max_slope: 0.0
       objects:
         - name: "Mario Level Spawn"
           match:
@@ -810,6 +811,21 @@ object_randomization:
 
     - name: "Level Special Cases"
       objects:
+        - name: "DDD: Limit max height in second area"
+          match:
+            - course_id: 0x17
+            - area_id: 0x02
+          for:
+            - "*"
+          rules:
+            - max_y: 1500
+        #- name: "WF: Limit slopes"
+        #  match:
+        #    - course_id: 0x18
+        #  for:
+        #    - "*"
+        #  rules:
+        #    - max_slope: 0
         - name: "JRB: Limit max height in Ship"
           match:
             - course_id: 0x0C
@@ -820,11 +836,10 @@ object_randomization:
             - max_y: 1800
         - name: "THI: Red Coins / Red Coin Star below Boss Room"
           match:
+            - 0x13003EAC # Red Coin
+            - 0x13003E8C # Red Coin Star
             - course_id: 0x0D
-            - area_id: 0x2
-            - behaviours:
-              - 0x13003EAC # Red Coin
-              - 0x13003E8C # Red Coin Star
+            - area_id: 0x03
           rules:
             - max_y: 1750
         - name: "WC: Coins within Reach of Platform"
@@ -833,11 +848,11 @@ object_randomization:
             - course_id: 0x1D
           rules:
             - no_floor_required
-            - min_y: -2260
-            - max_y: 4064
+            - min_y: -2000
+            - max_y: 3500
             - distance_to:
               - origin: [0, -2047, 0]
-                max_distance: 5000
+                max_distance: 3000
           for:
             - 'Coin'
             - 'Coin Formations'
@@ -847,6 +862,7 @@ object_randomization:
           rules:
             - distance_to:
               - origin: [0, 1900, 0]
+                max_distance: 5000
           for:
             - 'Coin'
             - 'Coin Formations'
@@ -898,6 +914,6 @@ custom_paintings:
       transform:
         - type: split-horizontal
     - name: painting_pss
-    file: "Assets/img/custom_paintings/mika/PSS.png"
-    transform:
-      - type: split-horizontal
+      file: "Assets/img/custom_paintings/mika/PSS.png"
+      transform:
+        - type: split-horizontal

@@ -549,68 +549,130 @@ class Config:
     # Object matching for existing objects
     if "for" in table:
       for obj_name in table["for"]:
-        if obj_name not in self.object_entries_by_name:
-          raise ValueError(f"The object '{obj_name}' is not known. Please ensure it is not referenced before it's declared. This is a current limitation.")
+        if obj_name == "*":
+          all_object_entry_names = list(self.object_entries_by_name.keys())
+          for target_obj_name in all_object_entry_names:
+            target = self.object_entries_by_name[target_obj_name]
+            new_entries = []
+            target_match = target["match"] if "match" in target and target["match"] is not None else dict()
+            target_exclude = target["exclude"] if "exclude" in target and target["exclude"] is not None else dict()
+            target_rules = target["rules"] if "rules" in target and target["rules"] is not None else dict()
+
+            parent_match = (match or dict())
+            parent_exclude = (exclude or dict())
+
+            # print(target["name"], len(list(target_match.keys())))
+            # don't add nodes with no matching property, those are groups
+            if len(list(target_match.keys())) > 0:
+              # print(f"{name}: {target['name']}")
+              # add the entry itself
+              new_entries.append(dict(
+                match={
+                  **target_match, # target, i.e. for-matches
+                  **parent_match, # parent
+                },
+                exclude={
+                  **target_exclude,
+                  **parent_exclude,
+                },
+                rules={
+                  **target_rules,
+                  **rules,
+                },
+                name=f"{name}: {target['name']}"
+              ))
+
+            # add the entries children
+            if "children" in target:
+              children = target["children"]
+              for child in children:
+                child_match = child["match"] if child and "match" in child and child["match"] is not None else dict()
+                child_exclude = child["exclude"] if child and "exclude" in child and child["exclude"] is not None else dict()
+
+                # don't add children with no matching property, those are groups
+                if len(list(child_match.keys())) > 0:
+                  new_entries.append(dict(
+                    match={
+                      **child_match,
+                      **parent_match
+                    },
+                    rules={
+                      **child["rules"],
+                      **rules,
+                    },
+                    exclude={
+                      **child_exclude,
+                      **parent_exclude
+                    },
+                    name=f"{name}: {child['name']}"
+                  ))
+                
+              for new_entry in new_entries:
+                self.object_entries_by_name[new_entry["name"]] = new_entry
+                self.object_entries.append(new_entry)
         else:
-          target = self.object_entries_by_name[obj_name]
-          new_entries = []
-          target_match = target["match"] if "match" in target and target["match"] is not None else dict()
-          target_exclude = target["exclude"] if "exclude" in target and target["exclude"] is not None else dict()
-          target_rules = target["rules"] if "rules" in target and target["rules"] is not None else dict()
+          if obj_name not in self.object_entries_by_name:
+            raise ValueError(f"The object '{obj_name}' is not known. Please ensure it is not referenced before it's declared. This is a current limitation.")
+          else:
+            target = self.object_entries_by_name[obj_name]
+            new_entries = []
+            target_match = target["match"] if "match" in target and target["match"] is not None else dict()
+            target_exclude = target["exclude"] if "exclude" in target and target["exclude"] is not None else dict()
+            target_rules = target["rules"] if "rules" in target and target["rules"] is not None else dict()
 
-          parent_match = (match or dict())
-          parent_exclude = (exclude or dict())
+            parent_match = (match or dict())
+            parent_exclude = (exclude or dict())
 
-          # print(target["name"], len(list(target_match.keys())))
-          # don't add nodes with no matching property, those are groups
-          if len(list(target_match.keys())) > 0:
-            # print(f"{name}: {target['name']}")
-            # add the entry itself
-            new_entries.append(dict(
-              match={
-                **target_match, # target, i.e. for-matches
-                **parent_match, # parent
-              },
-              exclude={
-                **target_exclude,
-                **parent_exclude,
-              },
-              rules={
-                **target_rules,
-                **rules,
-              },
-              name=f"{name}: {target['name']}"
-            ))
+            # print(target["name"], len(list(target_match.keys())))
+            # don't add nodes with no matching property, those are groups
+            if len(list(target_match.keys())) > 0:
+              # print(f"{name}: {target['name']}")
+              # add the entry itself
+              new_entries.append(dict(
+                match={
+                  **target_match, # target, i.e. for-matches
+                  **parent_match, # parent
+                },
+                exclude={
+                  **target_exclude,
+                  **parent_exclude,
+                },
+                rules={
+                  **target_rules,
+                  **rules,
+                },
+                name=f"{name}: {target['name']}"
+              ))
 
-          # add the entries children
-          if "children" in target:
-            children = target["children"]
-            for child in children:
-              child_match = child["match"] if "match" in child and child["match"] is not None else dict
-              child_exclude = child["exclude"] if "exclude" in child and child["exclude"] is not None else dict()
+            # add the entries children
+            if "children" in target:
+              children = target["children"]
+              for child in children:
+                child_match = child["match"] if child and  "match" in child and child["match"] is not None else dict()
+                child_exclude = child["exclude"] if child and "exclude" in child and child["exclude"] is not None else dict()
 
-              # print(child["name"], len(list(child_match.keys())))
-              # don't add children with no matching property, those are groups
-              if len(list(child_match.keys())) > 0:
-                new_entries.append(dict(
-                  match={
-                    **child_match,
-                    **parent_match
-                  },
-                  rules={
-                    **child["rules"],
-                    **rules,
-                  },
-                  exclude={
-                    **child_exclude,
-                    **parent_exclude
-                  },
-                  name=f"{name}: {child['name']}"
-                ))
-              
-            for new_entry in new_entries:
-              self.object_entries_by_name[new_entry["name"]] = new_entry
-              self.object_entries.append(new_entry)
+                # print(child["name"], len(list(child_match.keys())))
+                # don't add children with no matching property, those are groups
+                if len(list(child_match.keys())) > 0:
+                  new_entries.append(dict(
+                    match={
+                      **child_match,
+                      **parent_match
+                    },
+                    rules={
+                      **child["rules"],
+                      **rules,
+                    },
+                    exclude={
+                      **child_exclude,
+                      **parent_exclude
+                    },
+                    name=f"{name}: {child['name']}"
+                  ))
+                
+              for new_entry in new_entries:
+                self.object_entries_by_name[new_entry["name"]] = new_entry
+                self.object_entries.append(new_entry)
 
       # Discard this entry, do not add to the list without the items it matched with "for"
       return
