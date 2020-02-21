@@ -69,25 +69,25 @@ class RandomizeObjectsWhitelist:
         matches += 1
     
     if "bparam1" in matching:
-      if object3d.bparams[0] != matching["bparam1"]:
+      if len(object3d.bparams) < 1 or object3d.bparams[0] != matching["bparam1"]:
         return (matches, False)
       else:
         matches += 1
 
     if "bparam2" in matching:
-      if object3d.bparams[1] != matching["bparam2"]:
+      if len(object3d.bparams) < 2 or object3d.bparams[1] != matching["bparam2"]:
         return (matches, False)
       else:
         matches += 1
 
     if "bparam3" in matching:
-      if object3d.bparams[2] != matching["bparam3"]:
+      if len(object3d.bparams) < 3 or object3d.bparams[2] != matching["bparam3"]:
         return (matches, False)
       else:
         matches += 1
 
     if "bparam4" in matching:
-      if object3d.bparams[3] != matching["bparam4"]:
+      if len(object3d.bparams) < 4 or object3d.bparams[3] != matching["bparam4"]:
         return (matches, False)
       else:
         matches += 1
@@ -116,11 +116,11 @@ class RandomizeObjectsWhitelist:
       # the more precise the matching, the more priority it will have
       matches, did_match = self.matches_with(whitelist_entry["match"], object3d)
       if did_match and matches > best_match_count:
-        '''
-        if best_match is not None and object3d.behaviour == 0x13002aa4:
-          print("replacing rule ", best_match)
-          print("with rule ", whitelist_entry)
-        '''
+        
+        #if best_match is not None and object3d.behaviour == 0x13002aa4:
+        #  print("replacing rule ", best_match)
+        #  print("with rule ", whitelist_entry)
+        
         best_match = whitelist_entry
         best_match_count = matches
     return best_match

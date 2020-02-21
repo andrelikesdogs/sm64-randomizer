@@ -181,7 +181,7 @@ class LevelGeometry:
         self.level_forbidden_boundaries.append(bounding_box)
 
   def plot_placement(self, obj, *targets):
-    print("plotting debug placement")
+    #print("plotting placement")
     level_traces = []
 
     # Plot level wide boundaries
@@ -454,6 +454,6 @@ class LevelGeometry:
             )
           )
 
-      print(f'plotting {self.level.name} {hex(area_id)}')
+      #print(f'plotting {self.level.name} {hex(area_id)}')
       py.plot(traces, filename=f'dumps/level_plots/{self.level.name}_{hex(area_id)}.html', auto_open=False)
-      print('done')
+      #print('done')

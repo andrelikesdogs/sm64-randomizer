@@ -141,6 +141,8 @@ class ObjectRandomizer:
     # cache the check at this pos
     call_signature = hash(tuple(position)) + hash(repr(rules)) + hash(area_id)
 
+    # TODO: check for all corners of a bounding box, if that rule exists
+
     if call_signature in self.object_floor_traces:
       return self.object_floor_traces[call_signature]
     
@@ -265,7 +267,7 @@ class ObjectRandomizer:
         return False
 
     # check the floor type if the rule is set and the floor exists and the floor type isn't "all"
-    if "floor_types_allowed" in rules and floor_properties is not False:
+    if "no_floor_required" not in rules and "floor_types_allowed" in rules and floor_properties is not False:
       if rules["floor_types_allowed"] == "all":
         if floor_properties["collision_type"] not in self.rom.config.constants["collision_types"].values():
           self.log_reason_for_reject("is_valid_position", f'object floor type is "all" but "{hex(floor_properties["collision_type"])}" is unknown')
@@ -279,16 +281,29 @@ class ObjectRandomizer:
           self.log_reason_for_reject("is_valid_position", 'object floor type was not allowed')
           return False
 
+    if "disable_planes" in obj.level.properties:
+      for entry in obj.level.properties["disable_planes"]:
+        plane_type = list(entry.keys())[0]
+        (start, end) = entry[plane_type]
+        lower = min(start, end)
+        upper = max(start, end)
 
+        if plane_type == "y_range":
+          if position[1] > lower and position[1] < upper:
+            #print(position, " is between ", (lower, upper))
+            self.log_reason_for_reject("is_valid_position", "in level disable plane")
+            return False
 
     if "min_y" in rules:
       if position[1] < rules["min_y"]:
+        #print("min_y", position, rules["min_y"])
         self.log_reason_for_reject("is_valid_position", "object position below min_y")
         return False
 
     if "max_y" in rules:
       if position[1] > rules["max_y"]:
-        self.log_reason_for_reject("is_valid_position", "object position above min_y")
+        #print("max_y", position, rules["max_y"])
+        self.log_reason_for_reject("is_valid_position", "object position above max_y")
         return False
 
     if "distance" in rules:
@@ -397,7 +412,7 @@ class ObjectRandomizer:
 
               tri_box = trimesh.creation.box(extents=tri_extents, transform=trimesh.transformations.translation_matrix(tri_position))
 
-              self.debug_placement(levelscript, obj, bounding_box, tri_box)
+              #self.debug_placement(levelscript, obj, bounding_box, tri_box)
             
             return False
 
@@ -431,18 +446,19 @@ class ObjectRandomizer:
         list -- new position, that needs to be validated for validity/sanity
     """
 
-    if "drop_to_floor" in rules:
-      # this object is supposed to be dropped onto the floor
-      if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position) or rules["drop_to_floor"] == "force":
-        # if objest is in water, don't modify the position, except when forced
-        position = self.drop_position(obj.area_id, levelscript, position, rules)
-      
-    if "spawn_height" in rules:
-      # object can spawn in the air, decide on a height and validate
-      if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position) or rules["drop_to_floor"] == "force":
-        min_height, max_height = tuple(rules["spawn_height"])
+    if "no_floor_required" not in rules:
+      if "drop_to_floor" in rules:
+        # this object is supposed to be dropped onto the floor
+        if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position) or rules["drop_to_floor"] == "force":
+          # if objest is in water, don't modify the position, except when forced
+          position = self.drop_position(obj.area_id, levelscript, position, rules)
+        
+      if "spawn_height" in rules:
+        # object can spawn in the air, decide on a height and validate
+        if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position) or rules["drop_to_floor"] == "force":
+          min_height, max_height = tuple(rules["spawn_height"])
 
-        position[1] += random.randint(min_height, max_height)
+          position[1] += random.randint(min_height, max_height)
 
     return position
 
@@ -515,6 +531,7 @@ class ObjectRandomizer:
 
           # randomization disabled - continue to next one
           if "disabled" in randomizing_rules and randomizing_rules["disabled"] == True:
+            #print(object3d.level.name, object3d, "is disabled")
             self.flush_last_reject_log()
             continue
 

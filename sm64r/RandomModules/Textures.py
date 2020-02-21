@@ -4,7 +4,7 @@ from PIL import Image
 from pathlib import Path
 import os
 
-from sm64r.Parsers.Imaging import Imaging
+from sm64r.Parsers.Imaging import Imaging, N64Image
 from sm64r.Constants import application_path
 
 class Texture(NamedTuple):
@@ -74,38 +74,6 @@ class TextureAtlas:
           TextureAtlas.import_texture(painting_definition['name'], painting_definition['file'], painting_definition['transform'])
 
 
-    '''
-    bbh_painting = Imaging.parse_image(os.path.join(application_path, "Assets/img/custom_portraits/distressedphilosopher/BBH.png"))
-    full_img_bytes = bbh_painting.read_rgba16()
-
-    bbh_painting_upper = full_img_bytes[0:4096] # upper part
-    bbh_painting_lower = full_img_bytes[4096:8192] # lower part
-
-    TextureAtlas.add_texture_definition('painting_bbh', MultiTexture(
-      'bbh',
-      [
-        InMemoryTexture(
-          None,
-          int(32 * 64 * 16 / 8),
-          64,
-          32,
-          'painting_bbh_upper',
-          bbh_painting_upper
-        ),
-        InMemoryTexture(
-          None,
-          int(32 * 64 * 16 / 8),
-          64,
-          32,
-          'painting_bbh_lower',
-          bbh_painting_lower
-        )
-      ]
-    ))
-
-    self.copy_texture_from_to(self.rom, "painting_bbh", "painting_bob")
-    '''
-
   @staticmethod
   def get_byte_size_for_format(texture_format, size):
     if texture_format == 'rgba16':
@@ -132,9 +100,12 @@ class TextureAtlas:
       raise ValueError("no sections parsed")
 
     if len(sections) > 1:
-      TextureAtlas.add_texture_definition(name, MultiTexture(name, textures))
+      mt = MultiTexture(name, textures)
+      TextureAtlas.add_texture_definition(name, mt)
+      return mt
     else:
       TextureAtlas.add_texture_definition(name, textures[0])
+      return textures[0]
     
   @staticmethod
   def import_texture(name, filepath, transforms = dict()):
@@ -162,11 +133,11 @@ class TextureAtlas:
           #print(full_size, half_size)
 
           part_a = rgba_img[0:half_size]
-          part_b = rgba_img[half_size+1:full_size]
+          part_b = rgba_img[half_size:full_size]
 
           sections = [
             InMemoryTexture(
-              f'{name}_a',
+              None,
               TextureAtlas.get_byte_size_for_format('rgba16', parsed_img.img.size)/2,
               parsed_img.img.size[0],
               parsed_img.img.size[1]/2,
@@ -174,7 +145,7 @@ class TextureAtlas:
               part_a
             ),
             InMemoryTexture(
-              f'{name}_b',
+              None,
               TextureAtlas.get_byte_size_for_format('rgba16', parsed_img.img.size)/2,
               parsed_img.img.size[0],
               parsed_img.img.size[1]/2,
@@ -188,51 +159,55 @@ class TextureAtlas:
     else:
       TextureAtlas.add_texture_definition(name, sections[0])
 
-  def add_dynamic_positions(self):
-    # castle paintings
-    # paintings start: 0xE0BB07
-    '''
-    (paintings_start, _) = self.rom.segments_sequentially[23]
-    for (lvl_name, upper, lower) in paintings:
-      # Paintings Start (USA, Extended): 0xE0BB07
-      TextureAtlas.add_texture_definition(f'painting_{lvl_name}', MultiTexture(
-        lvl_name,
-        [
-          Texture(
-            paintings_start + upper,
-            int(32*64*16 / 8),
-            64,
-            32,
-            f'painting_{lvl_name}_upper'
-          ),
-          Texture(
-            paintings_start + lower,
-            int(32*64*16 / 8),
-            64,
-            32,
-            f'painting_{lvl_name}_lower'
-          ),
-        ]
-      ))
-    '''
-
-    self.add_segmented_position_texture(
-      'painting_unknown',
+  def load_default_unknown_texture(self):
+    # load questionmark as segmented position
+    texture = self.add_segmented_position_texture(
+      'question_mark',
       [
         dict(
-          segment_index = 37,
-          segment_offset = 0x8094,
-          size = [64, 32],
-          name = 'painting_unknown_upper'
-        ),dict(
-          segment_index = 37,
-          segment_offset = 0x8094,
-          size = [64, 32],
-          name = 'painting_unknown_lower'
+          segment_index = 42,
+          segment_offset = 0x49B8,
+          size = [32, 32],
+          name = 'question_mark'
         )
       ]
     )
 
+    n64img = Imaging.from_ingame(self.rom, texture)
+    resized = N64Image(n64img.img.resize((64, 64), Image.LANCZOS))
+
+    rgba_img = resized.read_rgba16()
+    full_size = int(len(rgba_img) / 2)
+    half_size = int(full_size / 2)
+
+    #print(half_size, full_size)
+
+    part_a = rgba_img[0:half_size]
+    part_b = rgba_img[half_size:full_size]
+
+    sections = [
+      InMemoryTexture(
+        None,
+        half_size,
+        64,
+        32,
+        f'painting_unknown_upper',
+        part_a
+      ),
+      InMemoryTexture(
+        None,
+        half_size,
+        64,
+        32,
+        f'painting_unknown_lower',
+        part_b
+      )
+    ]
+    TextureAtlas.add_texture_definition("painting_unknown", MultiTexture("painting_unknown", sections))
+
+
+
+  def add_dynamic_positions(self):
     self.add_segmented_position_texture(
       'castle_grounds_tree_shadow',
       [
@@ -245,58 +220,6 @@ class TextureAtlas:
       ]
     )
     
-    """
-    (misc_textures_address_start, _) = self.rom.segments_sequentially[305]
-    question_mark_icon = misc_textures_address_start + 0x818
-    question_mark_texture = Texture(
-      question_mark_icon,
-      int(32*32*2),
-      32,
-      32,
-      'question_mark'
-    )
-    
-    image_bytes = TextureAtlas.add_texture_definition('question_mark', question_mark_texture)
-    
-
-    # load texture and resize
-    b = self.rom.read_bytes(question_mark_texture.position, question_mark_texture.size)
-    from_bytes = np.frombuffer(b, dtype=np.uint8)
-    colors_format = np.zeros(from_bytes.size * 2, dtype=np.uint8)
-    
-    for idx in range(0, from_bytes.size, 2):
-      c0 = from_bytes[idx]
-      c1 = from_bytes[idx+1]
-
-      new_idx = int(idx / 2)
-
-      r = (((c0 & 0xF8) >> 3) * 0xFF) / 0x1F
-      g = ((((c0 & 0x07) << 2) | ((c1 & 0xC0) >> 6)) * 0xFF) / 0x1F
-      b = (((c1 & 0x3E) >> 1) * 0xFF) / 0x1F
-      a = 255 if c1 & 0x1 > 0 else 0
-      colors_format[new_idx * 4] = r
-      colors_format[new_idx * 4 + 1] = g
-      colors_format[new_idx * 4 + 2] = b
-      colors_format[new_idx * 4 + 3] = a
-    
-    print(colors_format[0:100])
-    colors_format = colors_format.reshape(question_mark_texture.width, question_mark_texture.height, 4)
-    img = Image.fromarray(colors_format, 'RGBA')
-    img_resized = img.resize((64, 64))
-    img_upper = img_resized.crop((0, 0, 64, 32))
-    img_lower = img_resized.crop((0, 32, 64, 64))
-    
-    TextureAtlas.add_texture_definition('painting_unknown', MultiTexture(
-      'unknown',
-      [
-        InMemoryTexture(
-          None,
-          int(32*64*4)
-        )
-      ]
-    ))
-    """
-
   @staticmethod
   def hide_texture(rom : "ROM", name):
     if name not in TextureAtlas.definitions:

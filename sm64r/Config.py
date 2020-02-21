@@ -27,6 +27,7 @@ LEVEL_PROPERTY_DEFINITIONS = {
   'shuffle_painting[].sections[].name': ["str"],
   'requires_key': ["int"],
   'loading_zones': ["list"],
+  'disable_planes': ["list"],
   'shuffle_warps': ["list"],
   'shuffle_warps[].to': ["list"],
   'shuffle_warps[].to[].course_id': ["int"],
@@ -53,7 +54,7 @@ RULE_DEFINITIONS = {
 
 # Which entries are allowed in objects[] (...) .match[]
 MATCH_DEFINITIONS = {
-  'behaviour': ["int", "list"],
+  'behaviours': ["int", "list"],
   'bparam1': ["int"],
   'bparam2': ["int"],
   'bparam3': ["int"],
@@ -98,6 +99,9 @@ class Config:
     self.validation_warnings = []
 
     #print(json.dumps(source, indent=2))
+
+    if os.path.exists("sm64_rando_rules.log"):
+      os.unlink("sm64_rando_rules.log")
 
     if not self.validate(source):
       print(f"Validation Error founds:{NL}{NL.join(self.validation_errors)}")
@@ -221,10 +225,10 @@ class Config:
           match_type = entry
           match_value = True
         elif type(entry) is int:
-          match_type = "behaviour"
-          match_value = entry
+          match_type = "behaviours"
+          match_value = [entry]
         elif type(entry) is list:
-          match_type = "behaviour"
+          match_type = "behaviours"
           match_value = entry
         else:
           self.validation_errors.append(f'Invalid Match property in "{" => ".join(parents)}" - supplied an invalid type of rule-set for a match property. Either boolean or key:value')
@@ -516,7 +520,10 @@ class Config:
               match["behaviours"].append(entry)
             if type(entry) is dict:
               prop_name = list(entry.keys())[0]
-              match[prop_name] = entry[prop_name]
+              if prop_name == "behaviours":
+                match[prop_name] = [entry[prop_name]]
+              else:
+                match[prop_name] = entry[prop_name]
 
     # Exclude Matching
     if "exclude" in table:
@@ -646,6 +653,10 @@ class Config:
     if "object_randomization" in source:
       self.parse_object_table(source["object_randomization"])
     
+    with open("sm64_rando_rules.log", "a") as rule_log:
+      for object_entry in self.object_entries:
+        rule_log.write(json.dumps(object_entry) + "\n")
+
     print(f"Configuration '{self.name}' loaded {len(self.object_entries)} object-rule entries")
 
   def has_checksum_configuration(self, checksum):

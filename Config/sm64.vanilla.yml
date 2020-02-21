@@ -176,6 +176,8 @@ levels:
   - name: "Big Boo's Haunt"
     course_id: 0x04
     properties:
+      - disable_planes: # the middle layer in BBH will make objects unaccessible
+        - y_range: [-1428, -206]
       - shuffle_painting:
         - custom_painting: 'painting_bbh'
   - name: "Hazy Maze Cave"
@@ -208,6 +210,7 @@ levels:
             - name: 'painting_lll_lower'
               segment_index: 23
               segment_offset: 0x12800
+              format: 'rgba16'
               size: [64, 32] # width, height
       - requires_key: 0x1
   - name: "Shifting Sand Land"
@@ -224,6 +227,7 @@ levels:
             - name: 'painting_ssl_lower'
               segment_index: 23
               segment_offset: 0x15800
+              format: 'rgba16'
               size: [64, 32] # width, height
       - requires_key: 0x1
   - name: "Dire, Dire Docks"
@@ -325,7 +329,7 @@ levels:
     course_id: 0x0D
     properties:
       - shuffle_painting:
-        - game_painting: 'painting_ttm'
+        - game_painting: 'painting_thi'
           sections:
           - name: 'painting_thi_upper'
             segment_index: 23
@@ -342,14 +346,14 @@ levels:
     course_id: 0x0E
     properties:
       - shuffle_painting:
-        - game_painting: 'painting_thi'
+        - game_painting: 'painting_ttc'
           sections:
-          - name: 'painting_thi_upper'
+          - name: 'painting_ttc_upper'
             segment_index: 23
             segment_offset: 0x1D800
             format: 'rgba16'
             size: [64, 32] # width, height
-          - name: 'painting_thi_lower'
+          - name: 'painting_ttc_lower'
             segment_index: 23
             segment_offset: 0x1E800
             format: 'rgba16'
@@ -377,6 +381,7 @@ levels:
   - name: "Wing Cap"
     course_id: 0x1D
     properties:
+      - fly_stage
       - shuffle_painting:
         - custom_painting: 'painting_wc'
 
@@ -526,7 +531,7 @@ object_randomization:
         - name: Bob-Omb
           match: 0x13003174
         - name: Goomba
-          match: 0x13004770
+          match: 0x1300472C
         - name: Goomba Triplet
           match: 0x13004770
         - name: Thwomp
@@ -598,24 +603,25 @@ object_randomization:
             - bparam2: 0
           rules:
             - bounding_box: [1000, 100, 100] # length, width, height
-            - spawn_height: [100, 600]
+            - spawn_height: [200, 600]
         - name: Grounded Ring Formation (8x)
           match:
             - bparam2: 2
           rules:
             - bounding_box: [1000, 1000, 100] # length, width, height
-            - spawn_height: [100, 600]
+            - spawn_height: [200, 600]
         - name: Grounded Arrow (8x)
           match:
             - bparam2: 4
           rules:
             - bounding_box: [500, 500, 100] # length, width, height
-            - spawn_height: [100, 600]
+            - spawn_height: [200, 600]
         - name: Horizontal Floating Line (x5)
           match:
             - bparam2: 16
           rules:
             - bounding_box: [600, 100, 100] # length, width, height
+            - spawn_height: [200, 500]
         - name: Vertical Floating Line (x5)
           match:
             - bparam2: 17
@@ -641,8 +647,9 @@ object_randomization:
       objects:
         - name: Yellow Coin
           match:
-            - 0x1300090C
-            - 0x1300091C # For Triggers?
+            - behaviours:
+              - 0x1300090C
+              - 0x1300091C # For Triggers?
         - name: Red Coin
           match: 0x13003EAC
         - name: Blue Coin
@@ -657,8 +664,10 @@ object_randomization:
       objects:
         - name: Star
           match:
-            - 0x13003E3C
-            - 0x13003EFC # Hidden
+            - behaviours:
+              - 0x13003E3C
+              - 0x13003EFC # Hidden
+              - 0x13003E8C # Red Coin Star
         - name: Star in Box
           match: 0x13002250
           rules:
@@ -762,8 +771,6 @@ object_randomization:
           match: 0x13002E58
         - name: "Pink Bob-Omb (Message)"
           match: 0x130031DC
-          rules:
-            - underwater: never
         - name: "Pink Bob-Omb (Canon)"
           match: 0x13003228
 
@@ -798,6 +805,8 @@ object_randomization:
             - course_property: slide
           for:
             - "Warps"
+          rules:
+            - disabled
 
     - name: "Level Special Cases"
       objects:
@@ -808,20 +817,27 @@ object_randomization:
           for:
             - 'Stars'
           rules:
-            - max_y: 1858
+            - max_y: 1800
         - name: "THI: Red Coins / Red Coin Star below Boss Room"
           match:
-            - 0x13003EAC # Red Coin
-            - 0x13003E8C # Red Coin Star
+            - course_id: 0x0D
+            - area_id: 0x2
+            - behaviours:
+              - 0x13003EAC # Red Coin
+              - 0x13003E8C # Red Coin Star
           rules:
             - max_y: 1750
         - name: "WC: Coins within Reach of Platform"
           match:
+            - course_property: fly_stage
             - course_id: 0x1D
           rules:
+            - no_floor_required
+            - min_y: -2260
+            - max_y: 4064
             - distance_to:
               - origin: [0, -2047, 0]
-                max_distance: 6000
+                max_distance: 5000
           for:
             - 'Coin'
             - 'Coin Formations'
@@ -837,9 +853,18 @@ object_randomization:
         - name: "WMotR: Disable Itembox Shuffle"
           match:
             - course_id: 0x1F
-            - behaviour: 0x13002250
+            - behaviours: 0x13002250
           rules:
             - disabled
+        - name: "BOB: Disable coin ring shuffle"
+          match:
+            - course_id: 0x09
+            - area_id: 0x01
+            - behaviours: 0x130008EC
+            - bparam2: 19
+          rules:
+            - disabled
+            
 
 # Define custom painting authors/names
 custom_paintings:
@@ -872,3 +897,7 @@ custom_paintings:
       file: "Assets/img/custom_paintings/mika/WC.png"
       transform:
         - type: split-horizontal
+    - name: painting_pss
+    file: "Assets/img/custom_paintings/mika/PSS.png"
+    transform:
+      - type: split-horizontal

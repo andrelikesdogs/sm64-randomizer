@@ -8,8 +8,9 @@ from sm64r.RandomModules.Textures import TextureAtlas
 
 if "SM64R" in os.environ and "WARPS" in os.environ["SM64R"]:
   import networkx as nx
-  import matplotlib.pyplot as plt
-
+  import plotly.offline as py
+  import plotly.graph_objs as go
+  
 WARP_ID_MAPPING = {
   0xf0: 'SUCCESS',
   0xf1: 'FAILURE',
@@ -20,6 +21,7 @@ class WarpRandomizer:
   def __init__(self, rom : 'ROM'):
     self.rom = rom
     self.warps = []
+    self.applied_change_list = []
 
   def _pick_best_fitting_warp(self, target_group_name, warp, warps_available):
     if target_group_name in list(warps_available.keys()):
@@ -38,6 +40,10 @@ class WarpRandomizer:
     # 
 
     self.warps = []
+
+    for level in self.rom.config.levels:
+      for warp in self.rom.levelscripts[level].warps:
+        self.warps.append(warp)
 
     # levels that contain entries to levels
     overworld_levels = list(filter(lambda level: "overworld" in level.properties, self.rom.config.levels))
@@ -94,8 +100,6 @@ class WarpRandomizer:
     # - entrance_dsts from levels
     for level in entrance_src_for_levels.keys():
       for warp in self.rom.levelscripts[level].warps:
-        self.warps.append(warp)
-
         # find in exit_dsts to match it
         for exit_dst in all_exit_dst_warps:
           # matched warp must match area, course and warp-id
@@ -291,8 +295,10 @@ class WarpRandomizer:
         targets = []
         target = choice(ow_set["exits"]) # fallback: pick random if no fitting targets
         
-        #if not src.anim_type:
-          #print('no source anim type - weird warp', hex(src.warp_id))
+        if not src.anim_type:
+          # if an exit warp inside a level is not one of the success, defeat or recovery warp types
+          # it means this level can link to another level. like HMC to MC
+          continue
         
         for dst in ow_set["exits"]:
           if dst.anim_type == src.anim_type:
@@ -310,19 +316,24 @@ class WarpRandomizer:
           else:
             source_painting_definition = ow_set["level"].properties["shuffle_painting"][0]          
             
+            # replace this
             source_painting_name = source_painting_definition["game_painting"] if "game_painting" in source_painting_definition else source_painting_definition["custom_painting"]
+
+            # with this
             target_painting_name = lvl_painting_names[lvl_set["level"]]
-            #print(source_painting_name, target_painting_name)
+            #print("setting painting from ", source_painting_name, " to ", target_painting_name)
 
             # don't copy if it's the same
             if source_painting_name != target_painting_name:
               # ensure we have a copy-able texture
-              if not TextureAtlas.has_texture(source_painting_name):
-                source_painting_name = "painting_unknown" # use replacement texture
+              if not TextureAtlas.has_texture(target_painting_name):
+                target_painting_name = "painting_unknown" # use replacement texture
 
               # ensure target is replaceable, textures loaded externally are not
-              if TextureAtlas.is_replacable(target_painting_name):
-                TextureAtlas.copy_texture_from_to(self.rom, source_painting_name, target_painting_name)
+              if TextureAtlas.is_replacable(source_painting_name):
+                TextureAtlas.copy_texture_from_to(self.rom, target_painting_name, source_painting_name)
+
+    self.applied_change_list = change_list
 
     for (target, course_id, area_id, warp_id) in change_list:
       target.set(self.rom, "to_course_id", course_id)
@@ -396,14 +407,99 @@ class WarpRandomizer:
     return True
 
   def plot_network(self):
-    G = nx.Graph()
+    G = nx.DiGraph()
+
+    def key_from_warp(warp):
+      return f'{hex(warp.course_id)} ({hex(warp.area_id)}): {hex(warp.warp_id)}'
+
+    warp_by_key = {}
+    all_connections = {}
 
     for warp in self.warps:
-      G.add_node(f'{hex(warp.course_id)} ({hex(warp.area_id)}): {hex(warp.warp_id)}')
+      warp_key = key_from_warp(warp)
+      warp_by_key[warp_key] = warp
 
-    plt.subplot()
-    nx.draw(G, with_labels=True)
-    plt.show()
+    for warp in self.warps:
+      target_key = f'{hex(warp.to_course_id)} ({hex(warp.to_area_id)}): {hex(warp.to_warp_id)}'
+      target_warp = warp_by_key[target_key]
+      all_connections[warp] = target_warp
+
+    for (src_warp, target_course_id, target_area_id, target_warp_id) in self.applied_change_list:
+      target_key = f'{hex(target_course_id)} ({hex(target_area_id)}): {hex(target_warp_id)}'
+      target_warp = warp_by_key[target_key]
+      all_connections[src_warp] = target_warp
+
+    for src_warp, target_warp in all_connections.items():
+      G.add_edge(key_from_warp(src_warp), key_from_warp(target_warp))
+
+    pos = nx.spring_layout(G)
+
+    #plt.subplot()
+    #nx.draw(G, with_labels=True)
+    #plt.show()
+    edge_x = []
+    edge_y = []
+    for edge in G.edges():
+      x0, y0 = pos[edge[0]]
+      x1, y1 = pos[edge[1]]
+      edge_x.append(x0)
+      edge_x.append(x1)
+      edge_x.append(None)
+      edge_y.append(y0)
+      edge_y.append(y1)
+      edge_y.append(None)
+
+    edge_trace = go.Scatter(
+      x=edge_x, y=edge_y,
+      line=dict(width=0.5, color='#888'),
+      hoverinfo='none',
+      mode='lines')
+
+    node_x = []
+    node_y = []
+    node_text = []
+    node_colors = []
+    for node in G.nodes():
+      x, y = pos[node]
+      node_x.append(x)
+      node_y.append(y)
+
+      warp = warp_by_key[node]
+      target_level = self.rom.config.levels_by_course_id[warp.to_course_id]
+      #print(warp_by_key[node])
+      node_text.append(f'{target_level.name} (Area: {hex(warp.area_id)}): {hex(warp.warp_id)}')
+
+      if warp.warp_id in WARP_ID_MAPPING.values():
+        node_colors.append('#ff0000')
+      elif warp.warp_id == 0xa:
+        node_colors.append('#0000ff')
+      else:
+        node_colors.append('#aeaeae')
+
+    node_trace = go.Scatter(
+      x=node_x, y=node_y,
+      mode='markers',
+      hoverinfo='text',
+      marker=dict(
+        color=[],
+        colorscale='YlGnBu',
+        line_width=2))
+    
+    node_trace.text = node_text
+    #node_trace.color = node_colors
+    fig = go.Figure(data=[edge_trace, node_trace],
+             layout=go.Layout(
+                showlegend=False,
+                hovermode='closest',
+                annotations=[ dict(
+                    showarrow=False,
+                    xref="paper", yref="paper",
+                    x=0.005, y=-0.002 ) ],
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+    )
+    
+    py.plot(fig, filename=f'dumps/warp_graph/Warps.html', auto_open=True)
 '''
 
   def shuffle_level_entries_old(self, painting_mode : str):

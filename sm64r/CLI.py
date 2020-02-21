@@ -134,9 +134,11 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       # initialize texture atlas and dynamic positions
       textures = TextureAtlas(rom)
       textures.add_dynamic_positions()
+      textures.load_default_unknown_texture()
     
     # Segment Finder
     # rom.match_segments(0xD78271)
+    # rom.match_segments(0xA8181C) # texture for question mark
 
     start_time = time.time()
 

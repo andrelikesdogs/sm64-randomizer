@@ -66,3 +66,4 @@ web/design
 node_modules/
 
 .data
+/*.zip
