@@ -36,7 +36,7 @@ The application is supported on everdrive. To ensure everdrive compatibility, pl
 Also auto extends ROM to work with the randomizer. If this fails, extend your ROM manually and use either [sm64extender](https://www.smwcentral.net/?p=viewthread&t=77343) or [Super Mario 64 ROM Extender](http://qubedstudios.rustedlogic.net/Mario64Tools.htm).
 
 # Web
-For extremely simple usage, simply use our existing web generator, found here: https://andre-meyer.github.io/sm64-randomizer/
+For extremely simple usage, simply use our existing web generator, found here: https://andrelikesdogs.github.io/sm64-randomizer/
 
 ![SM64 Randomizer Generator Web Edition](https://i.imgur.com/78OiLPZ.png)
 

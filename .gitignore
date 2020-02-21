@@ -67,3 +67,5 @@ node_modules/
 
 .data
 /*.zip
+#ide files
+*.wpr
