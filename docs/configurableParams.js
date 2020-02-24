@@ -175,6 +175,7 @@ configurableParams = [
     "name": "keydoor-requirements",
     "label": "Keydoor Requirements",
     "category": "gameplay",
+    "disabled": "work-in-progress",
     "type": "select",
     "options": [
       {

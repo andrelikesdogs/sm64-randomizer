@@ -3,3 +3,4 @@ Pillow==7.0.0
 PyYAML==5.3
 Rtree==0.9.3
 trimesh==3.5.19
+pyperclip==1.7.0
