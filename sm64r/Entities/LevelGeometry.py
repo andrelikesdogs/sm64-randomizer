@@ -87,12 +87,12 @@ class LevelGeometry:
       geometry_triangle_count, # start
       geometry_triangle_count + len(triangles) # end
     )] = collision_type
-
-    for [a_index, b_index, c_index] in self.area_faces[area_id]:
+    
+    for [a_index, b_index, c_index] in triangles:
       # positions of the 3 vertices that make up the face
-      a = self.area_vertices[area_id][a_index]
-      b = self.area_vertices[area_id][b_index]
-      c = self.area_vertices[area_id][c_index]
+      a = vertices[a_index]
+      b = vertices[b_index]
+      c = vertices[c_index]
 
       # min corner
       start = (

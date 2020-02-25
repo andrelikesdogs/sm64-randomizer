@@ -58,11 +58,12 @@ class WarpRandomizer:
     all_exit_dst_warps = []
 
     # entrances for levels
-    entrance_src_for_levels = {}
-    entrance_dst_for_levels = {}
-    exit_dst_for_levels = {}
-    exit_src_for_levels = {}
+    entrance_src_for_levels = {} # found in ow 
+    entrance_dst_for_levels = {} # found in level
+    exit_dst_for_levels = {} # found in ow
+    exit_src_for_levels = {} # found in level
 
+    # find warps *TO* levels
     # all levels that may contain entrance warps, this will find, e.g. overworld and HMC (to Metal Cap):
     # - entrance_srcs to levels
     # - exit_dsts from levels, not matched yet
@@ -94,13 +95,14 @@ class WarpRandomizer:
         if target_level not in target_levels:
           target_levels.append(target_level)
 
-    # all levels that we found entrances for, check these levels warps, this will find
-    # - exit_dsts from levels, now matched
-    # - exit_srcs from levels
-    # - entrance_dsts from levels
+    # find exits in levels we found entrances to
+    # - exit_dsts in ow from levels, now matched
+    # - exit_srcs in levels
+    # - entrance_dsts in ow
     for level in entrance_src_for_levels.keys():
+      # first, find all warps in the levels our entrance sources lead to
       for warp in self.rom.levelscripts[level].warps:
-        # find in exit_dsts to match it
+        # match with one of the exits we found in the overworlds/hub levels
         for exit_dst in all_exit_dst_warps:
           # matched warp must match area, course and warp-id
           if exit_dst.warp_id == warp.to_warp_id and exit_dst.course_id == warp.to_course_id and exit_dst.area_id == warp.to_area_id:
@@ -119,8 +121,7 @@ class WarpRandomizer:
             if warp not in exit_src_for_levels[level]:
               exit_src_for_levels[level].append(warp)
 
-            #break # because this warp is already matched and only matches 1 to 1
-
+        # match entrance destinations with level warps
         for entrance_src in entrance_src_for_levels[level]:
           # (course_id will always match, because we're checking the warps from and to this level)
           # must match warp_id <-> to_warp_id, area_id (in which area) <-> to_area_id
@@ -130,6 +131,26 @@ class WarpRandomizer:
 
             if warp not in entrance_dst_for_levels[level]:
               entrance_dst_for_levels[level].append(warp)
+
+      # add exit warps from continued levels, i.e. from the fight stages in bowser levels
+      if "continues_level" in level.properties:
+        course_ids = level.properties["continues_level"] if type(level.properties["continues_level"]) is list else [level.properties["continues_level"]]
+        continued_levels = list(map(lambda x: self.rom.config.levels_by_course_id[x], course_ids))
+
+        if level not in exit_dst_for_levels or level not in exit_src_for_levels:
+          print(f"WARNING: continued level for \"{level.name}\" without any warps of itself - how is this even possible")
+        else:
+          for continued_level in continued_levels:
+            for warp in self.rom.levelscripts[continued_level].warps:
+              for exit_dst in all_exit_dst_warps:
+                if exit_dst.warp_id == warp.to_warp_id and exit_dst.course_id == warp.to_course_id and exit_dst.area_id == warp.to_area_id:
+                  # NOTE: we're adding the warp exits to the LEVELs exit destination warps, not to the continued levels destination warps
+                  # as it won't have one seperately. this means during shuffling, the exits in this continued level will behave the same way
+                  # as if the warps were simply in the original stage.
+
+                  exit_dst.anim_type = WARP_ID_MAPPING[warp.warp_id] if warp.warp_id in WARP_ID_MAPPING else None
+                  exit_dst_for_levels[level].append(exit_dst)
+                  exit_src_for_levels[level].append(warp)
 
     # pool of warps that can be shuffled between
     warp_pools = {}
@@ -265,6 +286,10 @@ class WarpRandomizer:
             (ow_set, lvl_set)
           )
       
+      #for (ow_set, lvl_set) in new_level_warps:
+        #print(f'{ow_set["level"].name} now goes to {lvl_set["level"].name}')
+      #print('-' * 20)
+
     # If random paintings enabled, shuffle the key:value pairs in lvl_paintings
     if "shuffle_paintings" in settings:
       if settings["shuffle_paintings"] == "random":
@@ -377,33 +402,50 @@ class WarpRandomizer:
     '''
   
   def validate_path_for_keys(self, changelist):
-    #print(changelist)
-    key_groups = {}
-    for (to_warps, from_warps) in changelist:
-      key_required = None
+    indiv_key_requirements_per_level = {}
+    total_key_requirements_per_level = {}
+    key_sources = {}
+
+    # from = original entry position
+    # to = new entry position
+
+    # collect requires_key and key_receive groups
+    for (from_warps, to_warps) in changelist:
+      key_requirements = []
       if "requires_key" in from_warps["level"].properties:
-        key_required = from_warps["level"].properties["requires_key"]
+        requires_key = from_warps["level"].properties["requires_key"]
+        key_requirements = [requires_key] if type(requires_key) is not list else requires_key
 
-      if key_required not in key_groups:
-        key_groups[key_required] = []
-      key_groups[key_required].append(to_warps)
+      if "key_receive" in to_warps["level"].properties:
+        key_sources[to_warps["level"].properties["key_receive"]] = to_warps["level"]
+        #print(to_warps["level"].name, " awards ", to_warps["level"].properties["key_receive"])
+      
+      #awards_text = "" if "key_receive" not in to_warps["level"].properties else f' and rewards \"{to_warps["level"].properties["key_receive"]}\"'
+      #print(to_warps["level"].name, " now requires ", key_requirements, awards_text)
+      indiv_key_requirements_per_level[to_warps["level"]] = key_requirements
+
+    # define function to recursively gather all keys required per level
+    def recurse_find_keys_needed(level, keys, acc):
+      for key in keys:
+        if key not in acc:
+          acc.add(key)
+          level_req = key_sources[key]
+          #print("key ", key, " found in ", level_req)
+
+          level_req_keys = indiv_key_requirements_per_level[level_req]
+          recurse_find_keys_needed(level_req, level_req_keys, acc)
+      return acc
     
-    for key, key_group in key_groups.items():
-      #print(f"Requires Key: {str(key)}")
-      for warp_set in key_group:
-        if "key_receive" in warp_set["level"].properties:
-          key_received = warp_set["level"].properties["key_receive"]
+    # define total keys per level via above recursive func
+    for level, keys in indiv_key_requirements_per_level.items():
+      total_key_requirements_per_level[level] = recurse_find_keys_needed(level, keys, set())
+      #print(level, indiv_key_requirements_per_level[level], total_key_requirements_per_level[level])
 
-          #print(warp_set["level"].name, f"(Rewards {hex(key_received)})")
-          if key is not None and key_received == key:
-            # Invalid
-            #print()
-            #print(f"{warp_set['level'].name} requires key {hex(key)} but beating this level rewards {hex(key_received)}. Retrying")
-            #print()
-            return False
+      if "key_receive" in level.properties and level.properties["key_receive"] in total_key_requirements_per_level[level]:
+        print(f"{level.name} requires {total_key_requirements_per_level[level]} but rewards {level.properties['key_receive']} - invalid")
+        return False
+        
 
-        #print(warp_set["level"].name)
-      #print('-' * 30)
     return True
 
   def plot_network(self):
