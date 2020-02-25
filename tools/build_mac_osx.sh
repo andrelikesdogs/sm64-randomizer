@@ -16,8 +16,9 @@ mkdir -p ./dist/Data
 cp -v ./3rdparty/*mac* ./dist/3rdparty
 cp -vr ./Data ./dist
 cp -vr ./Config ./dist
+cp -vr ./Assets ./dist
 cp -v ./3rdparty/LICENSE* ./dist/3rdparty
 cp -v ./3rdparty/README* ./dist/3rdparty
 cd ./dist
-zip -r ../release/sm64-randomizer-${VERSION}-mac-osx.zip SM64* README.md LICENSE 3rdparty Data Config
+zip -r ../release/sm64-randomizer-${VERSION}-mac-osx.zip SM64* README.md LICENSE 3rdparty Data Config Assets
 cd -;
