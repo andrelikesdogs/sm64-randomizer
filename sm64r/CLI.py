@@ -24,6 +24,7 @@ from .RandomModules.Text import TextRandomizer
 from .RandomModules.Textures import TextureAtlas
 from .RandomModules.Stardoors import StardoorRandomizer
 from .RandomModules.Instruments import InstrumentRandomizer
+from .RandomModules.Skybox import SkyboxRandomizer
 from .Enhancements.GameplayEnhancements import Gameplay
 from .Enhancements.TextureChanges import TextureChanges
 
@@ -145,15 +146,18 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     music_random = MusicRandomizer(rom)
     if opt_args.shuffle_music:
       music_random.shuffle_music(ALL_LEVELS)
+      seed(opt_args.seed)
 
     mario_random = MarioRandomizer(rom)
     if opt_args.shuffle_mario_outfit:
       mario_random.randomize_color()
+      seed(opt_args.seed)
 
     warp_random = WarpRandomizer(rom)
     if opt_args.shuffle_entries:
       if opt_args.shuffle_paintings:
         textures.add_level_paintings()
+        seed(opt_args.seed)
 
         if opt_args.shuffle_paintings == 'replace-unknown':
           if not textures:
@@ -162,21 +166,25 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
             textures.add_vanilla_portrait_custom_paintings()
 
       warp_random.shuffle_level_entries(vars(opt_args))
+      seed(opt_args.seed)
 
       if "SM64R" in os.environ and "WARPS" in os.environ["SM64R"]:
         warp_random.plot_network()
     
     instrument_randomizer = InstrumentRandomizer(rom)
     if opt_args.shuffle_instruments:
-      instrument_randomizer.shuffle_instruments()  
+      instrument_randomizer.shuffle_instruments()
+      seed(opt_args.seed)
 
     text_randomizer = TextRandomizer(rom)
     if opt_args.shuffle_text:
       text_randomizer.shuffle_dialog_pointers()
+      seed(opt_args.seed)
 
     color_randomizer = ColorRandomizer(rom)
     if opt_args.shuffle_colors:
       color_randomizer.randomize_coin_colors()
+      seed(opt_args.seed)
 
     gameplay_stuff = Gameplay(rom)
     if opt_args.disable_cutscenes:
@@ -194,9 +202,14 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     if opt_args.keydoor_requirements != "vanilla":
       stardoor_randomizer.open_keydoors()
 
+    skybox_randomizer = SkyboxRandomizer(rom)
+    if opt_args.shuffle_skybox:
+      skybox_randomizer.randomize_skyboxes()
+
     object_randomizer = ObjectRandomizer(rom)
     if opt_args.shuffle_objects:
       object_randomizer.shuffle_objects()
+      seed(opt_args.seed)
 
       texture_changer = TextureChanges(rom)
       texture_changer.remove_tree_shadows()
