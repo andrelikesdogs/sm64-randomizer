@@ -55,7 +55,6 @@ configurableParams = [
     "label": "Sky randomization",
     "category": "aesthetics",
     "type": "checkbox",
-    "disabled": "work-in-progress",
     "default": false,
     "help": "Randomizes the sky-texture between different levels. The black skybox is excluded."
   },
