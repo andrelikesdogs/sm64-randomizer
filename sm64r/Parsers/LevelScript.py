@@ -3,6 +3,7 @@ from math import floor
 
 from sm64r.Parsers.Level import Level, LevelCommand
 from sm64r.Parsers.CollisionPresets import CollisionPresetParser, SPECIAL_CD_WITH_PARAMS
+from sm64r.Parsers.GeoLayoutParser import GeoLayoutParser
 from sm64r.Entities.Object3D import Object3D
 from sm64r.Entities.Warp import Warp
 from sm64r.Entities.LevelGeometry import LevelGeometry
@@ -39,6 +40,7 @@ class LevelScriptParser:
     self.warps = []
 
     self.commands = []
+    self.commands_by_id = {}
     self.mario_spawn = None
     self.layer = layer
     self.level = level
@@ -50,6 +52,8 @@ class LevelScriptParser:
     
     self.special_macro_tables = {}
     self.special_macro_object_tables = {}
+
+    self.geometry_layouts = []
 
     self.level_geometry = LevelGeometry(level)
     self.level_collisions = []
@@ -81,6 +85,9 @@ class LevelScriptParser:
         
         data = self.rom.read_bytes(cursor + 2, length)
         command = LevelCommand.from_id(cmd_id, length=length, data=data, position=cursor + 2)
+        if cmd_id not in self.commands_by_id:
+          self.commands_by_id[cmd_id] = []
+        self.commands_by_id[cmd_id].append(command)
         
         self.commands.append((self.layer, command))
         if command.identifier == 0x00 or command.identifier == 0x01:
@@ -179,11 +186,11 @@ class LevelScriptParser:
           segment_id = self.rom.read_integer(cursor + 3)
           segment_addr = self.rom.read_integer(cursor + 4, 4)
           segment_end = self.rom.read_integer(cursor + 8, 4)
-          
+
           self.rom.set_segment(segment_id, segment_addr, segment_end)
         elif command.identifier == 0x18 or command.identifier == 0x1A:
           """ 0x18 MIO0_DECOMPRESS or 0x1A MIO0_DECOMPRESS_TEXTURES """
-          #print(command.name, hex(command.identifier), hex(length+2), format_binary(data))
+
           segment_id = self.rom.read_integer(cursor + 3)
           begin_mio0 = self.rom.read_integer(cursor + 4, 4)
           segment_end = self.rom.read_integer(cursor + 8, 4)
@@ -232,9 +239,13 @@ class LevelScriptParser:
           """ 0x1F START_AREA_AND_LOAD_GEODATA """
           area_id = self.rom.read_integer(cursor + 2)
           area_segment_addr = self.rom.read_integer(cursor + 4, 4)
-          segment_start = self.rom.read_segment_addr(segment_addr)
-          segment_id = self.rom.read_segment_id(segment_addr)
+          
+          segment_id = self.rom.read_segment_id(area_segment_addr)
+          segment_addr_start = self.rom.read_segment_addr(area_segment_addr)
+          segment_addr_end = self.rom.read_segment_end(area_segment_addr)
 
+          self.geometry_layouts.append(GeoLayoutParser(self.rom, segment_id, segment_addr_start, segment_addr_end, area_id, "0x1F START_AREA_AND_LOAD_GEODATA"))
+          #sys.exit(1)
           #if segment_start and segment_id:
             #self.rom.set_segment(segment_id, segment_start, segment_start + 0xFFFF, area_id)
           
@@ -263,9 +274,16 @@ class LevelScriptParser:
           position = (self.rom.read_integer(cursor + 6, 2, True), self.rom.read_integer(cursor + 8, 2, True), self.rom.read_integer(cursor + 10, 2, True))
           self.objects.append(Object3D("MARIO_SPAWN", spawn_area_id, None, position, self.level, (None, rotation_y, None), mem_address = cursor + 2))
           #print(self.level.name, spawn_area_id, rotation_y, position)
+        elif command.identifier == 0x22:
+          """ 0x22 LOAD_POLYGON_WITH_GEO """
+          #segment_addr = self.rom.read_integer(cursor + 4, 4)
+          #segment_id = self.rom.read_segment_id(segment_addr)
+          #addr_start = self.rom.read_segment_addr(segment_addr)
+          #addr_end = self.rom.read_segment_end(segment_addr)
+          #print("reading 0x22 load polygon data with geo")
+          #self.geometry_layouts.append(GeoLayoutParser(self.rom, segment_id, addr_start, addr_end, "0x22 LOAD_POLYGON_WITH_GEO"))
         elif command.identifier == 0x20:
           """ 0x20 END_AREA """
-          #print("Ending Area", hex(self.current_area))
           self.current_area = None
         elif command.identifier == 0x02: 
           """ END_LEVEL_DATA """
