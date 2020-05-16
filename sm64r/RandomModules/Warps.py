@@ -296,8 +296,8 @@ class WarpRandomizer:
         keys = list(lvl_painting_names.keys())
         shuffled_keys = [*keys]
         shuffle(shuffled_keys)
-        for key in keys:
-          lvl_painting_names[key] = lvl_painting_names[shuffled_keys]
+        for level_key_index, level_key in enumerate(keys):
+          lvl_painting_names[level_key] = lvl_painting_names[shuffled_keys[level_key_index]]
     
     # list of changes that will be done
     change_list = []
