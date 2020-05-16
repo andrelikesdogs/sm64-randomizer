@@ -129,6 +129,7 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
     seed(opt_args.seed)
 
     rom.read_levels()
+    rom.read_asm()
     textures = None
 
     if rom.rom_type == 'EXTENDED':
@@ -187,6 +188,7 @@ def run_with_parsed_args(opt_args : argparse.Namespace):
       seed(opt_args.seed)
 
     gameplay_stuff = Gameplay(rom)
+    #gameplay_stuff.update_star_spawn_locations([])
     if opt_args.disable_cutscenes:
       gameplay_stuff.disable_all_cutscenes()
     if opt_args.disable_starwarp:

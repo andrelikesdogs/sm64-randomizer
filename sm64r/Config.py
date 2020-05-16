@@ -25,6 +25,7 @@ LEVEL_PROPERTY_DEFINITIONS = {
   'shuffle_painting[].sections[].segment_offset': ["int"],
   'shuffle_painting[].sections[].size': ["list"],
   'shuffle_painting[].sections[].name': ["str"],
+  'hardcoded_stars': ["list"],
   'requires_key': ["list", "int", "str"],
   'loading_zones': ["list"],
   'disable_planes': ["list"],
@@ -76,7 +77,8 @@ ROOT_LEVEL_FIELDS = [
 ]
 
 CONSTANT_FILE_FIELDS = [
-  "collision_types"
+  "collision_types",
+  "star_positions"
 ]
 
 NL = "\n"

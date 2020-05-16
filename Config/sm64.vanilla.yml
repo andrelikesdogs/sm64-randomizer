@@ -335,7 +335,16 @@ levels:
             size: [64, 32] # width, height
   - name: "Tiny-Huge Island"
     course_id: 0x0D
+    areas:
+      - id: 0x01
+        name: "THI: Huge"
+      - id: 0x02
+        name: "THI: Tiny"
+      - id: 0x03
+        name: "THI: Wiggler Cave"
     properties:
+      - hardcoded_stars:
+        - thi_piranha_plants
       - shuffle_painting:
         - game_painting: 'painting_thi'
           sections:
@@ -404,6 +413,8 @@ levels:
     course_id: 0x1B
     properties:
       - slide
+      - hardcoded_stars:
+        - pss_beat_slide_in_21s
       - shuffle_painting:
         - custom_painting: 'painting_pss'
   - name: "Winged Mario over the Rainbow"
@@ -703,6 +714,11 @@ object_randomization:
             - name: "Star #6"
               match:
                 - bparam2: 0xE
+        - name: Hardcoded Star
+          match:
+            - source: 'HARDCODED_STAR'
+          rules:
+            - underwater: allowed
     
     - name: "Tree"
       rules:

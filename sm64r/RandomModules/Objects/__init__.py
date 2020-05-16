@@ -12,6 +12,7 @@ from sm64r.Randoutils import format_binary, print_progress_bar
 
 from .Whitelist import RandomizeObjectsWhitelist, DEBUG_HIT_INDICES
 from sm64r.Entities.Object3D import Object3D
+from sm64r.Entities.HardcodedStar import HardcodedStar
 from sm64r.Parsers.LevelScript import LevelScriptParser
 
 from random import shuffle
@@ -541,7 +542,13 @@ class ObjectRandomizer:
 
     try:
       for level, levelscript in self.rom.levelscripts.items():
-        for object_idx, object3d in enumerate(levelscript.objects):
+        level_objects = [] #levelscript.objects
+
+        if "hardcoded_stars" in level.properties:
+          for hardcoded_star_def_name in level.properties["hardcoded_stars"]:
+            level_objects.append(HardcodedStar.from_constants_definition(self.rom, hardcoded_star_def_name))
+
+        for object_idx, object3d in enumerate(level_objects):
           self.start_reject_log(object3d, level, object3d.area_id)
           object3d.meta["randomization"] = "UNTOUCHED"
           levelscript.level_geometry.add_object_point_of_interest(object3d)
@@ -598,7 +605,7 @@ class ObjectRandomizer:
             
             found_valid_point = True
             object_randomization_count += 1
-            object3d.set(self.rom, "position", new_position)
+            object3d.set(self.rom, "position", new_position) # position here is in SM64 format, y being up/down
             object3d.meta["randomization"] = "RANDOMIZED"
             self.flush_last_reject_log()
     except KeyboardInterrupt:

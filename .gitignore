@@ -69,3 +69,8 @@ node_modules/
 /*.zip
 #ide files
 *.wpr
+
+# star location research
+sm64r/Scripts/hex_bscripts
+# used for 
+*.csv

@@ -12,6 +12,7 @@ import binascii
 from .Randoutils import pretty_print_table, generate_debug_materials, generate_obj_for_level_geometry, format_binary
 from .Level import Level
 from .Parsers.LevelScript import LevelScriptParser
+from .Parsers.Assembly import AssemblerParser
 from .Constants import ALL_LEVELS, application_path
 from .Config import Config
 from .RandomModules.Textures import TextureAtlas
@@ -245,8 +246,13 @@ class ROM:
         
         with open(os.path.join("dumps", "level_geometry", "debug.mtl"), "w+") as mtl_debug:
           mtl_debug.write(generate_debug_materials())
-    
-        
+
+  def read_asm(self):
+    self.asm_parser = AssemblerParser(self)
+
+    self.asm_parser.set_cursor(0x001000)
+    self.asm_instructions = self.asm_parser.parse_until(0xE6258)
+
   def print_info(self):
     pretty_print_table("ROM Properties", {
       'Loaded ROM': self.file.name,

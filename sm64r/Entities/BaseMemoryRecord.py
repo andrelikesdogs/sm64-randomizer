@@ -35,6 +35,8 @@ class BaseMemoryRecord:
       setattr(self, key, value)
       for index, value_type in enumerate(list(memory_information.data_type)):
         rom.write_integer(memory_information.address_start + index * size, value[index], size, value_type == 'int')
+    elif hasattr(memory_information.data_type, '__call__'):
+      memory_information.data_type(value)
     else:
       raise TypeError(f'Datatype unknown, can\'t format this data for writing')
 

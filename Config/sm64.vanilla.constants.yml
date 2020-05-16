@@ -61,4 +61,64 @@ collision_types:
   POOL_WARP: 0xFD
   BOWSER_1_TRAPDOOR: 0xFF
 
+# Define hardcoded star locations
+# Hardcoded star locations are stars that are spawned upon an event, like defeating King Bob-Omb.
+# Unlike regular stars that are defined as objects, these stars are spawned from the games code and require
+# special instructions on how to alter. This section defines all such stars
+star_positions:
+  pss_beat_slide_in_21s:
+    course_id: 0x1B
+    area_id: 0x1
+    position:
+      x:
+        strategy: 'rom_stored_mem'
+        mem_pos: 0xF1414
+        value: 0xC5C6B000
+      y:
+        strategy: 'rom_stored_mem'
+        mem_pos: 0xF1418
+        value: 0xC5866000
+      z:
+        strategy: 'lui_ori_change'
+        asm_pos:
+          LUI: 0x802507CC
+          ORI: 0x802507D0
+        value: 0x4592E000
+  thi_piranha_plants:
+    course_id: 0x0D
+    area_id: 0x1
+    position:
+      x:
+        strategy: 'rom_stored_mem'
+        mem_pos: 0xF3C54
+        value: 0xC5C4E000
+      y:
+        strategy: 'rom_stored_mem'
+        mem_pos: 0xF3C58
+        value: 0xC4E74000
+      z:
+        strategy: 'lui_ori_change'
+        asm_pos:
+          LUI: 0x8030D028
+          ORI: 0x8030D02C
+        value: 0xC5C4E000
+  lll_bully_minions:
+    course_id: 0x16
+    area_id: 0x1
+    position:
+      x:
+        strategy: 'rom_stored_mem'
+        mem_pos: 0xF3498
+        value: 0x45674000
+      y:
+        strategy: 'lui_change'
+        asm_pos: 0x802EBCB4
+        value: 0x44160000
+      z:
+        strategy: 'lui_ori_change'
+        asm_pos:
+          LUI: 0x802EBCBC
+          ORI: 0x802EBCC4
+        value: 0xC5ABE000
+
 

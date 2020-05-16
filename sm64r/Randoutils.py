@@ -17,6 +17,22 @@ def format_binary(bin_data):
 
   return ' '.join(hex(b)[2:].upper().rjust(2, '0') for b in bin_data)
 
+
+def format_bits(value_or_entries):
+  output = ""
+
+  entries = [value_or_entries] if type(value_or_entries) is not list else value_or_entries 
+  for entry in entries:
+    output += str(bin(entry)[2:]).rjust(8, '0')
+  return output
+
+def reverse_byte(value):
+  l = list(bin(value)[2:].rjust(8, '0'))
+  l.reverse()
+
+  return int(''.join(l), 2)
+
+
 def round_up_at_half(n):
   if n % 1 >= 0.5:
     return math.ceil(n)
