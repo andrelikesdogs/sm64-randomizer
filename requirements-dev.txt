@@ -119,7 +119,7 @@ pefile==2019.4.18
 pep8==1.7.1
 pexpect==4.6.0
 pickleshare==0.7.5
-Pillow==6.2.0
+Pillow==8.1.1
 pkginfo==1.5.0.1
 plotly==3.10.0
 pluggy==0.9.0
