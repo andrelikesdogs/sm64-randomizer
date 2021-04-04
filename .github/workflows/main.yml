@@ -28,7 +28,7 @@ jobs:
           architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-build.txt
 
       - name: Run Build Script
         run: ./tools/build_unix.sh
