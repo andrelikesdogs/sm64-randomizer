@@ -38,11 +38,14 @@ jobs:
       - name: Output Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: "sm64_randomizer_generator-unix-x64-${{ env.VERSION }}-${{ github.sha }}"
+          name: "sm64_randomizer_generator-unix-x64-${{ env.VERSION }}-${{ env.SHA8 }}"
           path: "dist/*"
     
   build-windows-x64:
     runs-on: windows-2019
+    env:
+      SHA8: ${GITHUB_SHA::8}
+    
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -59,5 +62,5 @@ jobs:
       - name: Output Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: "sm64_randomizer_generator-win-x64-${{ env.VERSION }}-${{ github.sha }}"
+          name: "sm64_randomizer_generator-win-x64-${{ env.VERSION }}-${{ env.SHA8 }}"
           path: "dist/*"

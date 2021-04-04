@@ -17,4 +17,4 @@ Copy-Item ./Data -Destination ./dist -Recurse -Force
 Copy-Item ./Assets -Destination ./dist -Recurse -Force
 
 # output version as env var for other build steps
-Write-Output "::echo VERSION=$RandoVersion"
+Write-Host $VERSION=$RandoVersion
