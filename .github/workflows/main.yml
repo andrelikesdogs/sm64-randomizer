@@ -39,5 +39,5 @@ jobs:
       - name: Output Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: release/${{ env.RELEASE_FILENAME }}.zip
+          name: "release/${{ env.RELEASE_FILENAME }}.zip"
           path: build_unix_64.zip
