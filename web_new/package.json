@@ -26,7 +26,7 @@
     "favicons-webpack-plugin": "^1.0.2",
     "html-webpack-plugin": "git+https://github.com/jantimon/html-webpack-plugin.git",
     "husky": "^3.1.0",
-    "node-sass": "^4.13.0",
+    "node-sass": "^4.13.1",
     "normalize.css": "^8.0.1",
     "prettier": "^1.19.1",
     "react": "^16.12.0",
