@@ -60,10 +60,11 @@ jobs:
         run: pip install -r requirements-build.txt
       
       - name: Run Build Script
+        id: build
         run: "powershell ./tools/build_win.ps1"
       
       - name: Output Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: "sm64_randomizer_generator-win-x64-v${{ env.VERSION }}-${{ steps.vars.outputs.sha_short }}.zip"
+          name: "sm64_randomizer_generator-win-x64-v${{ steps.build.outputs.version }}-${{ steps.vars.outputs.sha_short }}.zip"
           path: "dist/*"
