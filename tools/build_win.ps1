@@ -17,4 +17,4 @@ Copy-Item ./Data -Destination ./dist -Recurse -Force
 Copy-Item ./Assets -Destination ./dist -Recurse -Force
 
 # output version as env var for other build steps
-echo $VERSION=$RandoVersion | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+echo "VERSION=$RandoVersion" >> $GITHUB_ENV
