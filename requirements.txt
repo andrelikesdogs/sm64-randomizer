@@ -1,5 +1,5 @@
 numpy==1.18.1
-Pillow==7.0.0
+Pillow==8.1.1
 PyYAML==5.4
 Rtree==0.9.3
 trimesh==3.5.19
