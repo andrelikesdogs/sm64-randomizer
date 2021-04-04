@@ -31,9 +31,10 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run Build Script
-        run: ./tools/build_mac_osx.sh
-          
-          
-          
-          
-          echo test, and deploy your project.
+        run: ./tools/build_unix.sh
+
+      - name: Output Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: release/*
+          path: build_unix_64.zip
