@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 $RandoVersion = python -c 'from __version__ import __version__; print(__version__)'
 echo "Randomizer Version: $RandoVersion"
 
