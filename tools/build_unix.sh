@@ -1,5 +1,6 @@
 rm -rf dist/main
-bin/pyinstaller main-osx.spec
+set -e # exit on error
+pyinstaller main-osx.spec
 
 mv dist/main dist/SM64\ Randomizer\ Generator
 
@@ -22,3 +23,4 @@ cp -v ./3rdparty/README* ./dist/3rdparty
 cd ./dist
 zip -r ../release/sm64-randomizer-${VERSION}-mac-osx.zip SM64* README.md LICENSE 3rdparty Data Config Assets
 cd -;
+set +e
