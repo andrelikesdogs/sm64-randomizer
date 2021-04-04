@@ -31,7 +31,7 @@ jobs:
           architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
 
       - name: Enter virtualenv
-        run: python -m venv .
+        run: python -m venv . && source bin/activate
       
       - name: Install Dependencies
         run: pip install -r requirements-build.txt
@@ -58,6 +58,9 @@ jobs:
         with:
           python-version: '3.8'
           architecture: 'x64'
+      
+      - name: Enter virtualenv
+        run: python -m venv . && Scripts/Activate.ps1
       
       - name: Install Dependencies
         run: pip install -r requirements-build.txt
