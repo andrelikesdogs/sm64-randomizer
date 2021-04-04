@@ -11,9 +11,6 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-env:
-  SHA8: ${GITHUB_SHA::8}
-  
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build-unix-x64:
@@ -22,6 +19,10 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -41,7 +42,7 @@ jobs:
       - name: Output Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: "sm64_randomizer_generator-unix-x64-${{ env.VERSION }}-${{ env.SHA8 }}"
+          name: "sm64_randomizer_generator-unix-x64-${{ env.VERSION }}-${{ steps.vars.outputs.sha_short }}.zip"
           path: "dist/*"
     
   build-windows-x64:
@@ -63,5 +64,5 @@ jobs:
       - name: Output Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: "sm64_randomizer_generator-win-x64-${{ env.VERSION }}-${{ env.SHA8 }}"
+          name: "sm64_randomizer_generator-win-x64-${{ env.VERSION }}-${{ steps.vars.outputs.sha_short }}.zip"
           path: "dist/*"
