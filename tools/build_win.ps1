@@ -17,6 +17,8 @@ Copy-Item 3rdparty/README.md -Destination dist/3rdparty
 Copy-Item ./Config -Destination ./dist -Recurse -Force
 Copy-Item ./Data -Destination ./dist -Recurse -Force
 Copy-Item ./Assets -Destination ./dist -Recurse -Force
+Copy-Item LICENSE -Destination ./dist -Force
+Copy-Item README.md -Destination ./dist -Force
 
 # output version as env var for other build steps
 #echo "VERSION=$RandoVersion" >> $GITHUB_ENV
