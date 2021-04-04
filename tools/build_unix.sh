@@ -22,6 +22,8 @@ cp -v ./3rdparty/LICENSE* ./dist/3rdparty
 cp -v ./3rdparty/README* ./dist/3rdparty
 cd ./dist
 zip -r ../release/sm64-randomizer-${VERSION}-mac-osx.zip SM64* README.md LICENSE 3rdparty Data Config Assets
-export RELEASE_FILENAME=sm64-randomizer-${VERSION}-mac-osx.zip
 cd -;
 set +e
+
+# save filename in env variables for later build-step
+echo "RELEASE_FILENAME=sm64-randomizer-${VERSION}-mac-osx.zip" >> $GITHUB_ENV
