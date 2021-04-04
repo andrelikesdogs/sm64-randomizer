@@ -1,12 +1,14 @@
 # -*- mode: python -*-
 
 block_cipher = None
-
+import os
+libFolder = os.environ["LD_LIBRARY_PATH"] if "LD_LIBRARY_PATH" in os.environ else "lib"
+print("LibFolder: \"" + libFolder + "\"")
 
 a = Analysis(['main.py'],
              pathex=['/Users/andremeyer/Documents/Own/mario-64-rom-hacking/sm64-randomizer'],
              binaries=[],
-             datas=[('README.md', '.'), ('LICENSE', '.'), ('Data', '.'), ('Assets', '.'), ('Config', '.'), ('lib/python3.8/site-packages/trimesh/resources', 'trimesh/resources/')],
+             datas=[('README.md', '.'), ('LICENSE', '.'), ('Data', '.'), ('Assets', '.'), ('Config', '.'), (libFolder + '/python3.8/site-packages/trimesh/resources', 'trimesh/resources/')],
              hiddenimports=["pyperclip"],
              hookspath=[],
              runtime_hooks=[],
