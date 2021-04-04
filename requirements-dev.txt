@@ -17,7 +17,7 @@ backports.shutil-get-terminal-size==1.0.0
 beautifulsoup4==4.7.1
 bitarray==0.8.3
 bkcharts==0.2
-bleach==3.1.0
+bleach==3.3.0
 bokeh==1.0.4
 boto==2.49.0
 Bottleneck==1.2.1
@@ -33,7 +33,7 @@ conda==4.6.14
 conda-build==3.17.8
 conda-verify==3.1.1
 contextlib2==0.5.5
-cryptography==2.6.1
+cryptography==3.3.2
 cycler==0.10.0
 Cython==0.29.6
 cytoolz==0.9.0.1
@@ -67,7 +67,7 @@ isort==4.3.16
 itsdangerous==1.1.0
 jdcal==1.4
 jedi==0.13.3
-Jinja2==2.10
+Jinja2==2.11.3
 jsonschema==3.0.1
 jupyter==1.0.0
 jupyter-client==5.2.4
@@ -82,7 +82,7 @@ libarchive-c==2.8
 lief==0.9.0
 llvmlite==0.28.0
 locket==0.2.0
-lxml==4.3.2
+lxml==4.6.3
 macholib==1.11
 MarkupSafe==1.1.1
 matplotlib==3.0.3
@@ -100,7 +100,7 @@ nbformat==4.4.0
 networkx==2.2
 nltk==3.4.5
 nose==1.3.7
-notebook==5.7.8
+notebook==6.1.5
 numba==0.43.1
 numexpr==2.6.9
 numpy==1.16.3
@@ -119,14 +119,14 @@ pefile==2019.4.18
 pep8==1.7.1
 pexpect==4.6.0
 pickleshare==0.7.5
-Pillow==6.2.0
+Pillow==8.1.1
 pkginfo==1.5.0.1
 plotly==3.10.0
 pluggy==0.9.0
 ply==3.11
 prometheus-client==0.6.0
 prompt-toolkit==2.0.9
-psutil==5.6.1
+psutil==5.6.6
 ptyprocess==0.6.0
 py==1.8.0
 pycodestyle==2.5.0
@@ -137,7 +137,7 @@ pycrypto==2.6.1
 pycurl==7.43.0.2
 pyflakes==2.1.1
 pyglet==1.3.2
-Pygments==2.3.1
+Pygments==2.7.4
 PyInstaller==3.4
 pylint==2.3.1
 pyodbc==4.0.26
@@ -155,7 +155,7 @@ pytest-remotedata==0.3.1
 python-dateutil==2.8.0
 pytz==2018.9
 PyWavelets==1.0.2
-PyYAML==5.1
+PyYAML==5.4
 pyzmq==18.0.0
 QtAwesome==0.5.7
 qtconsole==4.4.3

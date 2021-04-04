@@ -25,7 +25,7 @@ LEVEL_PROPERTY_DEFINITIONS = {
   'shuffle_painting[].sections[].segment_offset': ["int"],
   'shuffle_painting[].sections[].size': ["list"],
   'shuffle_painting[].sections[].name': ["str"],
-  'requires_key': ["int"],
+  'requires_key': ["list", "int", "str"],
   'loading_zones': ["list"],
   'disable_planes': ["list"],
   'shuffle_warps': ["list"],
@@ -44,7 +44,7 @@ RULE_DEFINITIONS = {
   'drop_to_floor': ["bool", "str"], # Enable that objects drop to floor. True, False or "force" to apply this behaviour also when it would result in an underwater position
   'max_y': ["int"], # Maximum Y allowed
   'min_y': ["int"], # Minimum Y allowed
-  'max_slope': ["float"], # Maximum Slope allowed
+  'max_floor_steepness': ["float"], # Maximum Slope allowed, 0 = completely flat, 1 = 90º wall
   'disabled': ["bool"], # Disable this object for randomization
   'spawn_height': ["list"], # Min/Max heights above floor
   'distance_to': ["list"],

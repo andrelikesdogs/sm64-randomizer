@@ -64,6 +64,11 @@ levels:
   # - Define their paintings, this is so they can be shuffled
   # - Define their order, this is to ensure playability after shuffle
 
+  # Define level "keys"
+  # - 0x1 Basement Key
+  # - 0x2 Upstairs Key
+  # - 0x3 DDD Bowser Sub
+
   # Overworld Levels
   - name: "Castle Grounds"
     course_id: 0x10
@@ -183,7 +188,7 @@ levels:
   - name: "Hazy Maze Cave"
     course_id: 0x07
     properties:
-      - requires_key: 0x1
+      - requires_key: 'basement'
       - shuffle_warps:
           - to: # which warps in this level should match? warps "to" metal cap
               - course_id: 0x1C # MC
@@ -212,7 +217,7 @@ levels:
               segment_offset: 0x12800
               format: 'rgba16'
               size: [64, 32] # width, height
-      - requires_key: 0x1
+      - requires_key: 'basement'
   - name: "Shifting Sand Land"
     course_id: 0x08
     properties:
@@ -229,11 +234,12 @@ levels:
               segment_offset: 0x15800
               format: 'rgba16'
               size: [64, 32] # width, height
-      - requires_key: 0x1
+      - requires_key: 'basement'
   - name: "Dire, Dire Docks"
     course_id: 0x17
     properties:
-      - requires_key: 0x1
+      - requires_key: 'basement'
+      - key_receive: 'ddd_moved'
       - shuffle_painting:
         - custom_painting: 'painting_ddd'
     areas:
@@ -247,8 +253,10 @@ levels:
         name: "DDD: Bowsers Sub"
         properties:
           - loading_zones:
-            - p1: [-3173, 1229, -511]
+            - p1: [-3173, 1229, -511] # y is up/down
               p2: [-6041, -4607, 512]
+            - p1: [2893, -1051, -4095]
+              p2: [4941, -3063, -7167]
   - name: "Snowman's Land"
     course_id: 0x0A
     properties:
@@ -265,7 +273,7 @@ levels:
               segment_offset: 0x20800
               format: 'rgba16'
               size: [64, 32] # width, height
-      - requires_key: 0x2
+      - requires_key: 'upstairs'
   - name: "Wet-Dry World"
     course_id: 0x0B
     properties:
@@ -282,7 +290,7 @@ levels:
               segment_offset: 0x18800
               format: 'rgba16'
               size: [64, 32] # width, height
-      - requires_key: 0x2
+      - requires_key: 'upstairs'
       - disable_water_check
       - loading_zones: # between area 1 and 2
         - p1: [4616, -200, -1538]
@@ -311,6 +319,7 @@ levels:
         properties:
           - slide
     properties:
+      - requires_key: 'upstairs'
       - shuffle_painting:
         - game_painting: 'painting_ttm'
           sections:
@@ -324,7 +333,6 @@ levels:
             segment_offset: 0x1C800
             format: 'rgba16'
             size: [64, 32] # width, height
-      - requires_key: 0x2
   - name: "Tiny-Huge Island"
     course_id: 0x0D
     properties:
@@ -341,7 +349,7 @@ levels:
             segment_offset: 0x1A800
             format: 'rgba16'
             size: [64, 32] # width, height
-      - requires_key: 0x2
+      - requires_key: 'upstairs'
   - name: "Tick Tock Clock"
     course_id: 0x0E
     properties:
@@ -358,11 +366,11 @@ levels:
             segment_offset: 0x1E800
             format: 'rgba16'
             size: [64, 32] # width, height
-      - requires_key: 0x2
+      - requires_key: 'upstairs'
   - name: "Rainbow Ride"
     course_id: 0x0F
     properties:
-      - requires_key: 0x2
+      - requires_key: 'upstairs'
       - shuffle_painting:
         - custom_painting: 'painting_rr'
   
@@ -370,12 +378,13 @@ levels:
   - name: "Vanish Cap"
     course_id: 0x12
     properties:
+      - requires_key: 'basement'
       - shuffle_painting:
         - custom_painting: 'painting_vc'
   - name: "Metal Cap"
     course_id: 0x1C
     properties:
-      - requires_key: 0x1
+      - requires_key: 'basement'
       - shuffle_painting:
         - custom_painting: 'painting_mc'
   - name: "Wing Cap"
@@ -403,7 +412,7 @@ levels:
       - fly_stage
       - shuffle_painting:
         - custom_painting: 'painting_wmotr'
-      - requires_key: 0x2
+      - requires_key: 'upstairs'
   
   # Bowser Levels
   - name: "Bowser in the Dark World"
@@ -412,7 +421,7 @@ levels:
       - shuffle_painting:
         - custom_painting: 'painting_bidw'
       - continues_level: 0x1E
-      - key_receive: 0x1
+      - key_receive: 'basement'
   - name: "Bowser in the Dark World Battle"
     course_id: 0x1E
     properties:
@@ -422,8 +431,8 @@ levels:
     course_id: 0x13
     properties:
       - continues_level: 0x21
-      - requires_key: 0x1
-      - key_receive: 0x2
+      - requires_key: ['basement', 'ddd_moved']
+      - key_receive: 'upstairs'
       - shuffle_painting:
         - custom_painting: 'painting_bifs'
   - name: "Bowser in the Dark World Battle"
@@ -437,7 +446,7 @@ levels:
       - disabled:
         - entry_shuffle
       - continues_level: 0x22
-      - requires_key: 0x2
+      - requires_key: 'upstairs'
       - shuffle_painting:
         - custom_painting: 'painting_bits' # doesnt make sense right now, bits does not get shuffled
   - name: "Bowser in the Sky Battle"
@@ -499,14 +508,14 @@ object_randomization:
   rules:
     - drop_to_floor # try to place this object on the floor
     - floor_types_allowed: restricted # select above defined group as floor types allowed
-    - max_slope: 0.75
+    - max_floor_steepness: 0.20
   
   objects:
     # Bosses
     # - Generally shouldn't spawn on slopes, as that makes it hard to fight them
     - name: "Bosses"
       rules:
-        - max_slope: 0.0
+        - max_floor_steepness: 0.0
         - underwater: never
       objects:
         - name: King Bob-Omb
@@ -597,7 +606,6 @@ object_randomization:
         - 0x130008EC
       rules:
         - floor_types_allowed: with_slides
-        - underwater: allowed
       objects:
         - name: Grounded Line Formation (5x)
           match:
@@ -605,18 +613,21 @@ object_randomization:
           rules:
             - bounding_box: [1000, 100, 100] # length, width, height
             - spawn_height: [200, 600]
+            - drop_to_floor: force
         - name: Grounded Ring Formation (8x)
           match:
             - bparam2: 2
           rules:
             - bounding_box: [1000, 1000, 100] # length, width, height
             - spawn_height: [200, 600]
+            - drop_to_floor: force
         - name: Grounded Arrow (8x)
           match:
             - bparam2: 4
           rules:
             - bounding_box: [500, 500, 100] # length, width, height
             - spawn_height: [200, 600]
+            - drop_to_floor: force
         - name: Horizontal Floating Line (x5)
           match:
             - bparam2: 16
@@ -747,7 +758,7 @@ object_randomization:
       rules:
         - underwater: allowed
         - spawn_height: [100, 900]
-        - max_slope: 0.0
+        - max_floor_steepness: 0.05
       objects:
         - name: "Mario Level Spawn"
           match:
@@ -762,7 +773,7 @@ object_randomization:
     - name: "Special"
       rules:
         - underwater: never
-        - max_slope: 0.0
+        - max_floor_steepness: 0.05
       objects:
         - name: Toad
           match: 0x13002EF8
@@ -819,13 +830,6 @@ object_randomization:
             - "*"
           rules:
             - max_y: 1500
-        #- name: "WF: Limit slopes"
-        #  match:
-        #    - course_id: 0x18
-        #  for:
-        #    - "*"
-        #  rules:
-        #    - max_slope: 0
         - name: "JRB: Limit max height in Ship"
           match:
             - course_id: 0x0C
@@ -833,7 +837,7 @@ object_randomization:
           for:
             - 'Stars'
           rules:
-            - max_y: 1800
+            - disabled
         - name: "THI: Red Coins / Red Coin Star below Boss Room"
           match:
             - 0x13003EAC # Red Coin
@@ -842,6 +846,21 @@ object_randomization:
             - area_id: 0x03
           rules:
             - max_y: 1750
+        - name: "VC: Don't shuffle warp"
+          match:
+            - course_id: 0x12
+          for:
+            - 'Warps'
+          rules:
+            - disabled
+        - name: "THI: Wiggler Boss battle dont shuffle warp"
+          match:
+            - course_id: 0x0D
+            - area_id: 0x03
+          for:
+            - 'Warps'
+          rules:
+            - disabled
         - name: "WC: Coins within Reach of Platform"
           match:
             - course_property: fly_stage
@@ -849,7 +868,7 @@ object_randomization:
           rules:
             - no_floor_required
             - min_y: -2000
-            - max_y: 3500
+            - max_y: 2500
             - distance_to:
               - origin: [0, -2047, 0]
                 max_distance: 3000
@@ -863,6 +882,8 @@ object_randomization:
             - distance_to:
               - origin: [0, 1900, 0]
                 max_distance: 5000
+            - min_y: -3500
+            - max_y: 2200
           for:
             - 'Coin'
             - 'Coin Formations'

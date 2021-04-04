@@ -258,7 +258,7 @@ class GuiApplication:
           raise NotImplementedError(f'arg format for {type(tkinter_var)} is not implemented yet')
       
       args = [input_rom, *params]
-      from Rom import ROM
+      from .Rom import ROM
 
       test_output = os.path.join(tempfile.gettempdir(), 'test_output.z64')
       try:
@@ -270,7 +270,7 @@ class GuiApplication:
       try:
         run_with_args(args)
       except Exception as err:
-        messagebox.showerror(title="ROM Generation failed", message=f"Unfortunately, generation failed with error:\n {err}\nPlease submit this error to the projects github: https://github.com/andre-meyer/sm64-randomizer/issues")
+        messagebox.showerror(title="ROM Generation failed", message=f"Unfortunately, generation failed with error:\n {err}\nPlease submit this error to the projects github: https://github.com/andrelikesdogs/sm64-randomizer/issues")
         print(err)
         return
 
@@ -283,7 +283,7 @@ class GuiApplication:
       #webbrowser.open("file:///" + folder_containing_rom)
       return True
     except Exception as excp:
-      messagebox.showerror(title="ROM Generation failed", message=f'Sorry, ROM generation failed with error:\n {excp}\nPlease submit this error to the projects github: https://github.com/andre-meyer/sm64-randomizer/issues')
+      messagebox.showerror(title="ROM Generation failed", message=f'Sorry, ROM generation failed with error:\n {excp}\nPlease submit this error to the projects github: https://github.com/andrelikesdogs/sm64-randomizer/issues')
       
   def add_setting_field(self, field):
     master = self.frames[field['category']]

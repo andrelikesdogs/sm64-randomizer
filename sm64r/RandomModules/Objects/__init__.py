@@ -326,11 +326,13 @@ class ObjectRandomizer:
             self.log_reason_for_reject("is_valid_position", "object too close to origin")
             return False
       
-    if "max_slope" in rules and floor_properties is not False:
+    if "max_floor_steepness" in rules and floor_properties is not False:
       floor_slope = floor_properties["triangle_normal"][1]
 
       # 1 = Floor. 0 = Wall.
-      if floor_slope < abs(float(rules["max_slope"])):
+      slope_allowed = abs(float(rules["max_floor_steepness"]) - 1.0)
+      # validate steep-ness (must be this steep)
+      if floor_slope < slope_allowed: 
         self.log_reason_for_reject("is_valid_position", "floor too steep")
         return False
     
@@ -348,6 +350,38 @@ class ObjectRandomizer:
       elif underwater_status == "allowed" or underwater_status == True:
         pass
 
+    if not is_pre_position and "bounding_cylinder" in rules:
+      cylinder_def = rules["bounding_cylinder"]
+      radius = cylinder_def[0]
+      height = cylinder_def[1] if len(cylinder_def) > 1 else 100
+      orig_x = cylinder_def[2] if len(cylinder_def) > 2 else 0
+      orig_y = cylinder_def[3] if len(cylinder_def) > 3 else 0
+      orig_z = cylinder_def[4] if len(cylinder_def) > 4 else 0
+
+      target_position = [
+        position[0] + orig_x,
+        position[1] + orig_y,
+        position[2] + orig_z
+      ]
+
+      # positions here are in weird hand (y is up/down)
+      for face_index, (start, end) in enumerate(levelscript.level_geometry.area_face_aabbs[obj.area_id]):
+        # check height
+        if (start[1] > target_position[1] or end[1] > target_position[1]) or (start[1] < (target_position[1] + height) or end[1] < (target_position[1] + height)):
+          # atleast one vert is within cylinder
+          #print(face_index, len(levelscript.level_geometry.area_faces[obj.area_id]))
+          tri_verts = levelscript.level_geometry.area_faces[obj.area_id][face_index]
+          for vert in list(map(lambda x: levelscript.level_geometry.area_vertices[obj.area_id][x], tri_verts)):
+            # y is ignored to calc without height differences, as they were previously checked
+            distance = math.sqrt(
+              (target_position[0] - vert[0]) ** 2 +
+              (target_position[2] - vert[2]) ** 2
+            )
+
+            if distance < radius:
+              #print(distance, radius)
+              self.log_reason_for_reject("is_valid_position", "bounding cylinder intersection encountered")
+              return False
 
     if not is_pre_position and "bounding_box" in rules:
       extents = [ # x, z, y

@@ -9,7 +9,7 @@ import trimesh
 import sys
 import binascii
 
-from .Randoutils import pretty_print_table, generate_debug_materials, generate_obj_for_level_geometry
+from .Randoutils import pretty_print_table, generate_debug_materials, generate_obj_for_level_geometry, format_binary
 from .Level import Level
 from .Parsers.LevelScript import LevelScriptParser
 from .Constants import ALL_LEVELS, application_path
@@ -209,6 +209,18 @@ class ROM:
               mesh.export(obj_output, 'stl')
         if os.environ['SM64R'] == 'PLOT':
           self.levelscripts[level].level_geometry.plot()
+
+      if 'SM64R' in os.environ and os.environ['SM64R'] == 'GEO_LAYOUT':
+        if not os.path.exists(os.path.join("dumps", "geo_layouts")):
+          os.makedirs(os.path.join("dumps", "geo_layouts"))
+
+        with open(os.path.join("dumps", "geo_layouts", f"{level.name}_layouts.txt"), "w+") as dump_target:
+          for geo_layout in self.levelscripts[level].geometry_layouts:
+            dump_target.write(f"- Source: {geo_layout.source} ------\n")
+            for cmd_byte, commands in geo_layout.commands_by_id.items():
+              for (position, command) in commands:
+                dump_target.write(f"{hex(cmd_byte)}: [{hex(position)}]: {format_binary(command)}\n")
+            dump_target.write(("-"*50) + "\n")
       
       if 'SM64R' in os.environ and os.environ['SM64R'] == 'DUMP':
         if not os.path.exists(os.path.join("dumps", "level_scripts")):
@@ -251,8 +263,10 @@ class ROM:
     configuration = Config.find_configuration(self.checksum)
 
     if not configuration:
-      raise TypeError(f"Could not find a configuration for the loaded rom. Checksum: {hex(self.checksum)}")
-
+      print(f"Could not find configuration for the loaded ROM. Checksum: {hex(self.checksum)}")
+      print("Fallback to Default")
+      configuration = Config.find_configuration(0x635a42c5) # try US, BE, Extended
+      
     print("Loaded Configuration")
     print(configuration)
 
