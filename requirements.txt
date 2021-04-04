@@ -1,6 +1,6 @@
 numpy==1.18.1
 Pillow==7.0.0
-PyYAML==5.3
+PyYAML==5.4
 Rtree==0.9.3
 trimesh==3.5.19
 pyperclip==1.7.0
