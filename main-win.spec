@@ -2,11 +2,15 @@
 
 block_cipher = None
 
+import os
+libFolder = os.environ["pythonLocation"]+"\\lib" if "pythonLocation" in os.environ else "Lib"
+print("LibFolder: \"" + libFolder + "\"")
+
 
 a = Analysis(['main.py'],
              pathex=['C:\\Users\\Administrator\\Desktop\\sm64-randomizer'],
-             binaries=[('Lib/site-packages/rtree/spatialindex*', '.')],
-             datas=[('README.md', '.'), ('LICENSE', '.'), ('Data', '.'), ('Assets', '.'), ('Lib/site-packages/trimesh/resources', 'trimesh/resources/')],
+             binaries=[(libFolder+'\\site-packages\\rtree\\spatialindex*', '.')],
+             datas=[('README.md', '.'), ('LICENSE', '.'), ('Data', '.'), ('Assets', '.'), (libFolder+'\\site-packages\\trimesh\\resources', 'trimesh\\resources\\')],
              hiddenimports=["pyperclip"],
              hookspath=[],
              runtime_hooks=[],
