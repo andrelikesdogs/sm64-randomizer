@@ -20,4 +20,4 @@ Copy-Item ./Assets -Destination ./dist -Recurse -Force
 
 # output version as env var for other build steps
 #echo "VERSION=$RandoVersion" >> $GITHUB_ENV
-Write-Host "::set-output name=version::${$RandoVersion}"
+Write-Output "::set-output name=version::$RandoVersion"

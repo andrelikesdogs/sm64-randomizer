@@ -10,7 +10,7 @@ print("LibFolder: \"" + libFolder + "\"")
 a = Analysis(['main.py'],
              pathex=['C:\\Users\\Administrator\\Desktop\\sm64-randomizer'],
              binaries=[(libFolder+'\\site-packages\\rtree\\lib\\spatialindex*', '.')],
-             datas=[('README.md', '.'), ('LICENSE', '.'), ('Data', '.'), ('Assets', '.'), (libFolder+'\\site-packages\\trimesh\\resources', 'trimesh\\resources\\')],
+             datas=[('README.md', '.'), ('LICENSE', '.'), ('Data', '.'), ('Assets', '.'), ('Config', '.'), (libFolder+'\\site-packages\\trimesh\\resources', 'trimesh\\resources\\')],
              hiddenimports=["pyperclip"],
              hookspath=[],
              runtime_hooks=[],
