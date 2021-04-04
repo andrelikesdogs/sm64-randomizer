@@ -11,9 +11,12 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  SHA8: ${GITHUB_SHA::8}
+  
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build-unix:
+  build-unix-x64:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -43,8 +46,6 @@ jobs:
     
   build-windows-x64:
     runs-on: windows-2019
-    env:
-      SHA8: ${GITHUB_SHA::8}
     
     steps:
       - uses: actions/checkout@v2
