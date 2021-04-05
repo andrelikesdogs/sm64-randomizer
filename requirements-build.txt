@@ -1,0 +1,10 @@
+altgraph==0.17
+macholib==1.14
+numpy==1.18.1
+Pillow==7.0.0
+pyinstaller==4.2
+pyinstaller-hooks-contrib==2021.1
+pyperclip==1.7.0
+PyYAML==5.3
+Rtree==0.9.7
+trimesh==3.5.19

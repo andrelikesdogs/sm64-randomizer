@@ -26,8 +26,8 @@ This is a work in progress project to build an [OoT-Randomizer](https://www.ootr
 - Randomizes Mario's Outfit
 - Randomizes Coin Colors
 - Randomizes Objects in Level
-- Randomizes Music Instruments
-- ~~Randomizes Skybox~~ (Currently disabled)
+- Randomizes Musical Instruments
+- Randomizes Skybox
 - Disables Cutscenes
 - Disables Level Intros
 - ~~Disable Keydoors~~ (Currently disabled)

@@ -1,0 +1,113 @@
+# This actions workflow will build all supported platforms for the sm64 randomizer generator
+name: CI
+
+on:
+  push:
+    branches: [ master, development ]
+
+  workflow_dispatch:
+
+jobs:
+  build-unix-x64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+
+      - name: Install Dependencies
+        run: pip install -r requirements-build.txt
+
+      - name: Run Build Script
+        run: ./tools/build_unix.sh
+
+      - name: Output Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: "sm64_randomizer_generator-unix-x64-v${{ env.VERSION }}-${{ steps.vars.outputs.sha_short }}"
+          path: "dist/*"
+    
+  build-windows-x64:
+    runs-on: windows-2019
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      
+      - name: Install Dependencies
+        run: pip install -r requirements-build.txt
+      
+      - name: Run Build Script
+        id: build
+        run: "powershell ./tools/build_win.ps1"
+      
+      - name: Output Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: "sm64_randomizer_generator-win-x64-v${{ steps.build.outputs.version }}-${{ steps.vars.outputs.sha_short }}"
+          path: "dist/*"
+
+  build-windows-x86:
+    runs-on: windows-2019
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: 'x86'
+      
+      - name: Install Dependencies
+        run: pip install -r requirements-build.txt
+      
+      - name: Run Build Script
+        id: build
+        run: "powershell ./tools/build_win.ps1"
+      
+      - name: Output Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: "sm64_randomizer_generator-win-x86-v${{ steps.build.outputs.version }}-${{ steps.vars.outputs.sha_short }}"
+          path: "dist/*"
+  
+  build-osx-x64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+
+      - name: Install Dependencies
+        run: pip install -r requirements-build.txt
+
+      - name: Run Build Script
+        run: ./tools/build_osx.sh
+
+      - name: Output Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: "sm64_randomizer_generator-osx-x64-v${{ env.VERSION }}-${{ steps.vars.outputs.sha_short }}"
+          path: "dist/*"
