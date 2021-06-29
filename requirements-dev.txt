@@ -196,7 +196,7 @@ tqdm==4.31.1
 traitlets==4.3.2
 trimesh==2.38.26
 unicodecsv==0.14.1
-urllib3==1.24.1
+urllib3==1.26.5
 wcwidth==0.1.7
 webencodings==0.5.1
 Werkzeug==0.15.3
