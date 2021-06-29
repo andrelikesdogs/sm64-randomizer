@@ -1,39 +1,113 @@
-# This is a basic workflow to help you get started with Actions
-
+# This actions workflow will build all supported platforms for the sm64 randomizer generator
 name: CI
 
-# Controls when the action will run. 
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master, development ]
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  build-unix-x64:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          python-version: '3.8'
+          architecture: 'x64'
+
+      - name: Install Dependencies
+        run: pip install -r requirements-build.txt
+
+      - name: Run Build Script
+        run: ./tools/build_unix.sh
+
+      - name: Output Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: "sm64_randomizer_generator-unix-x64-v${{ env.VERSION }}-${{ steps.vars.outputs.sha_short }}"
+          path: "dist/*"
+    
+  build-windows-x64:
+    runs-on: windows-2019
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      
+      - name: Install Dependencies
+        run: pip install -r requirements-build.txt
+      
+      - name: Run Build Script
+        id: build
+        run: "powershell ./tools/build_win.ps1"
+      
+      - name: Output Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: "sm64_randomizer_generator-win-x64-v${{ steps.build.outputs.version }}-${{ steps.vars.outputs.sha_short }}"
+          path: "dist/*"
+
+  build-windows-x86:
+    runs-on: windows-2019
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: 'x86'
+      
+      - name: Install Dependencies
+        run: pip install -r requirements-build.txt
+      
+      - name: Run Build Script
+        id: build
+        run: "powershell ./tools/build_win.ps1"
+      
+      - name: Output Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: "sm64_randomizer_generator-win-x86-v${{ steps.build.outputs.version }}-${{ steps.vars.outputs.sha_short }}"
+          path: "dist/*"
+  
+  build-osx-x64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8' # Version range or exact version of a Python version to use, using SemVer's version range syntax
           architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-build.txt
 
       - name: Run Build Script
-        run: ./tools/build_mac_osx.sh
-          
-          
-          
-          
-          echo test, and deploy your project.
+        run: ./tools/build_osx.sh
+
+      - name: Output Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: "sm64_randomizer_generator-osx-x64-v${{ env.VERSION }}-${{ steps.vars.outputs.sha_short }}"
+          path: "dist/*"
