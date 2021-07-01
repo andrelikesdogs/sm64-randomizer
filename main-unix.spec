@@ -1,12 +1,15 @@
 # -*- mode: python -*-
+from PyInstaller.utils.hooks import collect_dynamic_libs
 
 block_cipher = None
-
+import os
+libFolder = os.environ["pythonLocation"]+"/lib" if "pythonLocation" in os.environ else "lib"
+print("LibFolder: \"" + libFolder + "\"")
 
 a = Analysis(['main.py'],
              pathex=['/Users/andremeyer/Documents/Own/mario-64-rom-hacking/sm64-randomizer'],
-             binaries=[],
-             datas=[('README.md', '.'), ('LICENSE', '.'), ('Data', '.'), ('Assets', '.'), ('lib/python3.7/site-packages/trimesh/resources', 'trimesh/resources/')],
+             binaries=collect_dynamic_libs("rtree"),
+             datas=[('README.md', '.'), ('LICENSE', '.'), ('Data', '.'), ('Assets', '.'), ('Config', '.'), (libFolder + '/python3.8/site-packages/trimesh/resources', 'trimesh/resources/')],
              hiddenimports=["pyperclip"],
              hookspath=[],
              runtime_hooks=[],
