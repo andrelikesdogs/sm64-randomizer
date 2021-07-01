@@ -69,3 +69,4 @@ node_modules/
 /*.zip
 #ide files
 *.wpr
+Scripts/

@@ -442,7 +442,7 @@ class WarpRandomizer:
       #print(level, indiv_key_requirements_per_level[level], total_key_requirements_per_level[level])
 
       if "key_receive" in level.properties and level.properties["key_receive"] in total_key_requirements_per_level[level]:
-        print(f"{level.name} requires {total_key_requirements_per_level[level]} but rewards {level.properties['key_receive']} - invalid")
+        #print(f"{level.name} requires {total_key_requirements_per_level[level]} but rewards {level.properties['key_receive']} - invalid")
         return False
         
 
