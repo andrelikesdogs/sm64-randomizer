@@ -103,10 +103,13 @@ class RandomizeObjectsWhitelist:
   def get_shuffle_properties(self, object3d : Object3D):
     best_match = None
     best_match_count = 0
+
+    # check against all matching/whitelist entries
     for whitelist_entry in self.object_whitelist:
       if whitelist_entry["match"] is None:
         continue
 
+      # if whitelist entry has an exclude property, see if we can skip this entry
       if whitelist_entry["exclude"] is not None:
         _, match_exclude = self.matches_with(whitelist_entry["exclude"], object3d)
 
@@ -115,12 +118,12 @@ class RandomizeObjectsWhitelist:
       
       # the more precise the matching, the more priority it will have
       matches, did_match = self.matches_with(whitelist_entry["match"], object3d)
+
+      # increase priority for matches from "for" rules
+      if "from_for" in whitelist_entry and whitelist_entry["from_for"]:
+        matches += 1
+
       if did_match and matches > best_match_count:
-        
-        #if best_match is not None and object3d.behaviour == 0x13002aa4:
-        #  print("replacing rule ", best_match)
-        #  print("with rule ", whitelist_entry)
-        
         best_match = whitelist_entry
         best_match_count = matches
     return best_match

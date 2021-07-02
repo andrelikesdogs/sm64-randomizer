@@ -306,9 +306,9 @@ class ObjectRandomizer:
         self.log_reason_for_reject("is_valid_position", "object position above max_y")
         return False
 
-    if "distance" in rules:
-      for distance_rules in rules["distance"]:
-        origin = distance_rules["origin"]
+    if "distance_to" in rules:
+      for distance_rule in rules["distance_to"]:
+        origin = distance_rule["origin"]
 
         distance = math.sqrt(
           (position[0] - origin[0]) ** 2 +
@@ -316,13 +316,13 @@ class ObjectRandomizer:
           (position[2] - origin[2]) ** 2
         )
 
-        if "max_distance" in distance_rules:
-          if distance > distance_rules["max_distance"]:
+        if "max_distance" in distance_rule:
+          if distance > distance_rule["max_distance"]:
             self.log_reason_for_reject("is_valid_position", "object too far away from origin")
             return False
 
-        if "min_distance" in distance_rules:
-          if distance > distance_rules["min_distance"]:
+        if "min_distance" in distance_rule:
+          if distance > distance_rule["min_distance"]:
             self.log_reason_for_reject("is_valid_position", "object too close to origin")
             return False
       
@@ -523,6 +523,8 @@ class ObjectRandomizer:
 
     (bounds_min, bounds_max) = area_mesh.bounds
     (x, y, z) = bounds_min
+
+    # TODO: Check the rules here to more accurately set a bounding box in which to randomize, shits unoptimized yo
 
     # position for boundary is slightly overshot, probably because of some shit i forgot to write here while it happened
     if abs(bounds_min[0] - bounds_max[0]) > 0:

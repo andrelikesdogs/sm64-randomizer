@@ -455,5 +455,7 @@ class LevelGeometry:
           )
 
       #print(f'plotting {self.level.name} {hex(area_id)}')
+      if not os.path.exists("dumps/level_plots"):
+        os.makedirs("dumps/level_plots")
       py.plot(traces, filename=f'dumps/level_plots/{self.level.name}_{hex(area_id)}.html', auto_open=False)
       #print('done')

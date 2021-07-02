@@ -204,6 +204,9 @@ class ROM:
 
       if 'SM64R' in os.environ:
         if os.environ['SM64R'] == 'EXPORT':
+          if not os.path.exists(os.path.join("dumps", "level_geometry")):
+            os.makedirs(os.path.join("dumps", "level_geometry"))
+          
           for (area_id, mesh) in self.levelscripts[level].level_geometry.area_geometries.items():
             with open(os.path.join("dumps", "level_geometry", f"{level.name}_{hex(area_id)}.stl"), "wb+") as obj_output:
               mesh.export(obj_output, 'stl')

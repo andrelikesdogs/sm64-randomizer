@@ -16,7 +16,6 @@ pip-selfcheck.json
 __pycache__
 .history
 .DS_Store
-.vscode
 env/
 .eggs/
 egg/

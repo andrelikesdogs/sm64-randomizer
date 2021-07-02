@@ -579,6 +579,7 @@ class Config:
                   **target_rules,
                   **rules,
                 },
+                from_for=True,
                 name=f"{name}: {target['name']}"
               ))
 
@@ -604,6 +605,7 @@ class Config:
                       **child_exclude,
                       **parent_exclude
                     },
+                    from_for=True,
                     name=f"{name}: {child['name']}"
                   ))
                 
@@ -641,6 +643,7 @@ class Config:
                   **target_rules,
                   **rules,
                 },
+                from_for=True,
                 name=f"{name}: {target['name']}"
               ))
 
@@ -667,6 +670,7 @@ class Config:
                       **child_exclude,
                       **parent_exclude
                     },
+                    from_for=True,
                     name=f"{name}: {child['name']}"
                   ))
                 

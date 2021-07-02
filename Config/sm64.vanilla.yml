@@ -503,6 +503,15 @@ collision_groups:
       - SLIPPERY
 
 # Start object randomization section. Can be deeply nested with groups, sub-group, etc
+# This segment will define all randomizable objects, that will be moved around in a level.
+# - Groups can be created (without a "match") property to organize multiple different objects together
+# - Matchings have a priority, defined by how much it matches an object in a level
+#   - for example: a Coin is supposed to not spawn in the air too high. It is matching via it's behaviour id.
+#                  however, in a wingcap level coins *can* spawn in the air. So a more specific "match" with
+#                  both the behaviour id and a match for level that have been flagged "fly_stage" will have
+#                  priority over the previous matching, allowing you overwrite randomization settings in special
+#                  circumstances. Randomizations with a "for" property automatically have +1 priority, as they're
+#                  generally intended for special levels that should take priority.
 object_randomization:
   # default
   rules:
@@ -861,27 +870,31 @@ object_randomization:
             - 'Warps'
           rules:
             - disabled
-        - name: "WC: Coins within Reach of Platform"
-          match:
+        - name: "TOTWC: Coins within Reach of Platform"
+          match: # this matching is very specific to increase priority
             - course_property: fly_stage
             - course_id: 0x1D
+            - area_id: 0x01
           rules:
             - no_floor_required
             - min_y: -2000
-            - max_y: 2500
+            - max_y: 2200
             - distance_to:
               - origin: [0, -2047, 0]
-                max_distance: 3000
+                max_distance: 5000
           for:
             - 'Coin'
             - 'Coin Formations'
         - name: "WMotR: Coins within Reach"
-          match:
+          match: # this matching is very specific to increase priority
+            - course_property: fly_stage
             - course_id: 0x1F
+            - area_id: 0x01
           rules:
+            - no_floor_required
             - distance_to:
               - origin: [0, 1900, 0]
-                max_distance: 5000
+                max_distance: 6500
             - min_y: -3500
             - max_y: 2200
           for:
