@@ -2,7 +2,7 @@ numpy==1.18.1
 Pillow==7.0.0
 plotly==5.1.0
 pyperclip==1.7.0
-PyYAML==5.3
+PyYAML==5.4
 Rtree==0.9.7
 six==1.16.0
 tenacity==7.0.0
