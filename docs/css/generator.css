@@ -4,32 +4,37 @@ section .dropzone {
   border-radius: 4px;
   position: relative;
   display: flex;
-  justify-content: center; }
+  justify-content: center;
+}
 
 section .dropzone .dz-preview {
   justify-self: center;
   width: 100%;
   max-width: 360px;
-  min-width: 240px; }
+  min-width: 240px;
+}
 
 section .dropzone .dz-preview .dz-image {
-  width: auto; }
+  width: auto;
+}
 
 .field {
   position: relative;
-  margin: 1em 0; }
+  margin: 1em 0;
+}
 
 .field.disabled input, .field.disabled select, .field.disabled label {
-  opacity: 0.6; }
-
+  opacity: 0.6;
+}
 .field.disabled .tooltip-content {
-  opacity: 1.0; }
-
+  opacity: 1;
+}
 .field.disabled::after {
-  content: 'Currently not available, coming soon!';
+  content: "Currently not available, coming soon!";
   line-height: 0;
   top: 50%;
-  margin-left: 20px; }
+  margin-left: 20px;
+}
 
 .field--type--text input {
   background: none;
@@ -37,21 +42,25 @@ section .dropzone .dz-preview .dz-image {
   font-size: large;
   border-bottom: 2px solid white;
   color: white;
-  text-align: right; }
+  text-align: right;
+}
 
 .field--type--text label, .field--type--select label, .field--type--file label {
   min-width: 200px;
   display: inline-block;
   white-space: nowrap;
-  margin-right: 12px; }
+  margin-right: 12px;
+}
 
 input[type=checkbox] {
   height: 0;
   width: 0;
-  visibility: hidden; }
+  visibility: hidden;
+}
 
 .field--type--checkbox {
-  line-height: 30px; }
+  line-height: 30px;
+}
 
 .field--type--checkbox input[type=checkbox] + label {
   cursor: pointer;
@@ -62,10 +71,11 @@ input[type=checkbox] {
   display: inline-block;
   border-radius: 30px;
   position: relative;
-  top: 2px; }
+  top: 2px;
+}
 
 .field--type--checkbox input[type=checkbox] + label:after {
-  content: '';
+  content: "";
   position: absolute;
   top: 2px;
   left: 2px;
@@ -73,17 +83,21 @@ input[type=checkbox] {
   height: 24px;
   background: #fff;
   border-radius: 20px;
-  transition: 0.3s; }
+  transition: 0.3s;
+}
 
 .field--type--checkbox input[type=checkbox] + label:active:after {
-  width: 34px; }
+  width: 34px;
+}
 
 .field--type--checkbox input[type=checkbox]:checked + label {
-  background: #bada55; }
+  background: #bada55;
+}
 
 .field--type--checkbox input[type=checkbox]:checked + label:after {
   left: calc(100% - 1px);
-  transform: translateX(-100%); }
+  transform: translateX(-100%);
+}
 
 button.help {
   width: 24px;
@@ -93,17 +107,21 @@ button.help {
   position: relative;
   appearance: none;
   background: white;
-  border: 1px solid #e6e6e6; }
+  border: 1px solid #e6e6e6;
+}
 
 button.help:hover, button.help:active, button.help:focus {
   outline: none;
-  border: 1px solid #e6e6e6; }
+  border: 1px solid #e6e6e6;
+}
 
 button.help::after {
-  content: '?'; }
+  content: "?";
+}
 
 button.help:hover .tooltip-content {
-  display: block; }
+  display: block;
+}
 
 .tooltip-content {
   display: none;
@@ -117,13 +135,15 @@ button.help:hover .tooltip-content {
   padding: 1em 2em;
   transform: translate(-50%, -100%);
   outline: none;
-  white-space: normal; }
+  white-space: normal;
+}
 
 .tooltip-content:active {
-  outline: none; }
+  outline: none;
+}
 
 .tooltip-content::before, .tooltip-content::after {
-  content: '';
+  content: "";
   pointer-events: none;
   position: absolute;
   top: 100%;
@@ -132,21 +152,26 @@ button.help:hover .tooltip-content {
   content: " ";
   height: 0;
   width: 0;
-  filter: drop-shadow(0 0 1px #000); }
+  filter: drop-shadow(0 0 1px #000);
+}
 
 .tooltip-content::after {
   border-top-color: rgba(0, 0, 0, 0.6);
   border-width: 8px;
-  margin-left: -8px; }
+  margin-left: -8px;
+}
 
 .summary {
-  text-align: center; }
+  text-align: center;
+}
 
 .field--type--file label {
-  line-height: 60px; }
+  line-height: 60px;
+}
 
 .field--type--file .hints {
-  text-align: justify; }
+  text-align: justify;
+}
 
 .file-upload-wrapper {
   display: block;
@@ -157,17 +182,19 @@ button.help:hover .tooltip-content {
   text-align: center;
   float: left;
   margin-right: 1em;
-  cursor: pointer; }
-  .file-upload-wrapper .like-button {
-    padding: 0;
-    margin: 0;
-    display: block;
-    cursor: pointer;
-    pointer-events: none;
-    width: 100%;
-    font-size: 100%; }
+  cursor: pointer;
+}
+.file-upload-wrapper .like-button {
+  padding: 0;
+  margin: 0;
+  display: block;
+  cursor: pointer;
+  pointer-events: none;
+  width: 100%;
+  font-size: 100%;
+}
 
-.file-upload-wrapper input[type="file"] {
+.file-upload-wrapper input[type=file] {
   position: absolute;
   top: 0;
   left: 0;
@@ -175,44 +202,56 @@ button.help:hover .tooltip-content {
   right: 0;
   width: 100%;
   height: 100%;
-  opacity: 0; }
+  opacity: 0;
+}
 
-.file-upload-wrapper input[type="file"]:disabled + .like-button {
+.file-upload-wrapper input[type=file]:disabled + .like-button {
   opacity: 0.6;
-  cursor: disabled; }
-
-.file-upload-wrapper input[type="file"]:not(:disabled):hover {
-  cursor: pointer; }
-  .file-upload-wrapper input[type="file"]:not(:disabled):hover + .like-button.primary {
-    background-color: #ffb4b4; }
-  .file-upload-wrapper input[type="file"]:not(:disabled):hover + .like-button.secondary {
-    background-color: #b4b4dd; }
+  cursor: disabled;
+}
+.file-upload-wrapper input[type=file]:not(:disabled):hover {
+  cursor: pointer;
+}
+.file-upload-wrapper input[type=file]:not(:disabled):hover + .like-button.primary {
+  background-color: #ffb4b4;
+}
+.file-upload-wrapper input[type=file]:not(:disabled):hover + .like-button.secondary {
+  background-color: #b4b4dd;
+}
 
 .message {
-  margin: 1em 0; }
+  margin: 1em 0;
+}
 
 #queue-generation {
-  max-width: 500px; }
+  max-width: 500px;
+}
 
 .progress-button {
   position: relative;
-  overflow: hidden; }
+  overflow: hidden;
+}
 
 @keyframes indefinite-animation {
   0% {
     left: 0%;
-    width: 0%; }
+    width: 0%;
+  }
   30% {
-    width: 30%; }
+    width: 30%;
+  }
   70% {
-    width: 30%; }
+    width: 30%;
+  }
   100% {
     left: 100%;
-    width: 0%; } }
-
+    width: 0%;
+  }
+}
 .progress-button.indefinite .progress {
   width: 30%;
-  animation: ease-in-out infinite 2s indefinite-animation; }
+  animation: ease-in-out infinite 2s indefinite-animation;
+}
 
 .progress {
   position: absolute;
@@ -223,11 +262,13 @@ button.help:hover .tooltip-content {
   right: 0;
   bottom: 0;
   transition: 1s ease width;
-  box-shadow: 0 0 4px white; }
+  box-shadow: 0 0 4px white;
+}
 
 .download-rom {
   display: block;
   margin: 20px;
   color: white;
   font-size: larger;
-  text-shadow: 0 0 2px white; }
+  text-shadow: 0 0 2px white;
+}

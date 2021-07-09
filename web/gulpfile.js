@@ -1,10 +1,8 @@
 'use strict';
  
 const { src, dest, task, watch, parallel } = require('gulp')
-var sass = require('gulp-sass');
-const mapStream = require('map-stream')
- 
-sass.compiler = require('node-sass');
+var sass = require('gulp-sass')(require('sass'));
+const mapStream = require('map-stream');
  
 const scssBuild = () => {
   return src('./scss/**/*.scss')
