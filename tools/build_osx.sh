@@ -3,7 +3,7 @@ mkdir -p dist
 set -e # exit on error
 pyinstaller main-unix.spec
 
-mv dist/main dist/SM64\ Randomizer\ Generator
+#mv "dist/main" "dist/SM64\ Randomizer\ Generator.app"
 
 # pack as zip
 VERSION="$(python -c 'from __version__ import __version__; print(__version__)')"
