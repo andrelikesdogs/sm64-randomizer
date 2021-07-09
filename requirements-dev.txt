@@ -1,8 +1,8 @@
-numpy==1.19.5
-Pillow==8.2.0
-PyYAML==5.4
-pyperclip==1.7.0
+numpy==1.21.0
+Pillow==8.3.1
+PyYAML==5.4.1
+pyperclip==1.8.2
 Rtree==0.9.7
 six==1.16.0
-tenacity==7.0.0
-trimesh==3.5.19
+tenacity==8.0.0
+trimesh==3.9.21
