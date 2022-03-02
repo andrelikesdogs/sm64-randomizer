@@ -26,6 +26,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+Scripts/
 
 # Windows Crap
 Thumbs.db
