@@ -94,7 +94,7 @@ class HardcodedStar(Object3D):
         self.rom.mark_checksum_dirty()
 
 
-    print("writing to hardcoded star", position_tuple)
+    print("writing to hardcoded star", self.level, position_tuple)
     pass
 
   def __init__(self, rom, name, properties):
