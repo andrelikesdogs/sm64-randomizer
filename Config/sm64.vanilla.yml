@@ -881,7 +881,7 @@ object_randomization:
             - max_y: 2200
             - distance_to:
               - origin: [0, -2047, 0]
-                max_distance: 5000
+                max_distance: 3000
           for:
             - 'Coin'
             - 'Coin Formations'
@@ -894,7 +894,7 @@ object_randomization:
             - no_floor_required
             - distance_to:
               - origin: [0, 1900, 0]
-                max_distance: 6500
+                max_distance: 5000
             - min_y: -3500
             - max_y: 2200
           for:

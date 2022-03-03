@@ -23,7 +23,7 @@
                 "SM64_US.z64"
             ],
             "env": {
-                "SM64R": "EXPORT"
+                "SM64R": "PLOT"
             }
         }
     ]
