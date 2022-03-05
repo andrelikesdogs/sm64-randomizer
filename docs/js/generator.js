@@ -1,4 +1,4 @@
-let BASE_URL = "https://mayro.surf.garbage";
+let BASE_URL = "https://mario.surf.garbage";
 
 if (location.hostname == "localhost" || location.hostname == "127.0.0.1") {
   BASE_URL = "http://localhost:5000";
