@@ -404,6 +404,8 @@ levels:
     course_id: 0x1B
     properties:
       - slide
+      - disable_planes: # the middle layer in BBH will make objects unaccessible
+        - y_range: [-2026, -1000]
       - shuffle_painting:
         - custom_painting: 'painting_pss'
   - name: "Winged Mario over the Rainbow"
@@ -479,7 +481,9 @@ collision_groups:
       - WIDE_CAMERA
       - CAMERA_BOB
       - CAMERA_CCM
+      - WALL_FENCE_CANON
       - SURFACE_FLAGS
+      - WATER_FLOWING
       - WATER
   with_slides:
     whitelist:
@@ -500,6 +504,7 @@ collision_groups:
       - CAMERA_CCM
       - SURFACE_FLAGS
       - WATER
+      - WATER_FLOWING
       - SLIPPERY
 
 # Start object randomization section. Can be deeply nested with groups, sub-group, etc
@@ -515,9 +520,10 @@ collision_groups:
 object_randomization:
   # default
   rules:
-    - drop_to_floor # try to place this object on the floor
-    - floor_types_allowed: restricted # select above defined group as floor types allowed
-    - max_floor_steepness: 0.20
+    - drop_to_floor # try to place all objects on the floor by default, but not if they would be positioned in water
+                    # ("force" will also position objects in water)
+    - floor_types_allowed: restricted # select above defined group as floor types allowed by default
+    - max_floor_steepness: 0.20 # default max steepness of floor. 0 = floor, 1 = wall
   
   objects:
     # Bosses
@@ -576,10 +582,11 @@ object_randomization:
         - name: Bully (Small)
           match: 0x1300362C
         - name: Boo
-          match: 0x130027E4
+          match: 
+            - 0x130027E4
         - name: Boo (x3)
           match: 0x130027D0
-        - name: Boo Secret (Kill 5)
+        - name: Boo Secret (Kill 5) # bparam = 0 -> Staircase Big Boo, bparam = 1 -> Merry Go Round, bparam = 2 -> Balcony Big Boo
           match:
             - 0x130027E4 # 3
             - 0x13002804 # 2
@@ -615,19 +622,22 @@ object_randomization:
         - 0x130008EC
       rules:
         - floor_types_allowed: with_slides
+        - underwater: allowed
       objects:
         - name: Grounded Line Formation (5x)
           match:
             - bparam2: 0
           rules:
             - bounding_box: [1000, 100, 100] # length, width, height
+            - max_uneven_distance: 600
             - spawn_height: [200, 600]
             - drop_to_floor: force
         - name: Grounded Ring Formation (8x)
           match:
             - bparam2: 2
           rules:
-            - bounding_box: [1000, 1000, 100] # length, width, height
+            - bounding_box: [800, 800, 100] # length, width, height
+            - max_uneven_distance: 600
             - spawn_height: [200, 600]
             - drop_to_floor: force
         - name: Grounded Arrow (8x)
@@ -635,6 +645,7 @@ object_randomization:
             - bparam2: 4
           rules:
             - bounding_box: [500, 500, 100] # length, width, height
+            - max_uneven_distance: 600
             - spawn_height: [200, 600]
             - drop_to_floor: force
         - name: Horizontal Floating Line (x5)
@@ -642,25 +653,29 @@ object_randomization:
             - bparam2: 16
           rules:
             - bounding_box: [600, 100, 100] # length, width, height
-            - spawn_height: [200, 500]
+            - max_uneven_distance: 400
+            - spawn_height: [200, 300]
         - name: Vertical Floating Line (x5)
           match:
             - bparam2: 17
           rules:
-            - bounding_box: [100, 100, 1000] # length, width, height
-            - spawn_height: [300, 900]
+            - bounding_box: [100, 100, 800] # length, width, height
+            - max_uneven_distance: 800
+            - spawn_height: [500, 900]
         - name: Horizontal Floating Ring (x8)
           match:
             - bparam2: 18
           rules:
-            - bounding_box: [1000, 1000, 100] # length, width, height
-            - spawn_height: [100, 600]
+            - bounding_box: [800, 800, 100] # length, width, height
+            - max_uneven_distance: 600
+            - spawn_height: [300, 500]
         - name: Vertical Floating Ring (x8)
           match:
             - bparam2: 19
           rules:
-            - bounding_box: [1000, 100, 1000] # length, width, height
-            - spawn_height: [300, 900]
+            - bounding_box: [800, 100, 800] # length, width, height
+            - max_uneven_distance: 800
+            - spawn_height: [500, 900]
     
     - name: "Coin"
       rules:
@@ -760,6 +775,12 @@ object_randomization:
           match: 0x13002250
           rules:
             - spawn_height: [200, 500]
+        - name: Item Box Vanish Cap
+          match: 
+            - 0x13002250
+            - bparam2: 2
+          rules:
+            - disabled
 
     - name: "Warps"
       exclude:
@@ -855,6 +876,14 @@ object_randomization:
             - area_id: 0x03
           rules:
             - max_y: 1750
+        - name: "PS: Don't touch itembox"
+          match: 
+            - course_id: 0x1B
+            - area_id: 0x01
+          for:
+            - 'Item Box'
+          rules:
+            - disabled
         - name: "VC: Don't shuffle warp"
           match:
             - course_id: 0x12

@@ -8,7 +8,7 @@ import math
 from time import time
 
 from sm64r.Constants import ALL_LEVELS, CAP_LEVELS, MISSION_LEVELS, BOWSER_STAGES, SPECIAL_LEVELS, BEHAVIOUR_NAMES
-from sm64r.Randoutils import format_binary, print_progress_bar
+from sm64r.Randoutils import format_binary, print_progress_bar, bounding_box_to_mesh
 
 from .Whitelist import RandomizeObjectsWhitelist, DEBUG_HIT_INDICES
 from sm64r.Entities.Object3D import Object3D
@@ -38,6 +38,8 @@ class ObjectRandomizer:
         self.object_wall_traces = {}
         self.object_floor_traces = {}
         self.reject_reasons_by_module = {}
+        self.last_reject_log_module = None
+        self.last_reject_log_reason = None
         self.current_reject_log = None
 
         if os.path.exists("sm64_rando_reject.log"):
@@ -79,9 +81,11 @@ class ObjectRandomizer:
         self.reject_reasons_by_module = {}
 
     def log_reason_for_reject(self, module, reason):
+        self.last_reject_log_module = module
         if module not in self.reject_reasons_by_module:
             self.reject_reasons_by_module[module] = {}
 
+        self.last_reject_log_reason = reason
         if reason not in self.reject_reasons_by_module[module]:
             self.reject_reasons_by_module[module][reason] = 1
         else:
@@ -149,8 +153,6 @@ class ObjectRandomizer:
         call_signature = hash(tuple(position)) + \
             hash(repr(rules)) + hash(area_id)
 
-        # TODO: check for all corners of a bounding box, if that rule exists
-
         if call_signature in self.object_floor_traces:
             return self.object_floor_traces[call_signature]
 
@@ -214,13 +216,13 @@ class ObjectRandomizer:
         """
         for boundary in levelscript.level_geometry.level_forbidden_boundaries:
             if boundary.contains([position]):
-                #print("Object position inside level loading zone")
+                # print("Object position inside level loading zone")
                 return True
 
         if area_id in levelscript.level_geometry.area_forbidden_boundaries:
             for boundary in levelscript.level_geometry.area_forbidden_boundaries[area_id]:
                 if boundary.contains([position]):
-                    #print("Object position inside area loading zone")
+                    # print("Object position inside area loading zone")
                     return True
 
         return False
@@ -250,6 +252,25 @@ class ObjectRandomizer:
             if position[0] > water_box["start"][0] and position[0] < water_box["end"][0] and position[1] > water_box["start"][1] and position[1] < water_box["end"][1] and position[2] > water_box["start"][2] and position[2] < water_box["end"][2]:
                 return True
         return False
+
+    def floor_validate(self, floor_properties, rules, is_bb_check=False):
+        if rules["floor_types_allowed"] == "all":
+            if floor_properties["collision_type"] not in self.rom.config.constants["collision_types"].values():
+                self.log_reason_for_reject(
+                    "is_valid_position" if not is_bb_check else "bb_check", f'object floor type is "all" but "{hex(floor_properties["collision_type"])}" is unknown')
+                return False
+
+        if rules["floor_types_allowed"] not in self.rom.config.collision_groups:
+            self.log_reason_for_reject(
+                "is_valid_position" if not is_bb_check else "bb_check", f'unknown {rules["floor_types_allowed"]} floor type')
+            return False
+        else:
+            if floor_properties["collision_type"] not in self.rom.config.collision_groups[rules["floor_types_allowed"]].values():
+                self.log_reason_for_reject(
+                    "is_valid_position" if not is_bb_check else "bb_check", 'object floor type was not allowed')
+                return False
+
+        return True
 
     def is_valid_position(self, levelscript: LevelScriptParser, obj: Object3D, position, rules: list, is_pre_position: bool = False):
         """ Validate if this position is valid for the given object, position and for the rules that are given to this method.
@@ -283,21 +304,51 @@ class ObjectRandomizer:
 
         # check the floor type if the rule is set and the floor exists and the floor type isn't "all"
         if "no_floor_required" not in rules and "floor_types_allowed" in rules and floor_properties is not False:
-            if rules["floor_types_allowed"] == "all":
-                if floor_properties["collision_type"] not in self.rom.config.constants["collision_types"].values():
-                    self.log_reason_for_reject(
-                        "is_valid_position", f'object floor type is "all" but "{hex(floor_properties["collision_type"])}" is unknown')
-                    return False
-
-            if rules["floor_types_allowed"] not in self.rom.config.collision_groups:
-                self.log_reason_for_reject(
-                    "is_valid_position", f'unknown {rules["floor_types_allowed"]} floor type')
+            if not self.floor_validate(floor_properties, rules):
                 return False
-            else:
-                if floor_properties["collision_type"] not in self.rom.config.collision_groups[rules["floor_types_allowed"]].values():
-                    self.log_reason_for_reject(
-                        "is_valid_position", 'object floor type was not allowed')
-                    return False
+
+            if not is_pre_position and "bounding_box" in rules:
+                (translated_points, extents) = bounding_box_to_mesh(
+                    obj, position, rules["bounding_box"])
+
+                lower_y = min(np.transpose(translated_points)[1])
+                lower_points = list(filter(
+                    lambda x: x[1] == lower_y, translated_points))
+
+                max_point_distance = 0
+                for point in lower_points:
+                    trace = self.check_floor(
+                        obj.area_id, levelscript, point, rules)
+
+                    if not trace:
+                        # t = trimesh.transformations.translation_matrix(
+                        #     position)
+                        # r = trimesh.transformations.rotation_matrix(obj.rotation[1] * math.pi / 180, [
+                        #                                             0, 1, 0])
+                        # bounding_pos = trimesh.transformations.concatenate_matrices(
+                        #     t, r)
+                        # bounding_box = trimesh.creation.box(
+                        #     extents=extents, transform=bounding_pos)
+                        # levelscript.level_geometry.plot_placement(
+                        #     obj, bounding_box)
+                        self.log_reason_for_reject(
+                            "is_valid_position", "bouding box floor check hit void")
+                        return False
+
+                    valid_point = self.floor_validate(trace, rules, True)
+                    if not valid_point:
+                        # reason logged in floor_validate
+                        return False
+
+                    distance = position[1] - trace['position'][1]
+                    if distance > max_point_distance:
+                        max_point_distance = distance
+
+                if "max_uneven_distance" in rules:
+                    if max_point_distance > rules["max_uneven_distance"]:
+                        self.log_reason_for_reject(
+                            "is_valid_position", "bounding box max_uneven_distance too far")
+                        return False
 
         if "disable_planes" in obj.level.properties:
             for entry in obj.level.properties["disable_planes"]:
@@ -308,21 +359,21 @@ class ObjectRandomizer:
 
                 if plane_type == "y_range":
                     if position[1] > lower and position[1] < upper:
-                        #print(position, " is between ", (lower, upper))
+                        # print(position, " is between ", (lower, upper))
                         self.log_reason_for_reject(
                             "is_valid_position", "in level disable plane")
                         return False
 
         if "min_y" in rules:
             if position[1] < rules["min_y"]:
-                #print("min_y", position, rules["min_y"])
+                # print("min_y", position, rules["min_y"])
                 self.log_reason_for_reject(
                     "is_valid_position", "object position below min_y")
                 return False
 
         if "max_y" in rules:
             if position[1] > rules["max_y"]:
-                #print("max_y", position, rules["max_y"])
+                # print("max_y", position, rules["max_y"])
                 self.log_reason_for_reject(
                     "is_valid_position", "object position above max_y")
                 return False
@@ -350,12 +401,11 @@ class ObjectRandomizer:
                         return False
 
         if "max_floor_steepness" in rules and floor_properties is not False:
-            # todo: use dot product
-            floor_slope = floor_properties["triangle_normal"][1]
+            floor_slope = np.dot(
+                floor_properties["triangle_normal"], [0, 1, 0])
 
-            # 1 = Floor. 0 = Wall.
             slope_allowed = abs(float(rules["max_floor_steepness"]) - 1.0)
-            # validate steep-ness (must be this steep)
+
             if floor_slope < slope_allowed:
                 self.log_reason_for_reject(
                     "is_valid_position", "floor too steep")
@@ -391,12 +441,11 @@ class ObjectRandomizer:
                 position[2] + orig_z
             ]
 
-            # positions here are in weird hand (y is up/down)
             for face_index, (start, end) in enumerate(levelscript.level_geometry.area_face_aabbs[obj.area_id]):
                 # check height
                 if (start[1] > target_position[1] or end[1] > target_position[1]) or (start[1] < (target_position[1] + height) or end[1] < (target_position[1] + height)):
                     # atleast one vert is within cylinder
-                    #print(face_index, len(levelscript.level_geometry.area_faces[obj.area_id]))
+                    # print(face_index, len(levelscript.level_geometry.area_faces[obj.area_id]))
                     tri_verts = levelscript.level_geometry.area_faces[obj.area_id][face_index]
                     for vert in list(map(lambda x: levelscript.level_geometry.area_vertices[obj.area_id][x], tri_verts)):
                         # y is ignored to calc without height differences, as they were previously checked
@@ -406,107 +455,87 @@ class ObjectRandomizer:
                         )
 
                         if distance < radius:
-                            #print(distance, radius)
+                            # print(distance, radius)
                             self.log_reason_for_reject(
                                 "is_valid_position", "bounding cylinder intersection encountered")
                             return False
 
-        if not is_pre_position and "bounding_box" in rules:
-            extents = [  # x, z, y
-                -rules["bounding_box"][0],  # x neg
-                rules["bounding_box"][2],  # y and z swap
-                rules["bounding_box"][1]
-            ]
+        # if not is_pre_position and "bounding_box" in rules:
+        #     y_rot = (obj.rotation[1] * math.pi / 180)
+        #     (translated_points, extents) = bounding_box_to_mesh(
+        #         obj, position, rules["bounding_box"])
+        #     t = trimesh.transformations.translation_matrix(position)
+        #     r = trimesh.transformations.rotation_matrix(y_rot, [0, 1, 0])
 
-            y_rot = (obj.rotation[1] * math.pi / 180)
+        #     bounding_pos = trimesh.transformations.concatenate_matrices(t, r)
 
-            # rotate points
-            vertices = [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1,
-                        1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1]
-            vertices = np.array(vertices, order='C',
-                                dtype=np.float64).reshape((-1, 3))
-
-            vertices -= 0.5
-            vertices *= extents
-
-            translation_matrix = trimesh.transformations.translation_matrix(
-                position)
-            rotation_matrix = trimesh.transformations.rotation_matrix(y_rot, [
-                                                                      0, 1, 0])
-
-            concat_matrix = trimesh.transformations.concatenate_matrices(
-                translation_matrix, rotation_matrix)
-
-            translated_points = trimesh.transform_points(
-                vertices, concat_matrix)
-
-            #t = trimesh.transformations.translation_matrix(position)
-            #r = trimesh.transformations.rotation_matrix(y_rot, [0, 1, 0])
-
-            #bounding_pos = trimesh.transformations.concatenate_matrices(t, r)
-
-            #bounding_box = trimesh.creation.box(extents=extents, transform=bounding_pos)
+        #     bounding_box = trimesh.creation.box(
+        #         extents=extents, transform=bounding_pos)
 
             # this will overwrite existing bounding meshes for the same obj
-            #levelscript.level_geometry.add_object_bounding_mesh(obj, obj.area_id, bounding_box)
+            # levelscript.level_geometry.add_object_bounding_mesh(obj, obj.area_id, bounding_box)
 
-            #levelscript.level_geometry.area_collision_managers[obj.area_id].in_collision(f'{obj.name} bounding box', bounding_box, bounding_pos)
+            # levelscript.level_geometry.area_collision_managers[obj.area_id].in_collision(f'{obj.name} bounding box', bounding_box, bounding_pos)
 
             # intersection check with world
-            for (start, end) in levelscript.level_geometry.area_face_aabbs[obj.area_id]:
-                for point in translated_points:
-                    if (point[0] > start[0] and point[0] < end[0]) and (point[1] > start[1] and point[1] < end[1]) and (point[2] > start[2] and point[2] < end[2]):
-                        self.log_reason_for_reject(
-                            "is_valid_position", "bounding box intersection encountered")
+            # intersected_points = []
+            # intersected_face_indices = []
+            # # this is very inaccurate, aabb's are huge for some triangles
+            # # in the future, change this to cast rays from the corner of the bounding box inwards to
+            # # see if
+            # for (index, (start, end)) in enumerate(levelscript.level_geometry.area_face_aabbs[obj.area_id]):
+            #     for point in translated_points:
+            #         if (point[0] > start[0] and point[0] < end[0]) and (point[1] > start[1] and point[1] < end[1]) and (point[2] > start[2] and point[2] < end[2]):
+            #             intersected_points.append(point)
+            #             intersected_face_indices.append(index)
+            #             # self.log_reason_for_reject(
+            #             #     "is_valid_position", "bounding box intersection encountered")
 
-                        if 'SM64R' in os.environ and 'PLOT' in os.environ['SM64R']:
-                            t = trimesh.transformations.translation_matrix(
-                                position)
-                            r = trimesh.transformations.rotation_matrix(y_rot, [
-                                                                        0, 1, 0])
-                            bounding_pos = trimesh.transformations.concatenate_matrices(
-                                t, r)
-                            bounding_box = trimesh.creation.box(
-                                extents=extents, transform=bounding_pos)
-                            # print(bounding_box.vertices)
-                            # print(translated_points)
+            #             if 'SM64R' in os.environ and 'PLOT' in os.environ['SM64R']:
+            #                 t = trimesh.transformations.translation_matrix(
+            #                     position)
+            #                 r = trimesh.transformations.rotation_matrix(y_rot, [
+            #                                                             0, 1, 0])
+            #                 bounding_pos = trimesh.transformations.concatenate_matrices(
+            #                     t, r)
+            #                 bounding_box = trimesh.creation.box(
+            #                     extents=extents, transform=bounding_pos)
+            #                 # print(bounding_box.vertices)
+            #                 # print(translated_points)
 
-                            tri_extents = [
-                                abs(start[0] - end[0]),
-                                abs(start[1] - end[1]),
-                                abs(start[2] - end[2])
-                            ]
-                            tri_position = [
-                                (start[0] if start[0] > end[0]
-                                 else end[0]) - (tri_extents[0]/2),
-                                (start[1] if start[1] > end[1]
-                                    else end[1]) - (tri_extents[1]/2),
-                                (start[2] if start[2] > end[2]
-                                    else end[2]) - (tri_extents[2]/2),
-                            ]
+            #                 tri_extents = [
+            #                     abs(start[0] - end[0]),
+            #                     abs(start[1] - end[1]),
+            #                     abs(start[2] - end[2])
+            #                 ]
+            #                 tri_position = [
+            #                     (start[0] if start[0] > end[0]
+            #                      else end[0]) - (tri_extents[0]/2),
+            #                     (start[1] if start[1] > end[1]
+            #                         else end[1]) - (tri_extents[1]/2),
+            #                     (start[2] if start[2] > end[2]
+            #                         else end[2]) - (tri_extents[2]/2),
+            #                 ]
 
-                            tri_box = trimesh.creation.box(
-                                extents=tri_extents, transform=trimesh.transformations.translation_matrix(tri_position))
+            #                 tri_box = trimesh.creation.box(
+            #                     extents=tri_extents, transform=trimesh.transformations.translation_matrix(tri_position))
 
-                            self.debug_placement(
-                                levelscript, obj, bounding_box, tri_box)
+            #                 levelscript.level_geometry.plot_placement(
+            #                     obj, bounding_box, tri_box)
 
-                        return False
+            #             return False
 
-            '''# check if intersects with WORLD
-      intersections = levelscript.level_geometry.area_geometries[obj.area_id].intersection(
-        bounding_box
-      )
+            # check if intersects with WORLD
+            # intersections = bounding_box.intersection(
+            #     levelscript.level_geometry.area_geometries[obj.area_id]
+            # )
 
-      if not intersections.is_empty:
-        self.log_reason_for_reject("is_valid_position", "bounding box intersection encountered")
-        self.debug_placement(levelscript, obj, bounding_box)
-        return False
-      '''
-
-            # return bounding_box
-            # pass
-
+            # if not intersections.is_empty:
+            #     print("bb intersection")
+            #     self.log_reason_for_reject(
+            #         "is_valid_position", "bounding box intersection encountered")
+            #     self.debug_placement(levelscript, obj, bounding_box)
+            #     return False
         return True
 
     def modify_position(self, levelscript: LevelScriptParser, obj: Object3D, position, rules: list):
@@ -525,22 +554,56 @@ class ObjectRandomizer:
         if "no_floor_required" not in rules:
             if "drop_to_floor" in rules:
                 # this object is supposed to be dropped onto the floor
-                if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position) or rules["drop_to_floor"] == "force":
+                if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position) or rules["drop_to_floor"] == "force" or ("underwater" in rules and rules["underwater"] == "allowed"):
                     # if objest is in water, don't modify the position, except when forced
                     position = self.drop_position(
                         obj.area_id, levelscript, position, rules)
 
-            if "spawn_height" in rules:
-                # object can spawn in the air, decide on a height and validate
-                if not self.is_in_water_box(obj.area_id, levelscript.water_boxes, position) or rules["drop_to_floor"] == "force":
-                    min_height, max_height = tuple(rules["spawn_height"])
+                    if "spawn_height" in rules:
+                        # object can spawn in the air, decide on a height and validate
+                        min_height, max_height = tuple(
+                            rules["spawn_height"])
 
-                    position[1] += random.randint(min_height, max_height)
+                        position[1] += min_height + \
+                            random.randint(0, max_height)
 
         return position
 
-    def debug_placement(self, levelscript: LevelScriptParser, obj: Object3D, *boundary):
-        levelscript.level_geometry.plot_placement(obj, *boundary)
+    def debug_object_placement(self, levelscript: LevelScriptParser, obj: Object3D, position, rules):
+        if 'SM64R' in os.environ and 'PLOT' in os.environ['SM64R']:
+            if "bounding_box" in rules:
+                # print(f"placing bb on plot for {obj}")
+                extents = [  # x, z, y
+                    -rules["bounding_box"][0],  # x neg
+                    rules["bounding_box"][2],  # y and z swap
+                    rules["bounding_box"][1]
+                ]
+
+                y_rot = (obj.rotation[1] * math.pi / 180)
+
+                t = trimesh.transformations.translation_matrix(
+                    position)
+                r = trimesh.transformations.rotation_matrix(y_rot, [
+                                                            0, 1, 0])
+                bounding_pos = trimesh.transformations.concatenate_matrices(
+                    t, r)
+                bounding_box = trimesh.creation.box(
+                    extents=extents, transform=bounding_pos)
+
+                # (translated_points, extents) = bounding_box_to_mesh(
+                #     obj, position, rules["bounding_box"])
+
+                # lower_y = min(np.transpose(translated_points)[1])
+                # lower_points = list(filter(
+                #     lambda x: x[1] == lower_y, translated_points))
+
+                # max_point_distance = 0
+                # for point in lower_points:
+                #     levelscript.level_geometry.plot_trace(
+                #         obj,
+                #         point, point+[0.0, -20000.0, 0.0])
+
+                levelscript.level_geometry.plot_bounding_box(obj, bounding_box)
 
     def generate_random_point_for(self, levelscript: LevelScriptParser, obj: Object3D, rules: list):
         """ Generate a random point for the target object, within the bounding box of this objects area.
@@ -562,6 +625,7 @@ class ObjectRandomizer:
                 f"""{area_id} not found in geometry but only in an excluded area, that means it is not a valid object and should not be selected.\n
         This probably means a rule is matching too many objects, like a star selector object."""
             )
+
         area_mesh = levelscript.level_geometry.area_geometries[area_id]
 
         (bounds_min, bounds_max) = area_mesh.bounds
@@ -573,12 +637,6 @@ class ObjectRandomizer:
         y_max = bounds_max[1]
         z_min = bounds_min[2]
         z_max = bounds_max[2]
-
-        if "max_y" in rules:
-            y_max = rules["max_y"]
-
-        if "min_y" in rules:
-            y_min = rules["min_y"]
 
         # overwrite position generation when using distance_to
         if "distance_to" in rules:
@@ -596,6 +654,19 @@ class ObjectRandomizer:
                     z = int(origin[2] + math.cos(angle) * dist)
 
                     return [x, y, z]
+
+        # overwrite position to generate only on floor triangles
+        if "no_floor_required" not in rules and "floor_types_allowed" in rules:
+            random_pos = levelscript.level_geometry.get_random_point_in_area(
+                area_id)
+
+            return random_pos
+
+        if "max_y" in rules:
+            y_max = rules["max_y"]
+
+        if "min_y" in rules:
+            y_min = rules["min_y"]
 
         # position for boundary is slightly overshot, probably because of some shit i forgot to write here while it happened
         if abs(x_min - x_max) > 0:
@@ -641,7 +712,7 @@ class ObjectRandomizer:
 
                     # randomization disabled - continue to next one
                     if "disabled" in randomizing_rules and randomizing_rules["disabled"] == True:
-                        #print(object3d.level.name, object3d, "is disabled")
+                        # print(object3d.level.name, object3d, "is disabled")
                         self.flush_last_reject_log()
                         continue
 
@@ -656,6 +727,8 @@ class ObjectRandomizer:
                             print(f"Used Rule: {whitelist_entry['name']}")
                             print(
                                 f"Warning: No valid position found for {object3d.behaviour_name} in {level.name} ({hex(level.course_id)}) (Area: {hex(object3d.area_id)}) after 10s, bailing.")
+                            print(
+                                f"Last reject log, last error: {self.last_reject_log_reason}: {self.reject_reasons_by_module[self.last_reject_log_module]}")
                             self.flush_last_reject_log()
                             break
 
@@ -674,6 +747,10 @@ class ObjectRandomizer:
                         # 4. Verify final position
                         if not self.is_valid_position(levelscript, object3d, new_position, randomizing_rules):
                             continue
+
+                        # 5. pass to debug func for plotting
+                        self.debug_object_placement(levelscript, object3d,
+                                                    new_position, randomizing_rules)
 
                         found_valid_point = True
                         object_randomization_count += 1

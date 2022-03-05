@@ -49,7 +49,8 @@ RULE_DEFINITIONS = {
   'spawn_height': ["list"], # Min/Max heights above floor
   'distance_to': ["list"],
   'bounding_box': ["list"], # length, width, height
-  'bounding_cylinder': ["list"] # radius, height, (offset x, offset y, offset z)
+  'bounding_cylinder': ["list"], # radius, height, (offset x, offset y, offset z)
+  'max_uneven_distance': ["int"]
 }
 
 # Which entries are allowed in objects[] (...) .match[]
