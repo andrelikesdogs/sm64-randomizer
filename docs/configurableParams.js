@@ -1,4 +1,4 @@
-[
+configurableParams = [
   {
     name: "seed",
     label: "Random Seed",
