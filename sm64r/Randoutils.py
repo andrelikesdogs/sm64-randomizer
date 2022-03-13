@@ -176,3 +176,15 @@ def bounding_box_to_mesh(obj, position, bounding_box):
     # bounding_pos = trimesh.transformations.concatenate_matrices(t, r)
 
     return (translated_points, extents)
+
+
+def fast_choice(options, weights, sum):
+    assert len(options) == len(
+        weights), "Options and weights need to be same length"
+    target = round(np.random.random() * sum)
+
+    for i, p in enumerate(options):
+        if weights[i] > target:
+            return p
+
+    return options[-1]

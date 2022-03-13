@@ -1,7 +1,10 @@
 from math import sqrt
+import math
+from secrets import choice
 import trimesh
 import numpy as np
-from random import choice, randint, random
+from random import random
+from sm64r.Randoutils import fast_choice
 import os
 import logging
 from time import strftime
@@ -33,6 +36,10 @@ class LevelGeometry:
         self.area_forbidden_boundaries = {}
         self.area_object_bounding_meshes = {}
 
+        self.area_floor_triangles = {}
+        self.area_floor_triangles_weights = {}
+        self.area_floor_triangles_weights_sum = {}
+
     def get_collision_type_for_triangle(self, area_id, triangle_index):
         if area_id not in self.area_geometry_triangle_collision_types:
             raise Exception("Area-ID not in collision types dict")
@@ -41,12 +48,15 @@ class LevelGeometry:
             if triangle_index >= start and triangle_index < end:
                 return collision_type
 
-    def get_random_point_in_area(self, area_id):
+    def get_random_point_in_area_weighted(self, area_id):
         if area_id not in self.area_face_types:
             raise Exception("Area-ID list geometry")
 
-        random_floor_triangle_index = choice(
-            self.area_face_types[area_id]['FLOOR'])
+        # random_floor_triangle_index = choice(
+        #     self.area_floor_triangles[area_id])
+
+        random_floor_triangle_index = fast_choice(
+            self.area_floor_triangles[area_id], self.area_floor_triangles_weights[area_id], self.area_floor_triangles_weights_sum[area_id])
 
         # (start,
         #  end) = self.area_face_aabbs[area_id][random_floor_triangle_index]
@@ -151,7 +161,6 @@ class LevelGeometry:
             for triangle_index, normal in enumerate(geometry.face_normals):
                 slope = np.dot(normal, (0, 1, 0))
 
-                # print(slope)
                 tri_type = 'WALL'
                 if slope >= 0.8:
                     tri_type = 'FLOOR'
@@ -159,16 +168,41 @@ class LevelGeometry:
                     tri_type = 'CEILING'
                 self.area_face_types[area_id][tri_type].append(triangle_index)
 
-            # print(
-            #     f"floors: {len(self.area_face_types[area_id]['FLOOR'])}, , walls: {len(self.area_face_types[area_id]['WALL'])}, , ceilings: {len(self.area_face_types[area_id]['CEILING'])}")
             self.area_geometries[area_id] = geometry
 
+            # after sorting triangles by type (wall, floor, ceiling)
+            # generate weighted random for all floors
+
+            self.area_floor_triangles_weights[area_id] = []
+
+            triangle_weights = []
+            triangle_weights_total = 0
+            for tri in self.area_face_types[area_id]['FLOOR']:
+                triangle_area = math.sqrt(geometry.area_faces[tri])
+                triangle_weights.append(triangle_weights_total + triangle_area)
+                triangle_weights_total += triangle_area
+
+            self.area_floor_triangles[area_id] = self.area_face_types[area_id]['FLOOR']
+
+            self.area_floor_triangles_weights[area_id] = triangle_weights
+            self.area_floor_triangles_weights_sum[area_id] = triangle_weights_total
+
             # add disabled bounding boxes for an individual area
-            if area_id in self.level.areas and "loading_zones" in self.level.areas[area_id].properties:
+            if area_id in self.level.areas:
                 # using the setting on the level properties will make the bounding box be overlapped
                 # over all areas, which is useful for levels that continue into another with a loading zone
 
-                for loading_zone in self.level.areas[area_id].properties["loading_zones"]:
+                area_forbidden_boundaries = []
+
+                if "loading_zones" in self.level.areas[area_id].properties:
+                    area_forbidden_boundaries = area_forbidden_boundaries + \
+                        self.level.areas[area_id].properties["loading_zones"]
+
+                if "forbidden_zones" in self.level.areas[area_id].properties:
+                    area_forbidden_boundaries = area_forbidden_boundaries + \
+                        self.level.areas[area_id].properties["forbidden_zones"]
+
+                for loading_zone in area_forbidden_boundaries:
                     start = loading_zone["p1"]
                     end = loading_zone["p2"]
                     extents = [
@@ -193,30 +227,38 @@ class LevelGeometry:
                     self.area_forbidden_boundaries[area_id].append(
                         bounding_box)
 
-        # add disabled bounding boxes for level and for areas
+        # for the whole level (this is overlapping between all areas)
+        # in most cases, this will work for example in WDW, if you overlay all area geometries together, it will simply
+        # form the whole level, but in TTMs slide, the geometries would collide.
+
+        level_forbidden_boundaries = []
+
         if "loading_zones" in self.level.properties:
-            # for the whole level (this is overlapping between all areas)
-            # in most cases, this will work for example in WDW, if you overlay all area geometries together, it will simply
-            # form the whole level, but in TTMs slide, the geometries would collide.
+            level_forbidden_boundaries = level_forbidden_boundaries + \
+                self.level.properties["loading_zones"]
 
-            for loading_zone in self.level.properties["loading_zones"]:
-                start = loading_zone["p1"]
-                end = loading_zone["p2"]
-                extents = [
-                    abs(start[0] - end[0]),
-                    abs(start[1] - end[1]),
-                    abs(start[2] - end[2])
-                ]
+        if "forbidden_zones" in self.level.properties:
+            level_forbidden_boundaries = level_forbidden_boundaries + \
+                self.level.properties["forbidden_zones"]
 
-                position = [
-                    start[0] - (extents[0]/2),
-                    start[1] - (extents[1]/2),
-                    start[2] - (extents[2]/2),
-                ]
+        for boundary in level_forbidden_boundaries:
+            start = boundary["p1"]
+            end = boundary["p2"]
+            extents = [
+                abs(start[0] - end[0]),
+                abs(start[1] - end[1]),
+                abs(start[2] - end[2])
+            ]
 
-                bounding_box = trimesh.creation.box(
-                    extents=extents, transform=trimesh.transformations.translation_matrix(position))
-                self.level_forbidden_boundaries.append(bounding_box)
+            position = [
+                start[0] - (extents[0]/2),
+                start[1] - (extents[1]/2),
+                start[2] - (extents[2]/2),
+            ]
+
+            bounding_box = trimesh.creation.box(
+                extents=extents, transform=trimesh.transformations.translation_matrix(position))
+            self.level_forbidden_boundaries.append(bounding_box)
 
     def plot_trace(self, obj, a, b):
         if obj.area_id not in self.area_level_debug_raytraces:

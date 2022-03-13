@@ -107,56 +107,6 @@
     "help": "Shuffle Dialog text, for signs, npc dialog, level dialog and prompts."
   },
   {
-    "name": "disable-cutscenes",
-    "label": "Disable Cutscenes/Intro",
-    "category": "gameplay",
-    "type": "checkbox",
-    "default": {
-      "CLI": false,
-      "WEB": true
-    },
-    "help": "Disables some of the games cutscenes. (Peach Intro, Lakitu Intro, Bowser-Text on Entry)"
-  },
-  {
-    "name": "disable-starwarp",
-    "label": "Disable Star-Warp",
-    "category": "gameplay",
-    "type": "checkbox",
-    "disabled": "work-in-progress",
-    "default": {
-      "CLI": false,
-      "WEB": false
-    },
-    "help": "Disables automatically leaving the level when you collect a star. This way, all stars act like a 100-Coin star or a Bowser 8-Reds Star"
-  },
-  {
-    "name": "stardoor-requirements",
-    "label": "Stardoor Requirements",
-    "category": "gameplay",
-    "disabled": "work-in-progress",
-    "type": "select",
-    "options": [
-      { "value": "vanilla", "label": "Vanilla" },
-      { "value": "random", "label": "Random" },
-      { "value": "open", "label": "All Open" }
-    ],
-    "default": "vanilla",
-    "help": "Changes how the doors to levels require different amounts of stars to be collected beforehand. Random means all doors require stars, but the amount will be random. Open simply means all doors are open from the start."
-  },
-  {
-    "name": "keydoor-requirements",
-    "label": "Keydoor Requirements",
-    "category": "gameplay",
-    "disabled": "work-in-progress",
-    "type": "select",
-    "options": [
-      { "value": "vanilla", "label": "Vanilla" },
-      { "value": "open", "label": "All Open" }
-    ],
-    "default": "vanilla",
-    "help": "Changes how the locked keydoors in the castle work. Vanilla means you will require the usual keys from the Bowser fights. Open means they're simply open from the start."
-  },
-  {
     "name": "shuffle-instruments",
     "label": "Instrument-Set Shuffle",
     "category": "aesthetics",
@@ -166,5 +116,16 @@
       "WEB": false
     },
     "help": "Shuffles instrument sounds around. Many different objects and songs use different instrument sets, as the N64 can't load all at once. This will shuffle them around. Might be wacky."
+  },
+  {
+    "name": "disable-cutscenes",
+    "label": "Disable Cutscenes/Intro",
+    "category": "gameplay",
+    "type": "checkbox",
+    "default": {
+      "CLI": false,
+      "WEB": true
+    },
+    "help": "Disables some of the games cutscenes. (Peach Intro, Lakitu Intro, Bowser-Text on Entry)"
   }
 ]

@@ -507,6 +507,11 @@ collision_groups:
       - WATER_FLOWING
       - SLIPPERY
 
+# Define a list of behaviours that should be used for geometry. This can include
+# the rocks from JRB, platforms from RR or the 
+use_behaviour_geometry:
+  - 0x130005B4
+
 # Start object randomization section. Can be deeply nested with groups, sub-group, etc
 # This segment will define all randomizable objects, that will be moved around in a level.
 # - Groups can be created (without a "match") property to organize multiple different objects together

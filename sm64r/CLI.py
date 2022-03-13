@@ -90,6 +90,7 @@ def generate_output_path(rom_in: Path):
 def run_with_parsed_args(opt_args: argparse.Namespace):
     rom_path = Path(opt_args.rom)
     out_path = opt_args.out or rom_path.with_suffix(f'.out{rom_path.suffix}')
+    start_time = time.time()
 
     if not rom_path.exists():
         raise Exception("invalid file, does not exist")
@@ -99,6 +100,7 @@ def run_with_parsed_args(opt_args: argparse.Namespace):
         opt_args.seed = randint(1e10, 10e10)
 
     with ROM(rom_path, out_path, opt_args.alignment) as rom:
+
         try:
             rom.verify_header()
         except Exception as err:
@@ -150,8 +152,6 @@ def run_with_parsed_args(opt_args: argparse.Namespace):
         # rom.match_segments(0xD78271)
         # rom.match_segments(0xA8181C) # texture for question mark
 
-        start_time = time.time()
-
         music_random = MusicRandomizer(rom)
         if opt_args.shuffle_music:
             music_random.shuffle_music(ALL_LEVELS)
@@ -199,18 +199,18 @@ def run_with_parsed_args(opt_args: argparse.Namespace):
         gameplay_stuff = Gameplay(rom)
         if opt_args.disable_cutscenes:
             gameplay_stuff.disable_all_cutscenes()
-        if opt_args.disable_starwarp:
-            gameplay_stuff.disable_starwarp()
+        # if opt_args.disable_starwarp:
+        #     gameplay_stuff.disable_starwarp()
 
-        stardoor_randomizer = StardoorRandomizer(rom)
-        if opt_args.stardoor_requirements != "vanilla":
-            if opt_args.stardoor_requirements == "open":
-                stardoor_randomizer.open_level_stardoors()
-            elif opt_args.stardoor_requirements == "random":
-                stardoor_randomizer.shuffle_level_stardoors()
+        # stardoor_randomizer = StardoorRandomizer(rom)
+        # if opt_args.stardoor_requirements != "vanilla":
+        #     if opt_args.stardoor_requirements == "open":
+        #         stardoor_randomizer.open_level_stardoors()
+        #     elif opt_args.stardoor_requirements == "random":
+        #         stardoor_randomizer.shuffle_level_stardoors()
 
-        if opt_args.keydoor_requirements != "vanilla":
-            stardoor_randomizer.open_keydoors()
+        # if opt_args.keydoor_requirements != "vanilla":
+        #     stardoor_randomizer.open_keydoors()
 
         skybox_randomizer = SkyboxRandomizer(rom)
         if opt_args.shuffle_skybox:

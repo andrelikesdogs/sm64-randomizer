@@ -246,6 +246,7 @@ class ObjectRandomizer:
             return False
 
         for water_box in applicable_waterboxes:
+            # non-water type waterboxes are poisonous gas from HMC
             if water_box["type"] != "WATER":
                 continue
 
@@ -289,7 +290,7 @@ class ObjectRandomizer:
 
         if self.inside_forbidden_boundary(obj.area_id, levelscript, position):
             self.log_reason_for_reject(
-                "is_in_waterbox", "object found in forbidden boundary")
+                "is_valid_position", "object found in forbidden boundary")
             return False
 
         floor_properties = self.check_floor(
@@ -539,7 +540,7 @@ class ObjectRandomizer:
         return True
 
     def modify_position(self, levelscript: LevelScriptParser, obj: Object3D, position, rules: list):
-        """ Modifies the position of the target object, if possible. This means dropping it onto the floor, moving it away from something, moving it closer to something.
+        """ Modifies the position of the target object, if possible. Currently, this means dropping it onto the floor.
 
         Arguments:
             levelscript {LevelScriptParser} -- Levelscript for the Level that contains this object3d
@@ -548,7 +549,7 @@ class ObjectRandomizer:
             rules {list} -- List of rules this randomization must obey
 
         Returns:
-            list -- new position, that needs to be validated for validity/sanity
+            list -- new position, that needs to be validated for validity
         """
 
         if "no_floor_required" not in rules:
@@ -657,7 +658,7 @@ class ObjectRandomizer:
 
         # overwrite position to generate only on floor triangles
         if "no_floor_required" not in rules and "floor_types_allowed" in rules:
-            random_pos = levelscript.level_geometry.get_random_point_in_area(
+            random_pos = levelscript.level_geometry.get_random_point_in_area_weighted(
                 area_id)
 
             return random_pos
@@ -682,6 +683,7 @@ class ObjectRandomizer:
 
     def shuffle_objects(self):
         object_randomization_count = 0
+        object_placement_failed_count = 0
 
         try:
             for level, levelscript in self.rom.levelscripts.items():
@@ -738,6 +740,7 @@ class ObjectRandomizer:
 
                         # 2. Check for a valid "preposition" - basic checks to ensure some viability
                         if not self.is_valid_position(levelscript, object3d, possible_position, randomizing_rules, True):
+                            object_placement_failed_count += 1
                             continue
 
                         # 3. Modify the position - certain rules will adjust the final position of the object by ie dropping it to the floor
@@ -746,6 +749,7 @@ class ObjectRandomizer:
 
                         # 4. Verify final position
                         if not self.is_valid_position(levelscript, object3d, new_position, randomizing_rules):
+                            object_placement_failed_count += 1
                             continue
 
                         # 5. pass to debug func for plotting
@@ -761,7 +765,10 @@ class ObjectRandomizer:
             self.flush_last_reject_log()
             print("Cancelled Object Randomization")
 
-        print(f"Randomized {object_randomization_count} objects")
+        failed_per_object = round(
+            object_placement_failed_count / object_randomization_count)
+        print(
+            f"Randomized {object_randomization_count} objects. (Tries per Object: {failed_per_object} - {object_placement_failed_count} failed placements.)")
 
         # unused whitelist entries
         """

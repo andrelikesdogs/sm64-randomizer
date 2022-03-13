@@ -18,12 +18,12 @@
                 // "--shuffle-skybox",
                 // "--shuffle-text",
                 // "--shuffle-colors",
-                "--disable-cutscenes",
+                // "--disable-cutscenes",
                 // "--shuffle-instruments",
                 "SM64_US.z64"
             ],
             "env": {
-                "SM64R": "PLOT"
+                // "SM64R": "PLOT"
             }
         }
     ]
