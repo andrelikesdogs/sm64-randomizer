@@ -721,9 +721,9 @@ class ObjectRandomizer:
                     found_valid_point = False
                     tries = 0
 
-                    try_start = time()
+                    #try_start = time()
                     while not found_valid_point:
-                        if time() - try_start > 10:
+                        if tries > 1000:
                             object3d.meta["randomization"] = "SKIPPED"
                             # print()
                             print(f"Used Rule: {whitelist_entry['name']}")
