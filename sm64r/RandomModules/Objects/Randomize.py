@@ -741,6 +741,7 @@ class ObjectRandomizer:
                         # 2. Check for a valid "preposition" - basic checks to ensure some viability
                         if not self.is_valid_position(levelscript, object3d, possible_position, randomizing_rules, True):
                             object_placement_failed_count += 1
+                            tries += 1
                             continue
 
                         # 3. Modify the position - certain rules will adjust the final position of the object by ie dropping it to the floor
@@ -750,6 +751,7 @@ class ObjectRandomizer:
                         # 4. Verify final position
                         if not self.is_valid_position(levelscript, object3d, new_position, randomizing_rules):
                             object_placement_failed_count += 1
+                            tries += 1
                             continue
 
                         # 5. pass to debug func for plotting

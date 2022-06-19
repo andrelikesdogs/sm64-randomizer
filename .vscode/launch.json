@@ -1,30 +1,32 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Python: Launch Project",
-            "type": "python",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "justMyCode": false,
-            "cwd": "${workspaceFolder}",
-            "args": [
-                "--shuffle-objects",
-                // "--shuffle-entries",
-                // "--shuffle-skybox",
-                // "--shuffle-text",
-                // "--shuffle-colors",
-                // "--disable-cutscenes",
-                // "--shuffle-instruments",
-                "SM64_US.z64"
-            ],
-            "env": {
-                // "SM64R": "PLOT"
-            }
-        }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Launch Project",
+      "type": "python",
+      "request": "launch",
+      "program": "main.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "SM64_US.z64",
+        "--shuffle-objects",
+        "--shuffle-entries",
+        "--shuffle-skybox",
+        "--shuffle-text",
+        "--shuffle-colors",
+        "--disable-cutscenes",
+        "--shuffle-instruments",
+        "--seed",
+        "123"
+      ],
+      "env": {
+        // "SM64R": "PLOT"
+      }
+    }
+  ]
 }

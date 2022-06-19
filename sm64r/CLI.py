@@ -9,6 +9,8 @@ from pathlib import Path
 from random import seed, randint
 from typing import List
 
+import numpy as np
+
 from __version__ import __version__
 
 from .Rom import ROM
@@ -62,6 +64,9 @@ for field in randomizer_params:
     elif field["type"] == 'checkbox':
         argument_kwargs["action"] = "store_true"
 
+    elif field["type"] == 'text':
+        argument_kwargs["type"] = str
+
     if "default" in field:
         if type(field["default"]) is dict and "CLI" in field["default"]:
             argument_kwargs["default"] = field["default"]["CLI"]
@@ -87,6 +92,13 @@ def generate_output_path(rom_in: Path):
     return
 
 
+def reseed(new_seed: int):
+    rs = np.random.RandomState(new_seed)
+    np.random.seed(new_seed)
+    seed(new_seed)
+    pass
+
+
 def run_with_parsed_args(opt_args: argparse.Namespace):
     rom_path = Path(opt_args.rom)
     out_path = opt_args.out or rom_path.with_suffix(f'.out{rom_path.suffix}')
@@ -99,6 +111,7 @@ def run_with_parsed_args(opt_args: argparse.Namespace):
         print("Choosing random seed")
         opt_args.seed = randint(1e10, 10e10)
 
+    rando_hash = None
     with ROM(rom_path, out_path, opt_args.alignment) as rom:
 
         try:
@@ -136,8 +149,8 @@ def run_with_parsed_args(opt_args: argparse.Namespace):
 
         # convert seed here! otherwise we might return the hashed seed and heck everything up
         opt_args.seed = int(hashlib.sha1(
-            bytes(str(opt_args.seed), 'utf8')).hexdigest(), 16) % (10**12)
-        seed(opt_args.seed)
+            bytes(str(opt_args.seed), 'utf8')).hexdigest(), 16) % (2**32)
+        reseed(opt_args.seed)
 
         rom.read_levels()
         textures = None
@@ -155,18 +168,18 @@ def run_with_parsed_args(opt_args: argparse.Namespace):
         music_random = MusicRandomizer(rom)
         if opt_args.shuffle_music:
             music_random.shuffle_music(ALL_LEVELS)
-            seed(opt_args.seed)
+            reseed(opt_args.seed)
 
         mario_random = MarioRandomizer(rom)
         if opt_args.shuffle_mario_outfit:
             mario_random.randomize_color()
-            seed(opt_args.seed)
+            reseed(opt_args.seed)
 
         warp_random = WarpRandomizer(rom)
         if opt_args.shuffle_entries:
             if opt_args.shuffle_paintings:
                 textures.add_level_paintings()
-                seed(opt_args.seed)
+                reseed(opt_args.seed)
 
                 if opt_args.shuffle_paintings == 'replace-unknown':
                     if not textures:
@@ -176,7 +189,7 @@ def run_with_parsed_args(opt_args: argparse.Namespace):
                         textures.add_vanilla_portrait_custom_paintings()
 
             warp_random.shuffle_level_entries(vars(opt_args))
-            seed(opt_args.seed)
+            reseed(opt_args.seed)
 
             if "SM64R" in os.environ and "WARPS" in os.environ["SM64R"]:
                 warp_random.plot_network()
@@ -184,17 +197,17 @@ def run_with_parsed_args(opt_args: argparse.Namespace):
         instrument_randomizer = InstrumentRandomizer(rom)
         if opt_args.shuffle_instruments:
             instrument_randomizer.shuffle_instruments()
-            seed(opt_args.seed)
+            reseed(opt_args.seed)
 
         text_randomizer = TextRandomizer(rom)
         if opt_args.shuffle_text:
             text_randomizer.shuffle_dialog_pointers()
-            seed(opt_args.seed)
+            reseed(opt_args.seed)
 
         color_randomizer = ColorRandomizer(rom)
         if opt_args.shuffle_colors:
             color_randomizer.randomize_coin_colors()
-            seed(opt_args.seed)
+            reseed(opt_args.seed)
 
         gameplay_stuff = Gameplay(rom)
         if opt_args.disable_cutscenes:
@@ -215,11 +228,12 @@ def run_with_parsed_args(opt_args: argparse.Namespace):
         skybox_randomizer = SkyboxRandomizer(rom)
         if opt_args.shuffle_skybox:
             skybox_randomizer.randomize_skyboxes()
+            reseed(opt_args.seed)
 
         object_randomizer = ObjectRandomizer(rom)
         if opt_args.shuffle_objects:
             object_randomizer.shuffle_objects()
-            seed(opt_args.seed)
+            reseed(opt_args.seed)
 
             texture_changer = TextureChanges(rom)
             texture_changer.remove_tree_shadows()
@@ -229,9 +243,12 @@ def run_with_parsed_args(opt_args: argparse.Namespace):
                 parsed.level_geometry.plot()
             # rom.levelscripts
 
+        rom.target.seek(0)
+        rando_hash = str(hashlib.sha1(rom.target.read()).hexdigest())
+
     SpoilerLog.output()
     print(f'It took {round(time.time() - start_time)}s to complete')
     print(
-        f'Completed! Your randomized ROM File can be found as "{str(Path(out_path).absolute())}"')
+        f'Completed! Your randomized ROM File can be found as "{str(Path(out_path).absolute())}" - {rando_hash}')
 
 # run_with_args()
