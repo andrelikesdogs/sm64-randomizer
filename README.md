@@ -8,6 +8,8 @@
   </a>
 </p>
 
+## This project is retired. Consider checking out Arthurtilly's randomizer: https://romhacking.com/hack/sm64-randomizer
+
 # Super Mario 64 ROM Randomizer Generator
 
 This is a work in progress project to build an [OoT-Randomizer](https://www.ootrandomizer.com/)-style randomizer for Super Mario 64, that is highly configurable but easy to use.
@@ -37,7 +39,9 @@ Also auto extends ROM to work with the randomizer. If this fails, extend your RO
 
 # Web
 
-For extremely simple usage, simply use our existing web generator, found here: https://andrelikesdogs.github.io/sm64-randomizer/
+~~For extremely simple usage, simply use our existing web generator, found here: https://andrelikesdogs.github.io/sm64-randomizer/~~
+
+Offline. Please download the program to use it.
 
 ![SM64 Randomizer Generator Web Edition](https://i.imgur.com/78OiLPZ.png)
 
